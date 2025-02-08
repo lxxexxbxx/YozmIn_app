@@ -1,33 +1,36 @@
-# Gradle files
-.gradle/
-build/
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
-# Local configuration file (sdk path, etc)
-local.properties
+# dependencies
+node_modules/
 
-# Log/OS Files
-*.log
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
 
-# Android Studio generated files and folders
-captures/
-.externalNativeBuild/
-.cxx/
-*.apk
-output.json
-
-# IntelliJ
-*.iml
-.idea/
-misc.xml
-deploymentTargetDropDown.xml
-render.experimental.xml
-
-# Keystore files
+# Native
+*.orig.*
 *.jks
-*.keystore
+*.p8
+*.p12
+*.key
+*.mobileprovision
 
-# Google Services (e.g. APIs or Firebase)
-google-services.json
+# Metro
+.metro-health-check*
 
-# Android Profiling
-*.hprof
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
