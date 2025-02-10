@@ -1,20 +1,51 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
+import HomeComponent from "./components/home/HomeComponent";
+import TrendComponent from "./components/trend/TrendComponent";
+import BoardComponent from "./components/board/BoardComponent";
+import NewsComponent from "./components/news/NewsComponent";
+import MyPageComponent from "./components/mypage/MyPageComponent";
+import {NavigationContainer} from "@react-navigation/native";
+import FontAwesome from "react-native-vector-icons/FontAwesome6";
 
-export default function App() {
+const Tab = createBottomTabNavigator();
+
+const App = () => {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ color, size }) => {
+            let iconName;
+                if(route.name === "Home") {
+                    iconName = "house-chimney-window";
+                }
+                else if(route.name === "Trend") {
+                    iconName = "house-fire";
+                }
+                else if(route.name === "Board") {
+                    iconName = "list";
+                }
+                else if(route.name === "News") {
+                    iconName = "newspaper";
+                }
+                else if(route.name === "MyPage") {
+                    iconName = "user-tie";
+                }
+
+                return <FontAwesome name={iconName} size={size} color={color}/>;
+              },
+            tabBarActiveTintColor: 'tomato',
+            tabBarInactiveTintColor: 'gray',
+        })}
+        >
+          <Tab.Screen name={"Home"} component={HomeComponent}/>
+          <Tab.Screen name={"Trend"} component={TrendComponent}/>
+          <Tab.Screen name={"Board"} component={BoardComponent}/>
+          <Tab.Screen name={"News"} component={NewsComponent}/>
+          <Tab.Screen name={"MyPage"} component={MyPageComponent}/>
+      </Tab.Navigator>
+    </NavigationContainer>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default App;
