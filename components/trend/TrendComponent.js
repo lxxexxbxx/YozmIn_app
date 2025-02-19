@@ -1,12 +1,8 @@
-import {Text, View} from "react-native";
+import YoutubeTrendingShorts from "./youtubeShorts/YoutubeTrendingShorts";
 
 const TrendComponent = () => {
     return (
-        <View>
-            <Text>
-                트렌드
-            </Text>
-        </View>
+        <YoutubeTrendingShorts/>
     )
 };
 

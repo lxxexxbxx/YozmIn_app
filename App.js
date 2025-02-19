@@ -38,11 +38,11 @@ const App = () => {
             tabBarInactiveTintColor: 'gray',
         })}
         >
-          <Tab.Screen name={"Home"} component={HomeComponent}/>
-          <Tab.Screen name={"Trend"} component={TrendComponent}/>
-          <Tab.Screen name={"Board"} component={BoardComponent}/>
-          <Tab.Screen name={"News"} component={NewsComponent}/>
-          <Tab.Screen name={"MyPage"} component={MyPageComponent}/>
+          <Tab.Screen name={"Home"} component={HomeComponent} options={{ headerTitle: "요 즘 사 람" }}/>
+          <Tab.Screen name={"Trend"} component={TrendComponent} options={{ headerShown: false, animationEnabled: false }}/>
+          <Tab.Screen name={"Board"} component={BoardComponent} options={{ headerShown: false }}/>
+          <Tab.Screen name={"News"} component={NewsComponent} options={{ headerShown: false }}/>
+          <Tab.Screen name={"MyPage"} component={MyPageComponent} options={{ headerShown: false }}/>
       </Tab.Navigator>
     </NavigationContainer>
   );
