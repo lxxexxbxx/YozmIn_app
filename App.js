@@ -46,6 +46,9 @@ const App = () => {
       </Tab.Navigator>
     </NavigationContainer>
   );
+
+
+
 }
 
 

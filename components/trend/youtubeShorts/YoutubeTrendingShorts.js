@@ -55,6 +55,8 @@ const YoutubeTrendingShorts = () => {
       <SafeAreaView style={{flex: 1}}>
         <ShortsList videoList={trendingShorts}/>
       </SafeAreaView>
+
+
   )
 }
 
