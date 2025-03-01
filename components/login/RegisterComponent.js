@@ -22,7 +22,8 @@ const RegisterComponent = () => {
 
     // 회원가입 inputbox 값 변동 시마다 모든 값 비어있지 않은지 확인
     useEffect(() => {
-        setBtnStaus(!(name && nickname && id && password && passwordCheck && birthday && phone && email));
+        setBtnStaus(!(name && nickname && id && password && passwordCheck &&
+            password === passwordCheck && birthday && phone && email));
     }, [name, nickname, id, password, passwordCheck, birthday, phone, email]);
     // 넘겨줄 값 초기화
     useEffect(() => {
@@ -35,35 +36,37 @@ const RegisterComponent = () => {
     }
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
+        <ScrollView>
             <PageTitleComponent title={"회원가입"}/>
 
-            <Text style={styles.text}>이름</Text>
-            <TextInput style={styles.inputBox} value={name} onChangeText={setName}/>
-            <Text style={styles.text}>닉네임</Text>
-            <TextInput style={styles.inputBox} value={nickname} onChangeText={setNickname}/>
-            <Text style={styles.text}>아이디</Text>
-            <TextInput style={styles.inputBox} value={id} onChangeText={setId}/>
-            <Text style={styles.text}>비밀번호</Text>
-            <TextInput style={styles.inputBox} value={password} onChangeText={setPassword} secureTextEntry={true}/>
-            <Text style={styles.text}>비밀번호 확인</Text>
-            <TextInput style={styles.inputBox} value={passwordCheck} onChangeText={setPasswordCheck}
-                       secureTextEntry={true}/>
-            <Text
-                style={(passwordCheck === "") || (password === passwordCheck) ? styles.warningDisabled : styles.warning}>
-                비밀번호가 일치하지 않습니다.
-            </Text>
-            <Text style={styles.text}>생년월일</Text>
-            <TextInput style={styles.inputBox} value={birthday} onChangeText={setBirthday} keyboardType={"numeric"}/>
-            <Text style={styles.text}>휴대폰번호</Text>
-            <TextInput style={styles.inputBox} value={phone} onChangeText={setPhone} keyboardType={"number-pad"}/>
-            <Text style={styles.text}>이메일</Text>
-            <TextInput style={styles.inputBox} value={email} onChangeText={setEmail} keyboardType={"email-address"}/>
+            <View style={styles.container}>
+                <Text style={styles.text}>이름</Text>
+                <TextInput style={styles.inputBox} value={name} onChangeText={setName}/>
+                <Text style={styles.text}>닉네임</Text>
+                <TextInput style={styles.inputBox} value={nickname} onChangeText={setNickname}/>
+                <Text style={styles.text}>아이디</Text>
+                <TextInput style={styles.inputBox} value={id} onChangeText={setId}/>
+                <Text style={styles.text}>비밀번호</Text>
+                <TextInput style={styles.inputBox} value={password} onChangeText={setPassword} secureTextEntry={true}/>
+                <Text style={styles.text}>비밀번호 확인</Text>
+                <TextInput style={styles.inputBox} value={passwordCheck} onChangeText={setPasswordCheck}
+                           secureTextEntry={true}/>
+                <Text
+                    style={(passwordCheck === "") || (password === passwordCheck) ? styles.warningDisabled : styles.warning}>
+                    비밀번호가 일치하지 않습니다.
+                </Text>
+                <Text style={styles.text}>생년월일</Text>
+                <TextInput style={styles.inputBox} value={birthday} onChangeText={setBirthday} keyboardType={"numeric"}/>
+                <Text style={styles.text}>휴대폰번호</Text>
+                <TextInput style={styles.inputBox} value={phone} onChangeText={setPhone} keyboardType={"number-pad"}/>
+                <Text style={styles.text}>이메일</Text>
+                <TextInput style={styles.inputBox} value={email} onChangeText={setEmail} keyboardType={"email-address"}/>
 
-            <TouchableOpacity style={btnStatus ? styles.buttonDisabled : styles.button} onPress={() => regist()}
-                              disabled={btnStatus}>
-                <Text>회원가입</Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={btnStatus ? styles.buttonDisabled : styles.button} onPress={() => regist()}
+                                  disabled={btnStatus}>
+                    <Text>회원가입</Text>
+                </TouchableOpacity>
+            </View>
         </ScrollView>
     )
 }
@@ -93,16 +96,14 @@ const styles = StyleSheet.create({
     },
     text: {
         fontSize: 15,
-        marginTop: 20,
     },
     inputBox: {
-        flexDirection: 'row',
         width: width - 20 * 2,
         marginTop: 5,
         borderWidth: 1,
     },
     button: {
-        marginTop: 20,
+        marginTop: 40,
         backgroundColor: '#f0f0f0',
         paddingVertical: 10,
         paddingHorizontal: 20,
@@ -110,7 +111,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     buttonDisabled: {
-        marginTop: 20,
+        marginTop: 40,
         backgroundColor: '#f0f0f0',
         paddingVertical: 10,
         paddingHorizontal: 20,
