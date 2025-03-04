@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Appearance } from 'react-native'; // Appearance API 사용
 import { useNavigation } from '@react-navigation/native';
+import PageTitleComponent from '../common/PageTitleComponent';
 
 const GeneralSettings = () => {
   const navigation = useNavigation();
@@ -20,10 +21,8 @@ const GeneralSettings = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.header} onPress={() => navigation.goBack()}>
-        <Ionicons name="arrow-back" size={24} color="black" />
-        <Text style={styles.headerText}>일반</Text>
-      </TouchableOpacity>
+      {/* 헤더 */}
+      <PageTitleComponent title="일반 설정" />
 
       <View style={styles.mainBox}>
         {/* 화면 테마 항목 */}

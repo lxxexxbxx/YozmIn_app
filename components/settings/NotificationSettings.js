@@ -1,7 +1,9 @@
+// filepath: /c:/Users/rkdwl/YozmIn_app/components/settings/NotificationSettings.js
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import PageTitleComponent from '../common/PageTitleComponent'; // PageTitleComponent import 확인
 
 const NotificationSettings = () => {
   const navigation = useNavigation();
@@ -24,11 +26,8 @@ const NotificationSettings = () => {
 
   return (
     <View style={styles.container}>
-      {/* 뒤로가기 화살표 및 제목 */}
-      <TouchableOpacity style={styles.header} onPress={() => navigation.goBack()}>
-        <Ionicons name="arrow-back" size={24} color="black" />
-        <Text style={styles.headerText}>알림</Text>
-      </TouchableOpacity>
+      {/* 페이지 제목 컴포넌트 */}
+      <PageTitleComponent title="알림 설정" />
 
       {/* 알림 항목들을 감싸는 선 추가 */}
       <View style={styles.settingsBox}>
