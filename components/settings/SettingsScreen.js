@@ -9,24 +9,19 @@ const SettingsScreen = () => {
   return (
     <View style={styles.container}>
       {/* 헤더 */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.headerText}>설정</Text>
-      </View>
+      <PageTitleComponent title="설정" />
 
       {/* 설정 목록을 감싸는 박스 */}
-        <View style={styles.settingsBox}>
-          <TouchableOpacity style={styles.settingItem} onPress={() => navigation.navigate('GeneralSettings')}>
-            <Text style={styles.settingText}>일반</Text>
-          </TouchableOpacity>
-          <View style={styles.separator} />
-          <TouchableOpacity style={styles.settingItem} onPress={() => navigation.navigate('NotificationSettings')}>
-            <Text style={styles.settingText}>알림</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.settingsBox}>
+        <TouchableOpacity style={styles.settingItem} onPress={() => navigation.navigate('GeneralSettings')}>
+          <Text style={styles.settingText}>일반</Text>
+        </TouchableOpacity>
+        <View style={styles.separator} />
+        <TouchableOpacity style={styles.settingItem} onPress={() => navigation.navigate('NotificationSettings')}>
+          <Text style={styles.settingText}>알림</Text>
+        </TouchableOpacity>
       </View>
+    </View>
   );
 };
 
@@ -34,18 +29,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 15,
-  },
-  backButton: {
-    marginRight: 10, // 화살표와 텍스트 간격 조정
-  },
-  headerText: {
-    fontSize: 18,
-    fontWeight: 'bold',
   },
   settingsBox: {
     backgroundColor: 'white',
