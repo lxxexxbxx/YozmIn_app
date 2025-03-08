@@ -3,6 +3,8 @@ import React, {useEffect, useState} from "react";
 import axios from "axios";
 import ShortsList from "./ShortsList";
 
+const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_API_KEY; // Gemini 2.0 API 키
+
 const YoutubeTrendingShorts = () => {
   const [trendingShorts, setTrendingShorts] = useState();
 
@@ -20,7 +22,6 @@ const YoutubeTrendingShorts = () => {
 
   // 검색 키워드 기준 지정 기간동안 지정 개수만큼의 쇼츠 정보 리스트를 조회해오는 함수
   const fetchYouTubeTrendingShorts = async () => {
-    const GOOGLE_API_KEY = "${GOOGLE_API_KEY}";
     const searchWord = "챌린지"; // 검색어
     const maxResults = 10; // 검색 쇼츠 개수
 
