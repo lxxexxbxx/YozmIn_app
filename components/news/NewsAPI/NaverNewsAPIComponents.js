@@ -1,0 +1,60 @@
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const NAVER_CLIENT_ID = process.env.EXPO_PUBLIC_NAVER_CLIENT_ID;
+const NAVER_CLIENT_SECRET = process.env.EXPO_PUBLIC_NAVER_CLIENT_SECRET;
+
+// 뉴스 데이터를 저장할 키
+const STORAGE_KEY = 'news_titles';
+// 뉴스 데이터 유효 시간 (예: 1시간 = 3600000ms)
+const EXPIRATION_TIME = 3600000;
+
+export const fetchNewsTitles = async () => {
+    try {
+        // ✅ 1. 로컬 저장소에서 데이터 확인
+        const storedData = await AsyncStorage.getItem(STORAGE_KEY);
+        if (storedData) {
+            const { newsTitles, timestamp } = JSON.parse(storedData);
+            const currentTime = new Date().getTime();
+
+            // ✅ 저장된 데이터가 유효하면 API 호출 없이 사용
+            if (currentTime - timestamp < EXPIRATION_TIME) {
+                console.log('📂 저장된 뉴스 데이터 사용');
+                console.log('📰 뉴스 1000개 제목 (처음 20개만 출력):', newsTitles.slice(0, 20));
+                return newsTitles;
+            }
+        }
+
+        // ✅ 2. 뉴스 데이터가 없거나 만료되었으면 API 호출
+        console.log('🔹 네이버 뉴스 API 호출 중...');
+        let allNews = [];
+        for (let start = 1; start <= 1000; start += 100) {
+            const response = await axios.get(
+                `https://openapi.naver.com/v1/search/news.json?query=뉴스&display=100&start=${start}`,
+                {
+                    headers: {
+                        'X-Naver-Client-Id': NAVER_CLIENT_ID,
+                        'X-Naver-Client-Secret': NAVER_CLIENT_SECRET,
+                    },
+                }
+            );
+            const newsTitles = response.data.items.map(item => item.title.replace(/<[^>]*>?/gm, '')); // HTML 태그 제거
+            allNews = [...allNews, ...newsTitles];
+        }
+
+        // ✅ 3. 새로운 뉴스 데이터를 AsyncStorage에 저장
+        const dataToStore = {
+            newsTitles: allNews,
+            timestamp: new Date().getTime(), // 저장한 시간 기록
+        };
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dataToStore));
+
+        console.log('✅ 새 뉴스 데이터를 저장하고 반환');
+        console.log('📰 가져온 뉴스 1000개 제목 (처음 10개만 출력):', allNews.slice(0, 10)); // 🔥 첫 10개 뉴스 제목 로그 출력
+        return allNews;
+    } catch (error) {
+        console.error('🚨 뉴스 API 호출 오류:', error);
+        return [];
+    }
+
+};
