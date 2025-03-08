@@ -4,9 +4,10 @@ import {useEffect} from "react";
 import TabNavigator from "./TabNavigator";
 import LoginComponent from "../components/login/LoginComponent";
 import RegisterComponent from "../components/login/RegisterComponent";
-import SettingsScreen from "../components/settings/SettingsScreen";
-import GeneralSettings from "../components/settings/SettingsComponent"; // GeneralSettings import 추가
-import NotificationSettings from "../components/settings/NotificationSettings"; // NotificationSettings import 추가
+import SettingsScreen from "../components/settings/SettingsComponent";
+import GeneralSettings from "../components/settings/GeneralSettingsComponent"; 
+import Notification from "../components/settings/NotificationComponent"; 
+import PostDetailComponent from '../components/board/PostDetailComponent';
 
 const Stack = createStackNavigator();
 
@@ -29,7 +30,9 @@ const Navigator = () => {
                 {/* 일반설정 컴포넌트 */}
                 <Stack.Screen name="GeneralSettings" component={GeneralSettings} /> 
                 {/* 알림설정 컴포넌트 */}
-                <Stack.Screen name="NotificationSettings" component={NotificationSettings} /> 
+                <Stack.Screen name="Notification" component={Notification} /> 
+                {/* 게시글 상세화면 컴포넌트 */}
+                <Stack.Screen name="PostDetail" component={PostDetailComponent} /> 
             </Stack.Navigator>
         </NavigationContainer>
     );
