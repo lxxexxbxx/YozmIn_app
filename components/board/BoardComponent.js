@@ -24,7 +24,6 @@ const BoardComponent = () => {
       aspect: [4, 3],
       quality: 1,
     });
-    
 
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
@@ -38,9 +37,9 @@ const BoardComponent = () => {
       const newPost = {
         id: Date.now().toString(),
         user: '나',
-        profileImage: require('../../assets/tino.png'),
+        profileImage: { uri: 'https://via.placeholder.com/40' }, // 기본 프로필 이미지
         content: message,
-        image: imageUri,
+        image: imageUri ? { uri: imageUri } : null,
         likes: 0,
         comments: 0,
         isMine: true,
@@ -51,9 +50,16 @@ const BoardComponent = () => {
     }
   };
 
-  // 📋 게시글 클릭 시 상세 화면 이동 // 아직 정상적으로 작동 X
+  // 📋 게시글 클릭 시 상세 화면 이동
   const handlePress = (post) => {
-    navigation.navigate('PostDetail', { post });
+    navigation.navigate('PostDetail', {
+      post: {
+        ...post,
+        profileImage: post.isMine
+          ? { uri: 'https://via.placeholder.com/40' }
+          : post.profileImage, // 네트워크 이미지 변환
+      },
+    });
   };
 
   // 채팅형 게시글 UI
@@ -61,8 +67,7 @@ const BoardComponent = () => {
     <TouchableOpacity onPress={() => handlePress(item)} style={[styles.postContainer, item.isMine ? styles.myPost : styles.otherPost]}>
       {!item.isMine && <Image source={item.profileImage} style={styles.profileImage} />}
       <View style={styles.bubble}>
-        {/* 게시글 이미지 (선택 시) */}
-        {item.image && <Image source={{ uri: item.image }} style={styles.postImage} />}
+        {item.image && <Image source={item.image} style={styles.postImage} />}
         <Text style={styles.content}>{item.content}</Text>
         <View style={styles.postFooter}>
           <Text style={styles.footerText}>❤️ {item.likes}   💬 {item.comments}</Text>
@@ -73,29 +78,13 @@ const BoardComponent = () => {
 
   return (
     <View style={styles.container}>
-
-      {/* 📢 상단 안내 문구 */}
       <Text style={styles.notice}>최신 트렌드를 사람들과 공유 해보세요!</Text>
-
-      {/* 게시글 목록 */}
-      <FlatList
-        data={posts}
-        renderItem={renderPost}
-        keyExtractor={(item) => item.id}
-        inverted // 최신 글이 위로 오게 정렬
-      />
-
-      {/* 📸 이미지/메시지 전송 바 */}
+      <FlatList data={posts} renderItem={renderPost} keyExtractor={(item) => item.id} inverted />
       <View style={styles.inputContainer}>
         <TouchableOpacity onPress={pickImage}>
           <Ionicons name="image-outline" size={28} color="#333" />
         </TouchableOpacity>
-        <TextInput
-          style={styles.input}
-          placeholder="메시지를 입력하세요..."
-          value={message}
-          onChangeText={setMessage}
-        />
+        <TextInput style={styles.input} placeholder="메시지를 입력하세요..." value={message} onChangeText={setMessage} />
         <TouchableOpacity onPress={handleSend}>
           <Ionicons name="send" size={28} color="#007AFF" />
         </TouchableOpacity>
