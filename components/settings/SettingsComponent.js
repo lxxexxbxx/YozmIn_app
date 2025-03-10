@@ -18,7 +18,7 @@ const SettingsScreen = () => {
           <Text style={styles.settingText}>일반</Text>
         </TouchableOpacity>
         <View style={styles.separator} />
-        <TouchableOpacity style={styles.settingItem} onPress={() => navigation.navigate('NotificationSettings')}>
+        <TouchableOpacity style={styles.settingItem} onPress={() => navigation.navigate('Notification')}>
           <Text style={styles.settingText}>알림</Text>
         </TouchableOpacity>
       </View>
