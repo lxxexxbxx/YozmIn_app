@@ -32,12 +32,13 @@ const BoardComponent = () => {
       const newPost = {
         id: Date.now().toString(),
         user: '나',
-        profileImage: { uri: 'https://via.placeholder.com/40' }, // 기본 프로필 이미지
+        profileImage: { uri: 'https://via.placeholder.com/40' },
         content: message,
         image: imageUri ? { uri: imageUri } : null,
         likes: 0,
         comments: 0,
         isMine: true,
+        hasLiked: false, // 하트 상태 추가
       };
       setPosts([newPost, ...posts]);
       setMessage('');
@@ -50,7 +51,23 @@ const BoardComponent = () => {
     navigation.navigate('PostDetail', { post });
   };
 
-  // 채팅형 게시글 UI
+  // ❤️ 하트 토글 기능
+  const toggleLike = (id) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((post) => {
+        if (post.id === id) {
+          return {
+            ...post,
+            likes: post.hasLiked ? post.likes - 1 : post.likes + 1,
+            hasLiked: !post.hasLiked,
+          };
+        }
+        return post;
+      })
+    );
+  };
+
+  // 📝 채팅형 게시글 UI
   const renderPost = ({ item }) => (
     <TouchableOpacity onPress={() => handlePress(item)} style={[styles.postContainer, item.isMine ? styles.myPost : styles.otherPost]}>
       {!item.isMine && <Image source={item.profileImage} style={styles.profileImage} />}
@@ -58,7 +75,12 @@ const BoardComponent = () => {
         {item.image && <Image source={item.image} style={styles.postImage} />}
         <Text style={styles.content}>{item.content}</Text>
         <View style={styles.postFooter}>
-          <Text style={styles.footerText}>❤️ {item.likes}   💬 {item.comments}</Text>
+          <TouchableOpacity onPress={() => toggleLike(item.id)}>
+            <Ionicons name={item.hasLiked ? 'heart' : 'heart-outline'} size={20} color={item.hasLiked ? 'red' : 'black'} />
+          </TouchableOpacity>
+          <Text style={styles.footerText}>{item.likes}</Text>
+          <Ionicons name="chatbubble-outline" size={20} color="black" style={styles.iconSpacing} />
+          <Text style={styles.footerText}>{item.comments}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -71,7 +93,7 @@ const BoardComponent = () => {
         data={posts}
         renderItem={renderPost}
         keyExtractor={(item) => item.id}
-        inverted // 최신 글이 위로 가도록 설정
+        inverted
       />
       <View style={styles.inputContainer}>
         <TouchableOpacity onPress={pickImage}>
@@ -100,8 +122,9 @@ const styles = StyleSheet.create({
   profileImage: { width: 40, height: 40, borderRadius: 20, marginRight: 8 },
   bubble: { maxWidth: '70%', padding: 12, borderRadius: 15, backgroundColor: 'white', elevation: 2 },
   content: { fontSize: 14, color: 'black' },
-  postFooter: { marginTop: 8, flexDirection: 'row', justifyContent: 'flex-end' },
-  footerText: { fontSize: 12, color: '#666' },
+  postFooter: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  footerText: { fontSize: 12, color: '#666', marginLeft: 5 },
+  iconSpacing: { marginLeft: 15 },
   postImage: { width: '100%', height: 150, marginTop: 5, borderRadius: 10 },
   inputContainer: { flexDirection: 'row', alignItems: 'center', padding: 10, borderTopWidth: 1, borderColor: '#ddd' },
   input: { flex: 1, marginLeft: 10, marginRight: 10, padding: 8, borderRadius: 20, backgroundColor: '#FFF' },
