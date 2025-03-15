@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, TextInput, Share, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, TextInput, Share, ScrollView, Dimensions } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 
 const PostDetailComponent = ({ route, navigation }) => {
   const { post } = route.params; // 전달된 게시글 데이터
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(post.likeCount || 0); // NaN 문제 해결
+  const [likeCount, setLikeCount] = useState(post.likeCount || 0); 
   const [comments, setComments] = useState(post.comments || []);
   const [newComment, setNewComment] = useState('');
   const [commentCount, setCommentCount] = useState(post.comments?.length || 0);
@@ -79,7 +79,7 @@ const PostDetailComponent = ({ route, navigation }) => {
 
       {/* 게시글 */}
       <ScrollView style={styles.contentScroll}>
-        {post.image && <Image source={{ uri: post.image }} style={styles.image} />}
+        {post.image && <Image source={{ uri: post.image.uri }} style={styles.image} resizeMode="contain" />}
         <View style={styles.postContainer}>
           <Text style={styles.text}>{post.text || '내용 없음'}</Text>
           <View style={styles.actionsContainer}>
@@ -136,12 +136,12 @@ const PostDetailComponent = ({ route, navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'white' },
-  topBar: { flexDirection: 'row', alignItems: 'center', padding: 15 },
-  profileContainer: { flexDirection: 'row', alignItems: 'center', marginLeft: 15 },
+  topBar: { flexDirection: 'row', alignItems: 'center', padding: 10, marginTop: 30 },
+  profileContainer: { flexDirection: 'row', alignItems: 'center', mawrginLeft: 15 },
   profileImage: { width: 40, height: 40, borderRadius: 20 },
   profileName: { marginLeft: 10, fontSize: 16 },
   contentScroll: { flex: 1 },
-  image: { width: '100%', height: 200 },
+  image: { width: '100%', height: undefined, aspectRatio: 1, resizeMode: 'contain' , padding: 15}, // 이미지 스타일 수정
   postContainer: { padding: 15, borderWidth: 1, borderColor: '#ddd', borderRadius: 10, margin: 10 },
   text: { fontSize: 16, marginBottom: 10 },
   actionsContainer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },

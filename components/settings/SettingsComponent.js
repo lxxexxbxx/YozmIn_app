@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
 import PageTitleComponent from '../common/PageTitleComponent';
 
 const SettingsScreen = () => {
@@ -10,7 +9,7 @@ const SettingsScreen = () => {
   return (
     <View style={styles.container}>
       {/* 헤더 */}
-      <PageTitleComponent title="설정" />
+      <PageTitleComponent title={"설정"} backToTab={"MyPage"} />
 
       {/* 설정 목록을 감싸는 박스 */}
       <View style={styles.settingsBox}>
