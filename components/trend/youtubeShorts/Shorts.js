@@ -2,16 +2,17 @@
 import {View} from "react-native";
 import WebView from "react-native-webview";
 
-const Shorts = ({url}) => {
+const Shorts = ({url, w, h}) => {
     return (
-        <View style={{flex: 1, backgroundColor: "#000"}}>
-            <WebView
-                source={{ uri: url }}
-                style={{ flex: 1 }}
-                allowsFullscreenVideo={true} // 전체 화면 모드 허용
-                allowsInlineMediaPlayback={true} // iOS에서 인라인 재생 허용
-                mediaPlaybackRequiresUserAction={false} // 자동 재생 허용
-            />
+        <View style={{width: w, height: h}}>
+          <WebView
+              source={{uri: url}}
+              style={{width: "100%", height: "100%"}}
+              //// ios 세팅 ////
+              allowsInlineMediaPlayback={true}  // 전체화면 방지
+              mediaPlaybackRequiresUserAction={false} // 자동 재생 허용
+              allowsFullscreenVideo={false}  // 전체화면 버튼 제거
+          />
         </View>
     )
 }
