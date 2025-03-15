@@ -32,7 +32,7 @@ const YoutubeTrendingShorts = () => {
     const mainQuery = "https://www.googleapis.com/youtube/v3/search"
     const dateQuery = `publishedAfter=${formatDate(ago)}T00:00:00Z&publishedBefore=${formatDate(today)}T23:59:59Z`
     const regionQuery = `regionCode=KR&relevanceLanguage=ko&key=${GOOGLE_API_KEY}`
-    const embedQuery = "autoplay=1"
+    const embedQuery = "autoplay=1&loop=1&disableScroll=1"
     const searchQuery = `part=snippet&q=${searchWord}&maxResults=${maxResults}&order=viewCount&type=video&videoDuration=short`
     // const searchQuery = `chart=mostPopular&part=snippet&maxResults=${maxResults}&type=video&videoDuration=short`
 
