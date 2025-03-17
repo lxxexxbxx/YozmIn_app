@@ -7,6 +7,7 @@ const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_API_KEY; // Gemini 2.0 API 키
 
 const YoutubeTrendingShorts = () => {
   const [trendingShorts, setTrendingShorts] = useState();
+  const maxResults = 5; // 검색 쇼츠 개수
 
   // 날짜 형식 가공(연-월-일)
   const formatDate = (date) => {
@@ -23,16 +24,21 @@ const YoutubeTrendingShorts = () => {
   // 검색 키워드 기준 지정 기간동안 지정 개수만큼의 쇼츠 정보 리스트를 조회해오는 함수
   const fetchYouTubeTrendingShorts = async () => {
     const searchWord = "챌린지"; // 검색어
-    const maxResults = 10; // 검색 쇼츠 개수
 
     const today = new Date(); // 오늘
     const ago = new Date(); // n일 전
-    ago.setDate(today.getDate() - 1);
+    ago.setDate(today.getDate() - 2);
+
+    const mainQuery = "https://www.googleapis.com/youtube/v3/search"
+    const dateQuery = `publishedAfter=${formatDate(ago)}T00:00:00Z&publishedBefore=${formatDate(today)}T23:59:59Z`
+    const regionQuery = `regionCode=KR&relevanceLanguage=ko&key=${GOOGLE_API_KEY}`
+    const embedQuery = "autoplay=1&loop=1&disableScroll=1"
+    const searchQuery = `part=snippet&q=${searchWord}&maxResults=${maxResults}&order=viewCount&type=video&videoDuration=short`
+    // const searchQuery = `chart=mostPopular&part=snippet&maxResults=${maxResults}&type=video&videoDuration=short`
 
     // YouTube API 조회
     const response = await axios.get(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${searchWord}&publishedAfter=${formatDate(ago)}T00:00:00Z
-&publishedBefore=${formatDate(today)}T23:59:59Z&maxResults=${maxResults}&order=viewCount&type=video&videoDuration=short&regionCode=KR&relevanceLanguage=ko&key=${GOOGLE_API_KEY}`
+        `${mainQuery}?${dateQuery}&${regionQuery}&${searchQuery}`
     );
 
     // 조회해온 쇼츠의 제목, 업로드 시간, 영상ID, URL(쇼츠) 정보 리스트 저장
@@ -54,7 +60,10 @@ const YoutubeTrendingShorts = () => {
 
   return (
       <SafeAreaView style={{flex: 1}}>
-        <ShortsList videoList={trendingShorts}/>
+        {/* 밈 | 챌린지    ((((키워드 요약 보기 버튼))))*/}
+        {/* or */}
+        {/* 하단바 밈 탭, 챌린지 탭 추가 */}
+        <ShortsList videoList={trendingShorts} max={maxResults}/>
       </SafeAreaView>
   )
 }
