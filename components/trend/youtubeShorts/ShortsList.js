@@ -1,6 +1,7 @@
 import {useBottomTabBarHeight} from "@react-navigation/bottom-tabs";
 import {Dimensions, FlatList, Platform, StatusBar} from "react-native";
 import Shorts from "./Shorts";
+import GeminiComponent from "../searchKeyword/GeminiComponent";
 
 const {width, height} = Dimensions.get("window"); // 현재 화면 너비, 높이
 
@@ -23,6 +24,9 @@ const ShortsList = ({videoList, max}) => {
                 horizontal={false} // 가로 스크롤 비활성
                 initialNumToRender={2} // 초기 렌더링 개수
                 windowSize={max} // 최대 렌더링 개수
+                ListHeaderComponent={
+                    <GeminiComponent w={width} h={adjustedHeight}/>
+                }
       />
   );
 };
