@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, TextInput,} from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
@@ -37,12 +37,13 @@ const BoardComponent = () => {
       const newPost = {
         id: Date.now().toString(),
         user: '나',
-        profileImage: { uri: 'https://via.placeholder.com/40' }, // 기본 프로필 이미지
-        content: message,
+        profileImage: { uri: 'https://via.placeholder.com/40' },
+        text: message,
         image: imageUri ? { uri: imageUri } : null,
         likes: 0,
         comments: 0,
         isMine: true,
+        hasLiked: false,
       };
       setPosts([newPost, ...posts]);
       setMessage('');
@@ -97,21 +98,32 @@ const BoardComponent = () => {
         data={posts}
         renderItem={renderPost}
         keyExtractor={(item) => item.id}
-        inverted // 최신 글이 위로 가도록 설정
+        inverted
       />
-      <View style={styles.inputContainer}>
-        <TouchableOpacity onPress={pickImage}>
-          <Ionicons name="image-outline" size={28} color="#333" />
-        </TouchableOpacity>
-        <TextInput
-          style={styles.input}
-          placeholder="메시지를 입력하세요..."
-          value={message}
-          onChangeText={setMessage}
-        />
-        <TouchableOpacity onPress={handleSend}>
-          <Ionicons name="send" size={28} color="#007AFF" />
-        </TouchableOpacity>
+      {/* ✏️ 입력창 (사진 미리보기 포함) */}
+      <View style={styles.inputWrapper}>
+        {imageUri && (
+          <View style={styles.previewContainer}>
+            <Image source={{ uri: imageUri }} style={styles.previewImage} />
+            <TouchableOpacity onPress={removeImage} style={styles.removeButton}>
+              <Ionicons name="close-circle" size={24} color="red" />
+            </TouchableOpacity>
+          </View>
+        )}
+        <View style={styles.inputContainer}>
+          <TouchableOpacity onPress={pickImage}>
+            <Ionicons name="image-outline" size={28} color="#333" />
+          </TouchableOpacity>
+          <TextInput
+            style={styles.input}
+            placeholder="메시지를 입력하세요..."
+            value={message}
+            onChangeText={setMessage}
+          />
+          <TouchableOpacity onPress={handleSend}>
+            <Ionicons name="send" size={28} color="#007AFF" />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
