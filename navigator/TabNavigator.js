@@ -5,11 +5,15 @@ import TrendComponent from "../components/trend/TrendComponent";
 import BoardComponent from "../components/board/BoardComponent";
 import NewsComponent from "../components/news/NewsComponent";
 import MyPageComponent from "../components/mypage/MyPageComponent";
+import {TouchableOpacity} from "react-native";
+import {useState} from "react";
 
 const Tab = createBottomTabNavigator();
 
 // 하단 바 네비게이터
 const TabNavigator = () => {
+    const [trendKey, setTrendKey] = useState(0);
+
     return (
         <Tab.Navigator
             screenOptions={({route}) => ({
@@ -32,13 +36,23 @@ const TabNavigator = () => {
                 },
                 tabBarActiveTintColor: 'tomato', // 선택 탭 색
                 tabBarInactiveTintColor: 'gray', // 미선택 탭 색
+                tabBarButton: (props) => (
+                    <TouchableOpacity
+                        {...props}
+                        onPress={() => {
+                            setTrendKey((prev) => prev + 1); // 탭을 다시 누르면 새로운 key로 변경하여 화면 리렌더링
+                            props.onPress?.();
+                        }}
+                    />
+                ),
             })}
         >
             {/*홈*/}
             <Tab.Screen name={"Home"} component={HomeComponent} options={{headerTitle: "요 즘 사 람"}}/>
             {/*트렌드*/}
-            <Tab.Screen name={"Trend"} component={TrendComponent}
-                        options={{headerShown: false, animationEnabled: false}}/>
+            <Tab.Screen name={"Trend"} options={{headerShown: false, animationEnabled: false}}>
+                {() => <TrendComponent key={trendKey}/>}
+            </Tab.Screen>
             {/*게시판*/}
             <Tab.Screen name={"Board"} component={BoardComponent} options={{headerShown: false}}/>
             {/*뉴스*/}
