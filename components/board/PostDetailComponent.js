@@ -3,17 +3,28 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, TextInput, S
 import { FontAwesome } from '@expo/vector-icons';
 
 const PostDetailComponent = ({ route, navigation }) => {
-  const { post } = route.params; // 전달된 게시글 데이터
+  // const { post } = route.params;
+  // 아래는 테스트용 더미 데이터임 수정 필요
+  const defaultPost = {
+    userName: "테스트 유저",
+    text: "이건 테스트 게시글입니다.",
+    image: null,
+    likeCount: 10,
+    viewCount: 50,
+    comments: [],
+    profileImage: "https://via.placeholder.com/40", // 더미 프로필 사진 URL
+  };
+  
+  const { post = defaultPost } = route.params || {};
+  
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(post.likeCount || 0); // NaN 문제 해결
+  const [likeCount, setLikeCount] = useState(post.likeCount || 0);
   const [comments, setComments] = useState(post.comments || []);
   const [newComment, setNewComment] = useState('');
   const [commentCount, setCommentCount] = useState(post.comments?.length || 0);
 
-  const toggleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
-  };
+  const toggleBookmark = () => setIsBookmarked(!isBookmarked);
 
   const toggleLike = () => {
     setIsLiked(!isLiked);
@@ -29,12 +40,7 @@ const PostDetailComponent = ({ route, navigation }) => {
 
   const addComment = () => {
     if (newComment.trim()) {
-      const newCommentData = {
-        id: Date.now().toString(),
-        text: newComment,
-        likeCount: 0,
-        isLiked: false,
-      };
+      const newCommentData = { id: Date.now().toString(), text: newComment, likeCount: 0, isLiked: false };
       setComments([...comments, newCommentData]);
       setNewComment('');
       setCommentCount(commentCount + 1);
@@ -43,13 +49,12 @@ const PostDetailComponent = ({ route, navigation }) => {
 
   const sharePost = async () => {
     try {
-      await Share.share({
-        message: `${post.text}\n\n${post.image}`,
-      });
+      await Share.share({ message: `${post.text}\n\n${post.image}` });
     } catch (error) {
       alert('공유하는 동안 오류가 발생했습니다.');
     }
   };
+  
 
   const renderComment = ({ item, index }) => (
     <View style={styles.comment}>
@@ -66,20 +71,20 @@ const PostDetailComponent = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* 상단 바 */}
       <View style={styles.topBar}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <FontAwesome name="arrow-left" size={24} color="black" />
         </TouchableOpacity>
         <View style={styles.profileContainer}>
           <Image source={{ uri: 'https://via.placeholder.com/40' }} style={styles.profileImage} />
-          <Text style={styles.profileName}>{post.userName}</Text>
+          <Text style={styles.profileName}>{post?.userName || '익명'}</Text>
+          {/* 위 코드는 테스트용 더미 데이터임 수정 필요 */}
+          {/* <Text style={styles.profileName}>{post.userName}</Text> */}
         </View>
       </View>
 
-      {/* 게시글 */}
       <ScrollView style={styles.contentScroll}>
-        {post.image && <Image source={{ uri: post.image }} style={styles.image} />}
+        {post.image && <Image source={{ uri: post.image.uri }} style={styles.image} />}
         <View style={styles.postContainer}>
           <Text style={styles.text}>{post.text || '내용 없음'}</Text>
           <View style={styles.actionsContainer}>
@@ -102,7 +107,6 @@ const PostDetailComponent = ({ route, navigation }) => {
           </View>
         </View>
 
-        {/* 댓글 */}
         <View style={styles.commentSection}>
           <View style={styles.commentHeader}>
             <FontAwesome name="comments" size={20} color="black" />
@@ -111,23 +115,13 @@ const PostDetailComponent = ({ route, navigation }) => {
           </View>
 
           <View style={styles.commentInputContainer}>
-            <TextInput
-              style={styles.commentInput}
-              value={newComment}
-              onChangeText={setNewComment}
-              placeholder="댓글을 입력하세요..."
-            />
+            <TextInput style={styles.commentInput} value={newComment} onChangeText={setNewComment} placeholder="댓글을 입력하세요..." />
             <TouchableOpacity onPress={addComment} style={styles.sendButton}>
               <FontAwesome name="arrow-right" size={20} color="white" />
             </TouchableOpacity>
           </View>
 
-          <FlatList
-            data={comments}
-            renderItem={renderComment}
-            keyExtractor={(item) => item.id}
-            scrollEnabled={false}
-          />
+          <FlatList data={comments} renderItem={renderComment} keyExtractor={(item) => item.id} scrollEnabled={false} />
         </View>
       </ScrollView>
     </View>
@@ -136,12 +130,12 @@ const PostDetailComponent = ({ route, navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'white' },
-  topBar: { flexDirection: 'row', alignItems: 'center', padding: 15 },
-  profileContainer: { flexDirection: 'row', alignItems: 'center', marginLeft: 15 },
+  topBar: { flexDirection: 'row', alignItems: 'center', padding: 10, marginTop: 30 },
+  profileContainer: { flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'center' },
   profileImage: { width: 40, height: 40, borderRadius: 20 },
   profileName: { marginLeft: 10, fontSize: 16 },
   contentScroll: { flex: 1 },
-  image: { width: '100%', height: 200 },
+  image: { width: '100%', height: undefined, aspectRatio: 1, resizeMode: 'contain' },
   postContainer: { padding: 15, borderWidth: 1, borderColor: '#ddd', borderRadius: 10, margin: 10 },
   text: { fontSize: 16, marginBottom: 10 },
   actionsContainer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },

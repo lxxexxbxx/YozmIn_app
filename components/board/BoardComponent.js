@@ -26,6 +26,11 @@ const BoardComponent = () => {
     }
   };
 
+  // 🗑 선택한 사진 삭제
+  const removeImage = () => {
+    setImageUri(null);
+  };
+
   // 📤 메시지 전송 (내 글 추가)
   const handleSend = () => {
     if (message.trim() || imageUri) {
@@ -33,16 +38,16 @@ const BoardComponent = () => {
         id: Date.now().toString(),
         user: '나',
         profileImage: { uri: 'https://via.placeholder.com/40' },
-        content: message,
+        text: message,
         image: imageUri ? { uri: imageUri } : null,
         likes: 0,
         comments: 0,
         isMine: true,
-        hasLiked: false, // 하트 상태 추가
+        hasLiked: false,
       };
       setPosts([newPost, ...posts]);
       setMessage('');
-      setImageUri(null);
+      setImageUri(null); // 전송 후 미리보기 초기화
     }
   };
 
@@ -73,7 +78,7 @@ const BoardComponent = () => {
       {!item.isMine && <Image source={item.profileImage} style={styles.profileImage} />}
       <View style={styles.bubble}>
         {item.image && <Image source={item.image} style={styles.postImage} />}
-        <Text style={styles.content}>{item.content}</Text>
+        <Text style={styles.content}>{item.text}</Text>
         <View style={styles.postFooter}>
           <TouchableOpacity onPress={() => toggleLike(item.id)}>
             <Ionicons name={item.hasLiked ? 'heart' : 'heart-outline'} size={20} color={item.hasLiked ? 'red' : 'black'} />
@@ -95,19 +100,30 @@ const BoardComponent = () => {
         keyExtractor={(item) => item.id}
         inverted
       />
-      <View style={styles.inputContainer}>
-        <TouchableOpacity onPress={pickImage}>
-          <Ionicons name="image-outline" size={28} color="#333" />
-        </TouchableOpacity>
-        <TextInput
-          style={styles.input}
-          placeholder="메시지를 입력하세요..."
-          value={message}
-          onChangeText={setMessage}
-        />
-        <TouchableOpacity onPress={handleSend}>
-          <Ionicons name="send" size={28} color="#007AFF" />
-        </TouchableOpacity>
+      {/* ✏️ 입력창 (사진 미리보기 포함) */}
+      <View style={styles.inputWrapper}>
+        {imageUri && (
+          <View style={styles.previewContainer}>
+            <Image source={{ uri: imageUri }} style={styles.previewImage} />
+            <TouchableOpacity onPress={removeImage} style={styles.removeButton}>
+              <Ionicons name="close-circle" size={24} color="red" />
+            </TouchableOpacity>
+          </View>
+        )}
+        <View style={styles.inputContainer}>
+          <TouchableOpacity onPress={pickImage}>
+            <Ionicons name="image-outline" size={28} color="#333" />
+          </TouchableOpacity>
+          <TextInput
+            style={styles.input}
+            placeholder="메시지를 입력하세요..."
+            value={message}
+            onChangeText={setMessage}
+          />
+          <TouchableOpacity onPress={handleSend}>
+            <Ionicons name="send" size={28} color="#007AFF" />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -126,6 +142,19 @@ const styles = StyleSheet.create({
   footerText: { fontSize: 12, color: '#666', marginLeft: 5 },
   iconSpacing: { marginLeft: 15 },
   postImage: { width: '100%', height: 150, marginTop: 5, borderRadius: 10 },
+  inputWrapper: { paddingBottom: 10 }, // 미리보기 포함 UI
+  previewContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 10,
+    marginBottom: 5,
+    backgroundColor: '#FFF',
+    borderRadius: 10,
+    padding: 5,
+    elevation: 2,
+  },
+  previewImage: { width: 80, height: 80, borderRadius: 10 },
+  removeButton: { marginLeft: 10 },
   inputContainer: { flexDirection: 'row', alignItems: 'center', padding: 10, borderTopWidth: 1, borderColor: '#ddd' },
   input: { flex: 1, marginLeft: 10, marginRight: 10, padding: 8, borderRadius: 20, backgroundColor: '#FFF' },
   notice: { textAlign: 'center', marginVertical: 10, fontSize: 24, fontWeight: 'bold', color: 'black', marginTop: 50 },
