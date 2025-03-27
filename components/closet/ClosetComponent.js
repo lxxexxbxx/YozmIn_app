@@ -1,16 +1,11 @@
 import React from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import PageTitleComponent from "../common/PageTitleComponent";
 
 const ClosetScreen = () => {
   return (
     <View style={styles.container}>
-      {/* 뒤로가기 버튼 */}
-      <TouchableOpacity style={styles.backButton}>
-        <Text style={styles.backArrow}>←</Text>
-      </TouchableOpacity>
-
-      {/* 캐릭터 이름과 옷장 타이틀 */}
-      <Text style={styles.title}>(캐릭터 이름) 옷장</Text>
+      <PageTitleComponent title={"(캐릭터 이름) 옷장"} backToTab={"MyPage"}/>
 
       {/* 캐릭터 이미지 */}
       <View style={styles.characterContainer}>
@@ -46,10 +41,8 @@ const ClosetScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     alignItems: "center",
     backgroundColor: "#F5F5F5",
-    marginTop: 30,
   },
   backButton: {
     position: "absolute",
