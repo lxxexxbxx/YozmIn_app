@@ -26,7 +26,7 @@ const MyPageComponent = () => {
                         <Ionicons name="settings" size={24} color="black" style={styles.iconSpacing} />
                     </TouchableOpacity>
 
-                    <TouchableOpacity onPress={() => navigation.navigate('BookMark')}>
+                    <TouchableOpacity onPress={() => navigation.navigate('Bookmark')}>
                         <Ionicons name="bookmark" size={24} color="black" style={styles.iconSpacing} />
                     </TouchableOpacity>
                 </View>
@@ -48,7 +48,7 @@ const MyPageComponent = () => {
                             <Entypo name="shop" size={24} color="black" style={styles.iconSpacing} />
                         </TouchableOpacity>
 
-                        <TouchableOpacity onPress={() => navigation.navigate('ClosetScreen')}>
+                        <TouchableOpacity onPress={() => navigation.navigate('Closet')}>
                             <MaterialCommunityIcons name="wardrobe" size={24} color="black" />
                         </TouchableOpacity>
                     </View>

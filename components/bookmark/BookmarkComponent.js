@@ -12,7 +12,7 @@ const bookmarks = [
     { id: '3', title: '직박구리', image: require('../../assets/chil.jpg') }
 ];
 
-const BookMarkComponent = () => {
+const BookmarkComponent = () => {
     const navigation = useNavigation();
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
@@ -42,12 +42,7 @@ const BookMarkComponent = () => {
     return (
         <View style={styles.container}>
             {/* 상단에 "북마크" 텍스트 추가 */}
-
-
             <PageTitleComponent title={"북마크"} backToTab={"MyPage"}/>
-
-
-            
 
             <FlatList 
                 data={bookmarks}
@@ -109,14 +104,9 @@ const BookMarkComponent = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
         backgroundColor: '#ffffff',
         alignItems: 'center',
     },
-
-
-
-
     itemContainer: {
         alignItems: 'center',
         margin: 15,
@@ -211,4 +201,4 @@ const styles = StyleSheet.create({
 
 });
 
-export default BookMarkComponent;
+export default BookmarkComponent;
