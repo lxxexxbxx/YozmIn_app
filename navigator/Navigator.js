@@ -8,6 +8,8 @@ import SettingsScreen from "../components/settings/SettingsComponent";
 import GeneralSettings from "../components/settings/GeneralSettingsComponent"; 
 import Notification from "../components/settings/NotificationComponent"; 
 import PostDetailComponent from '../components/board/PostDetailComponent';
+import ClosetScreen from "../components/FashionHub.js/closet";
+import ClosetScreen from "../components/bookmark.js/BookMark";
 
 const Stack = createStackNavigator();
 
@@ -32,7 +34,11 @@ const Navigator = () => {
                 {/* 알림설정 컴포넌트 */}
                 <Stack.Screen name="Notification" component={Notification} /> 
                 {/* 게시글 상세화면 컴포넌트 */}
-                <Stack.Screen name="PostDetail" component={PostDetailComponent} /> 
+                <Stack.Screen name="PostDetail" component={PostDetailComponent} />
+                {/* 북마크 컴포넌트 */}
+                <Stack.Screen name="BookMark" component={BookMarkComponent} />
+                {/* 옷장장 컴포넌트 */}
+                <Stack.Screen name="ClosetScreen" component={ClosetScreen} /> 
             </Stack.Navigator>
         </NavigationContainer>
     );
