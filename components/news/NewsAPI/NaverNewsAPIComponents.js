@@ -52,9 +52,38 @@ export const fetchNewsTitles = async () => {
         console.log('✅ 새 뉴스 데이터를 저장하고 반환');
         console.log('📰 가져온 뉴스 1000개 제목 (처음 10개만 출력):', allNews.slice(0, 10)); // 🔥 첫 10개 뉴스 제목 로그 출력
         return allNews;
+
     } catch (error) {
         console.error('🚨 뉴스 API 호출 오류:', error);
         return [];
     }
+};
+export const fetchNewsDetail = async (title) => {
+    try {
+        console.log(`🔎 뉴스 검색: ${title}`);
 
+        const response = await axios.get(
+            `https://openapi.naver.com/v1/search/news.json?query=${encodeURIComponent(title)}&display=1&sort=sim`,
+            {
+                headers: {
+                    'X-Naver-Client-Id': NAVER_CLIENT_ID,
+                    'X-Naver-Client-Secret': NAVER_CLIENT_SECRET,
+                },
+            }
+        );
+
+        if (response.data.items.length > 0) {
+            const newsItem = response.data.items[0]; // 관련도가 가장 높은 뉴스 1개 가져오기
+            return {
+                title: newsItem.title.replace(/<[^>]*>?/gm, ''), // HTML 태그 제거
+                description: newsItem.description.replace(/<[^>]*>?/gm, ''), // HTML 태그 제거
+                link: newsItem.link,
+            };
+        } else {
+            return null;
+        }
+    } catch (error) {
+        console.error("🚨 네이버 뉴스 API 호출 중 오류 발생:", error);
+        return null;
+    }
 };

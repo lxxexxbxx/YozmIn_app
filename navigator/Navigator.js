@@ -8,9 +8,10 @@ import SettingsScreen from "../components/settings/SettingsComponent";
 import GeneralSettings from "../components/settings/GeneralSettingsComponent"; 
 import Notification from "../components/settings/NotificationComponent"; 
 import PostDetailComponent from '../components/board/PostDetailComponent';
+import NewsComponent from "../components/news/NewsComponent";
+import NewsDetailComponent from "../components/news/NewsDetailComponent";
 import BookmarkComponent from "../components/bookmark/BookmarkComponent";
 import ClosetComponent from "../components/closet/ClosetComponent";
-
 
 const Stack = createStackNavigator();
 
@@ -40,6 +41,13 @@ const Navigator = () => {
                 <Stack.Screen name="Bookmark" component={BookmarkComponent} />
                 {/* 옷장장 컴포넌트 */}
                 <Stack.Screen name="Closet" component={ClosetComponent} />
+                {/* ------------------------- 뉴스 연결 네비게이션 ------------------------ */}
+                {/* 뉴스 목록 페이지 */}
+                <Stack.Screen name="NewsList" component={NewsComponent}/>
+                {/* 뉴스 상세 페이지 */}
+                <Stack.Screen name="NewsDetail" component={NewsDetailComponent}/>
+                {/* ------------------------- 뉴스 연결 네비게이션 ------------------------ */}
+
             </Stack.Navigator>
         </NavigationContainer>
     );
