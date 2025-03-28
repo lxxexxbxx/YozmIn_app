@@ -6,7 +6,7 @@ import { fetchNewsTrends } from "./NewsAPI/GeminiAPIComponent";
 
 const { width } = Dimensions.get("window");
 
-const NewsComponent = () => {
+const NewsComponent = ({ navigation }) => {
     const [newsTopics, setNewsTopics] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -63,10 +63,14 @@ const NewsComponent = () => {
                         data={newsTopics}
                         keyExtractor={(item, index) => index.toString()}
                         renderItem={({ item, index }) => (
-                            <View style={styles.newsItemContainer}>
+                            <TouchableOpacity
+                                style={styles.newsItemContainer}
+                                onPress={() => navigation.navigate("NewsDetail", { keyword: item })}
+                            >
                                 <Text style={styles.rankText}>TOP {index + 1} {getMedalEmoji(index + 1)}</Text>
                                 <Text style={styles.newsText}>{item}</Text>
-                            </View>
+                            </TouchableOpacity>
+
                         )}
                         contentContainerStyle={styles.listContainer}
                         keyboardShouldPersistTaps="handled"
