@@ -12,6 +12,7 @@ import NewsComponent from "../components/news/NewsComponent";
 import NewsDetailComponent from "../components/news/NewsDetailComponent";
 import BookmarkComponent from "../components/bookmark/BookmarkComponent";
 import ClosetComponent from "../components/closet/ClosetComponent";
+import BeforeLoginComponent from "../components/login/BeforeLoginComponent";
 
 const Stack = createStackNavigator();
 
@@ -22,7 +23,9 @@ const Navigator = () => {
 
     return (
         <NavigationContainer>
-            <Stack.Navigator initialRouteName={"Login"}>
+            <Stack.Navigator initialRouteName={"BeforeLogin"}>
+                {/*로그인 컴포넌트*/}
+                <Stack.Screen name={"BeforeLogin"} component={BeforeLoginComponent}/>
                 {/*로그인 컴포넌트*/}
                 <Stack.Screen name={"Login"} component={LoginComponent}/>
                 {/*회원가입 컴포넌트*/}
