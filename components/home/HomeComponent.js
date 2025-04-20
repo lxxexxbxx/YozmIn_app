@@ -1,11 +1,10 @@
-import {Text, View} from "react-native";
+import {View} from "react-native";
+import ChatBotComponent from "../chatbot/ChatBotComponent";
 
 const HomeComponent = () => {
     return (
-        <View>
-            <Text>
-                홈
-            </Text>
+        <View style={{flex: 1}}>
+            <ChatBotComponent/>
         </View>
     )
 }
