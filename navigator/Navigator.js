@@ -13,6 +13,8 @@ import NewsDetailComponent from "../components/news/NewsDetailComponent";
 import BookmarkComponent from "../components/bookmark/BookmarkComponent";
 import ClosetComponent from "../components/closet/ClosetComponent";
 import BeforeLoginComponent from "../components/login/BeforeLoginComponent";
+import MovieDetailComponent from "../components/trend/movie/MovieDetailComponent";
+import TrendNavigator from "../components/trend/trendNavigator/TrendNavigator";
 
 const Stack = createStackNavigator();
 
@@ -50,7 +52,10 @@ const Navigator = () => {
                 {/* 뉴스 상세 페이지 */}
                 <Stack.Screen name="NewsDetail" component={NewsDetailComponent}/>
                 {/* ------------------------- 뉴스 연결 네비게이션 ------------------------ */}
-
+                {/*트렌드 탭 내 네비게이터*/}
+                <Stack.Screen name={"TrendNavigator"} component={TrendNavigator}/>
+                {/*영화 정보 상세*/}
+                <Stack.Screen name={"TrendMovieDetail"} component={MovieDetailComponent}/>
             </Stack.Navigator>
         </NavigationContainer>
     );

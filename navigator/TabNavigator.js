@@ -50,9 +50,10 @@ const TabNavigator = () => {
             {/*홈*/}
             <Tab.Screen name={"Home"} component={HomeComponent} options={{headerTitle: "요 즘 사 람"}}/>
             {/*트렌드*/}
-            <Tab.Screen name={"Trend"} options={{headerShown: false, animationEnabled: false}}>
-                {() => <TrendComponent key={trendKey}/>}
-            </Tab.Screen>
+            {/*<Tab.Screen name={"Trend"} options={{headerShown: false, animationEnabled: false}}>*/}
+            {/*    {() => <TrendComponent key={trendKey}/>}*/}
+            {/*</Tab.Screen>*/}
+            <Tab.Screen name={"Trend"} component={TrendComponent} options={{headerShown: false}}/>
             {/*게시판*/}
             <Tab.Screen name={"Board"} component={BoardComponent} options={{headerShown: false}}/>
             {/*뉴스*/}
