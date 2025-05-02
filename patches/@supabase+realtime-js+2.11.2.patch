@@ -1,0 +1,14 @@
+diff --git a/node_modules/@supabase/realtime-js/dist/main/RealtimeClient.js b/node_modules/@supabase/realtime-js/dist/main/RealtimeClient.js
+index e0c43db..acb4764 100644
+--- a/node_modules/@supabase/realtime-js/dist/main/RealtimeClient.js
++++ b/node_modules/@supabase/realtime-js/dist/main/RealtimeClient.js
+@@ -173,7 +173,8 @@ class RealtimeClient {
+                 this.conn = null;
+             },
+         });
+-        Promise.resolve().then(() => __importStar(require('ws'))).then(({ default: WS }) => {
++        // Promise.resolve().then(() => __importStar(require('ws'))).then(({ default: WS }) => {
++        Promise.resolve().then(() => __importStar()).then(({ default: WS }) => {
+             this.conn = new WS(this.endpointURL(), undefined, {
+                 headers: this.headers,
+             });
