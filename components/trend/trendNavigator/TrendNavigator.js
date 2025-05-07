@@ -1,9 +1,10 @@
 import React from "react";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import MovieListComponent from "../movie/MovieListComponent";
-import {Platform, StatusBar, View} from "react-native";
+import {Dimensions, Platform, StatusBar, View} from "react-native";
 
 const Tab = createMaterialTopTabNavigator();
+const {height} = Dimensions.get("window");
 
 export default function TrendNavigator() {
     const statusBarHeight = Platform.OS === "android" ? StatusBar.currentHeight : 0; // 휴대폰 상단 상태바 크기
