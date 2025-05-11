@@ -1,6 +1,5 @@
 import {createStackNavigator} from "@react-navigation/native/src/__stubs__/createStackNavigator";
 import {NavigationContainer} from "@react-navigation/native";
-import {useEffect} from "react";
 import TabNavigator from "./TabNavigator";
 import LoginComponent from "../components/login/LoginComponent";
 import RegisterComponent from "../components/login/RegisterComponent";
@@ -12,22 +11,23 @@ import NewsComponent from "../components/news/NewsComponent";
 import NewsDetailComponent from "../components/news/NewsDetailComponent";
 import BookmarkComponent from "../components/bookmark/BookmarkComponent";
 import ClosetComponent from "../components/closet/ClosetComponent";
-import BeforeLoginComponent from "../components/login/BeforeLoginComponent";
+import BeforeLoginForm from "../form/BeforeLoginForm";
 import MovieDetailComponent from "../components/trend/movie/MovieDetailComponent";
 import TrendNavigator from "../components/trend/trendNavigator/TrendNavigator";
+import StartForm from "../form/StartForm";
+import LoginForm from "../form/LoginForm";
 
 const Stack = createStackNavigator();
 
 const Navigator = () => {
-    useEffect(() => {
-
-    }, []);
-
     return (
         <NavigationContainer>
-            <Stack.Navigator initialRouteName={"BeforeLogin"}>
-                {/*로그인 컴포넌트*/}
-                <Stack.Screen name={"BeforeLogin"} component={BeforeLoginComponent}/>
+            <Stack.Navigator initialRouteName={"StartForm"}>
+                {/*디자인 폼*/}
+                <Stack.Screen name={"BeforeLogin"} component={BeforeLoginForm}/>
+                <Stack.Screen name={"LoginForm"} component={LoginForm}/>
+                <Stack.Screen name={"StartForm"} component={StartForm}/>
+
                 {/*로그인 컴포넌트*/}
                 <Stack.Screen name={"Login"} component={LoginComponent}/>
                 {/*회원가입 컴포넌트*/}

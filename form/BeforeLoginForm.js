@@ -11,7 +11,7 @@ import {useNavigation} from "@react-navigation/native";
 
 const {width, height} = Dimensions.get("window");
 
-const BeforeLoginComponent = () => {
+const BeforeLoginForm = () => {
   const navigation = useNavigation();
 
   return (
@@ -19,7 +19,7 @@ const BeforeLoginComponent = () => {
         <View style={styles.loadingTitle}>
           <View style={styles.yozmin_Logo}>
             <ImageBackground style={styles.yozmin_Logo_v1}
-                             source={require("../../assets/Yozmin_Logo_v0.1.png")}/>
+                             source={require("../assets/Yozmin_Logo_v0.1.png")}/>
           </View>
           <View style={styles.lbMainTitle}>
             <Text style={styles.mainTitle}>요즘사람</Text>
@@ -28,7 +28,7 @@ const BeforeLoginComponent = () => {
             <Text style={styles.subTitle}>일상을 더욱 스마트하고 트렌디하게</Text>
           </View>
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+        <TouchableOpacity onPress={() => navigation.navigate("LoginForm")}>
           <View style={styles.btnFiststsrt}>
             <Text style={styles.buttontext}>시작하기</Text>
           </View>
@@ -91,4 +91,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default BeforeLoginComponent;
+export default BeforeLoginForm;
