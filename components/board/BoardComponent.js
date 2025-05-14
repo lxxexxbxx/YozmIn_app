@@ -1,17 +1,51 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
+import supabase from '../../supabase';
 
-// 📋 BoardComponent
 const BoardComponent = () => {
   const navigation = useNavigation();
   const [posts, setPosts] = useState([]);
   const [message, setMessage] = useState('');
   const [imageUri, setImageUri] = useState(null);
 
-  // 📸 이미지 선택 기능
+  // ✅ 게시글 불러오기
+  const fetchPosts = async () => {
+    const { data, error } = await supabase
+      .from('post')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('게시글 불러오기 실패:', error.message);
+      return;
+    }
+
+    const formattedPosts = data.map((post) => ({
+      id: post.post_id.toString(),
+      user: '나',
+      profileImage: { uri: 'https://via.placeholder.com/40' },
+      text: post.content,
+      image: post.image_url ? { uri: post.image_url } : null,
+      likes: post.like_cnt,
+      comments: post.comment_cnt || 0,
+      isMine: true,
+      hasLiked: false, // 실제 liked 여부는 post detail에서 처리
+    }));
+
+    setPosts(formattedPosts);
+  };
+
+  // ✅ 포커스될 때마다 최신 게시글 fetch
+  useFocusEffect(
+    useCallback(() => {
+      fetchPosts();
+    }, [])
+  );
+
+  // ✅ 이미지 선택
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -26,40 +60,45 @@ const BoardComponent = () => {
     }
   };
 
-  // 🗑 선택한 사진 삭제
-  const removeImage = () => {
-    setImageUri(null);
-  };
+  const removeImage = () => setImageUri(null);
 
-  // 📤 메시지 전송 (내 글 추가)
-  const handleSend = () => {
-    if (message.trim() || imageUri) {
-      const newPost = {
-        id: Date.now().toString(),
-        user: '나',
-        profileImage: { uri: 'https://via.placeholder.com/40' },
-        text: message,
-        image: imageUri ? { uri: imageUri } : null,
-        likes: 0,
-        comments: 0,
-        isMine: true,
-        hasLiked: false,
-      };
-      setPosts([newPost, ...posts]);
+  // ✅ 게시글 전송
+  const handleSend = async () => {
+    console.log("전송 클릭");
+
+    try {
+      const { data, error } = await supabase.from('post').insert([
+        {
+          content: message,
+          image_url: imageUri || null,
+          like_cnt: 0,
+          user_id: '1', // 나중에 Supabase Auth 또는 Firebase Auth 등을 사용해 유저 로그인 시 user.id를 받아 저장
+          // const { data: { user } } = await supabase.auth.getUser();
+          // const userId = user?.id;             // useEffect 안에 넣거나, async 함수 안에서 써야 됨
+
+        },
+      ]);
+
+      if (error) {
+        console.error('❌ 게시글 저장 실패:', error.message);
+        console.log('🔍 Supabase 응답 전체:', error);
+        return;
+      }
+
+      console.log('✅ 게시글 저장 성공:', data);
+
       setMessage('');
-      setImageUri(null); // 전송 후 미리보기 초기화
+      setImageUri(null);
+      fetchPosts(); // 새로고침
+    } catch (e) {
+      console.error('❗ 예외 발생:', e);
     }
   };
 
-  // 📋 게시글 클릭 시 상세 화면으로 이동
-  const handlePress = (post) => {
-    navigation.navigate('PostDetail', { post });
-  };
-
-  // ❤️ 하트 토글 기능
+  // ✅ 좋아요 토글 (로컬 상태만 변경, DB는 상세화면에서 처리)
   const toggleLike = (id) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) => {
+    setPosts((prev) =>
+      prev.map((post) => {
         if (post.id === id) {
           return {
             ...post,
@@ -72,7 +111,12 @@ const BoardComponent = () => {
     );
   };
 
-  // 📝 채팅형 게시글 UI
+  // ✅ 상세화면 이동
+  const handlePress = (post) => {
+    navigation.navigate('PostDetail', { postId: post.id });
+  };
+
+  // ✅ 게시글 렌더링
   const renderPost = ({ item }) => (
     <TouchableOpacity onPress={() => handlePress(item)} style={[styles.postContainer, item.isMine ? styles.myPost : styles.otherPost]}>
       {!item.isMine && <Image source={item.profileImage} style={styles.profileImage} />}
@@ -100,7 +144,6 @@ const BoardComponent = () => {
         keyExtractor={(item) => item.id}
         inverted
       />
-      {/* ✏️ 입력창 (사진 미리보기 포함) */}
       <View style={styles.inputWrapper}>
         {imageUri && (
           <View style={styles.previewContainer}>
@@ -129,7 +172,6 @@ const BoardComponent = () => {
   );
 };
 
-// 📐 스타일 정의
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F5F5' },
   postContainer: { flexDirection: 'row', alignItems: 'flex-end', marginVertical: 8, marginHorizontal: 10 },
@@ -142,7 +184,7 @@ const styles = StyleSheet.create({
   footerText: { fontSize: 12, color: '#666', marginLeft: 5 },
   iconSpacing: { marginLeft: 15 },
   postImage: { width: '100%', height: 150, marginTop: 5, borderRadius: 10 },
-  inputWrapper: { paddingBottom: 10 }, // 미리보기 포함 UI
+  inputWrapper: { paddingBottom: 10 },
   previewContainer: {
     flexDirection: 'row',
     alignItems: 'center',
