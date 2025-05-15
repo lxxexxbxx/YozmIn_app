@@ -5,6 +5,8 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import supabase from '../../supabase';
 
+const TEST_USER_ID = 'f0334b06-3076-4858-8cb7-47b3804f0696'; // 실제 존재하는 유효한 uuid
+
 const BoardComponent = () => {
   const navigation = useNavigation();
   const [posts, setPosts] = useState([]);
@@ -32,7 +34,7 @@ const BoardComponent = () => {
       likes: post.like_cnt,
       comments: post.comment_cnt || 0,
       isMine: true,
-      hasLiked: false, // 실제 liked 여부는 post detail에서 처리
+      hasLiked: false,
     }));
 
     setPosts(formattedPosts);
@@ -44,6 +46,21 @@ const BoardComponent = () => {
       fetchPosts();
     }, [])
   );
+
+  // ✅ 실시간 리스닝: post 테이블 변경 감지 (insert, update 등)
+  useEffect(() => {
+    const channel = supabase
+      .channel('realtime-posts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'post' }, (payload) => {
+        console.log('📡 실시간 변경 감지:', payload);
+        fetchPosts();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // ✅ 이미지 선택
   const pickImage = async () => {
@@ -69,33 +86,28 @@ const BoardComponent = () => {
     try {
       const { data, error } = await supabase.from('post').insert([
         {
-          content: message,
+          comment: message,
           image_url: imageUri || null,
           like_cnt: 0,
-          user_id: '1', // 나중에 Supabase Auth 또는 Firebase Auth 등을 사용해 유저 로그인 시 user.id를 받아 저장
-          // const { data: { user } } = await supabase.auth.getUser();
-          // const userId = user?.id;             // useEffect 안에 넣거나, async 함수 안에서 써야 됨
-
+          user_id: TEST_USER_ID, // 임시 user_id (로그인 기능 연결 시 수정)
         },
       ]);
 
       if (error) {
         console.error('❌ 게시글 저장 실패:', error.message);
-        console.log('🔍 Supabase 응답 전체:', error);
         return;
       }
 
       console.log('✅ 게시글 저장 성공:', data);
-
       setMessage('');
       setImageUri(null);
-      fetchPosts(); // 새로고침
+      // fetchPosts(); // ❌ 실시간으로 자동 반영되므로 필요 없음
     } catch (e) {
       console.error('❗ 예외 발생:', e);
     }
   };
 
-  // ✅ 좋아요 토글 (로컬 상태만 변경, DB는 상세화면에서 처리)
+  // ✅ 좋아요 토글 (로컬 상태만 변경)
   const toggleLike = (id) => {
     setPosts((prev) =>
       prev.map((post) => {
