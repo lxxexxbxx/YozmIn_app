@@ -185,44 +185,30 @@ const PostDetailComponent = ({ route, navigation }) => {
 	// ===========================================================
 
 
-	const addComment = async () => {
-		if (!newComment.trim()) return;
-
-		// uuidv4로 로컬에서 임시 ID 생성 (DB에서 자동 생성된다면 필요 없을 수도 있습니다)
-		// DB 스키마에 comment_id가 있다면 서버에서 생성하는 것이 권장됩니다.
-		const tempCommentId = uuidv4(); 
-
-		const newCommentObj = {
-			// id: tempCommentId, // 서버에서 id를 자동 생성한다면 이 줄은 제거
-			post_id: postId,
-			user_id: userId, // user_id (text)
-			content: newComment, // 'text' 대신 'content'가 DB 컬럼 이름일 가능성
-			// like_cnt: 0, // DB에서 기본값 설정 가능
-			// created_at: new Date().toISOString(), // DB에서 기본값 설정 가능
-		};
-
-		// DB 삽입
-		const { data, error } = await supabase.from('comment').insert(newCommentObj).select().single(); // 삽입된 데이터 가져오기
-		if (error) {
-			console.error('댓글 저장 실패:', error);
-			Alert.alert('오류', '댓글 저장 중 오류가 발생했습니다.');
-			return;
-		}
-
-		// 댓글 목록 상태 업데이트
-		// 서버에서 id, created_at, like_cnt 등을 받아왔을 경우 data를 사용합니다.
-		const addedComment = {
-			...data, // 서버에서 받은 데이터를 포함
-			isLiked: false, // 새로 추가된 댓글은 아직 좋아요 안 눌렀으므로 false
-			likeCount: data.like_cnt || 0 // 서버에서 받은 like_cnt 사용
-		};
-
-		// 댓글 목록을 가져오는 로직 (loadCommentLikes, fetchComments)을 통일하는게 좋습니다.
-		// 여기서는 일단 목록에 추가 후 다시 로드하는 방식 사용
-		await fetchComments(); // 댓글 목록을 다시 가져와서 최신 상태 반영
-
-		setNewComment(''); // 입력 필드 초기화
-	};
+  const addComment = async () => {
+    if (!newComment.trim()) return;
+  
+    const newCommentObj = {
+      // id는 DB에서 자동 생성 (INT PR)
+      post_id: postId,
+      user_id: userId,
+      comment: newComment, // <--- 여기서 'content' 대신 'comment'로 수정했습니다.
+      // like_cnt는 스키마에 없다면 보내지 않음
+      // created_at는 DB에 DEFAULT now() 설정이 되어 있다면 보내지 않음
+    };
+  
+    // ... (나머지 삽입 및 후처리 로직은 그대로)
+    const { data, error } = await supabase.from('comment').insert(newCommentObj).select().single();
+  
+    if (error) {
+      console.error('댓글 저장 실패:', error);
+      Alert.alert('오류', '댓글 저장 중 오류가 발생했습니다.');
+      return;
+    }
+  
+    await fetchComments(); // 댓글 목록 다시 가져와서 UI 갱신
+    setNewComment(''); // 입력 필드 초기화
+  };
 
 	const sharePost = async () => {
 		try {
@@ -264,7 +250,7 @@ const PostDetailComponent = ({ route, navigation }) => {
 			<Image source={{ uri: item.profile_image || 'https://via.placeholder.com/40' }} style={styles.commentProfileImage} />
 			<View style={styles.commentContent}>
 				{/* item.text 대신 item.content가 DB 컬럼 이름일 가능성 */}
-				<Text>{item.content || item.text}</Text> 
+				<Text>{item.comment}</Text>
 				<TouchableOpacity onPress={() => toggleCommentLike(index)} style={styles.commentLikeButton}>
 					<FontAwesome name={item.isLiked ? 'heart' : 'heart-o'} size={16} color="gray" />
 					<Text style={styles.commentLikeCount}>{item.likeCount || 0}</Text>
