@@ -2,6 +2,7 @@ import {StyleSheet, Text, TextInput, View, Dimensions, Button, TouchableOpacity}
 import React, {useEffect, useState} from "react";
 import KakaoLoginComponent from "./KakaoLoginComponent";
 import {useNavigation} from "@react-navigation/native";
+import {CommonUtils} from "../common/CommonUtils";
 
 const {width, height} = Dimensions.get("window");
 
@@ -12,14 +13,7 @@ const LoginComponent = (registered) => {
     const [password, setPassword] = useState("");
 
     useEffect(() => {
-        let data = registered.route.params;
-        if (!!data) {
-            setId(data.id);
-            setPassword(data.password);
-        } else {
-            setId("");
-            setPassword("");
-        }
+        // CommonUtils.noGoBack();
     });
 
     return (
@@ -28,8 +22,8 @@ const LoginComponent = (registered) => {
             <TextInput style={styles.inputBox} value={id} onChangeText={setId} placeholder={"아이디"}/>
             <TextInput style={styles.inputBox} value={password} onChangeText={setPassword} secureTextEntry={true}
                        autoComplete={"password"} placeholder={"비밀번호"}/>
-            <Button title={"로그인"} onPress={() => navigation.navigate("TabNavigator")}/>
-            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("LoginRegister")}>
+            <Button title={"로그인"} onPress={() => navigation.navigate("StartForm")}/>
+            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("SignUp")}>
                 <Text>회원가입</Text>
             </TouchableOpacity>
             <KakaoLoginComponent/>

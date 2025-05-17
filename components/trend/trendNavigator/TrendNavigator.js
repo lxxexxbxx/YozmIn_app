@@ -10,7 +10,7 @@ export default function TrendNavigator() {
     const statusBarHeight = Platform.OS === "android" ? StatusBar.currentHeight : 0; // 휴대폰 상단 상태바 크기
 
     return (
-        <View style={{flex: 1, marginTop: Platform.OS === "ios" ? height * -0.0555 : statusBarHeight}}>
+        <View style={{flex: 1, marginTop: Platform.OS === "ios" ? height * 0.04 : statusBarHeight}}>
             {/*<PageTitleComponent backToTab={"Trend"}/>*/}
             <Tab.Navigator>
                 <Tab.Screen name="인기 영화">

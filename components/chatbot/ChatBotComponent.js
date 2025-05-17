@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
     View,
     TextInput,
@@ -48,6 +48,22 @@ const ChatBotComponent = () => {
         }, 100);
     };
 
+    const user = {
+        name: "홍길동",
+        category: "영화/드라마",
+    };
+
+    // // 최초 진입 시 챗봇 멘트
+    // const onFirst = async () => {
+    //     await setInput(`안녕? 내 이름은 ${user.name}이야. ${user.category}에 대한 오늘의 추천 정보 좀 알려줄래?`);
+    //     await handleSend;
+    //     // setInput("");
+    // }
+    //
+    // useEffect(() => {
+    //     onFirst();
+    // }, []);
+
     // 메시지 렌더링 함수
     const renderMessage = (msg, idx) => {
         const isLast = idx === messages.length - 1; // 마지막 메시지인지?
@@ -94,7 +110,7 @@ const ChatBotComponent = () => {
                         onChangeText={setInput}
                         multiline
                     />
-                    <Button title="보내기" onPress={handleSend} />
+                    <Button id={"sendBtn"} title="보내기" onPress={handleSend} />
                 </View>
             </KeyboardAvoidingView>
         </View>
