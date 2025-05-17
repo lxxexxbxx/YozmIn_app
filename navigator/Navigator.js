@@ -16,17 +16,34 @@ import MovieDetailComponent from "../components/trend/movie/MovieDetailComponent
 import TrendNavigator from "../components/trend/trendNavigator/TrendNavigator";
 import StartForm from "../form/StartForm";
 import LoginForm from "../form/LoginForm";
+import SignUpNameForm from "../components/signup/SignUpNameForm";
+import SignUpIdForm from "../components/signup/SignUpIdForm";
+import SignUpPwForm from "../components/signup/SignUpPwForm";
+import SignUpBirthDateForm from "../components/signup/SignUpBirthDateForm";
+import SignUpEmailForm from "../components/signup/SignUpEmailForm";
+import SignUpCompleteForm from "../components/signup/SignUpCompleteForm";
+import SignUpComponent from "../components/signup/SignUpComponent";
 
 const Stack = createStackNavigator();
 
 const Navigator = () => {
     return (
         <NavigationContainer>
-            <Stack.Navigator initialRouteName={"StartForm"}>
+            <Stack.Navigator initialRouteName={"BeforeLogin"}>
                 {/*디자인 폼*/}
                 <Stack.Screen name={"BeforeLogin"} component={BeforeLoginForm}/>
                 <Stack.Screen name={"LoginForm"} component={LoginForm}/>
                 <Stack.Screen name={"StartForm"} component={StartForm}/>
+
+                {/*회원가입 컴포넌트*/}
+                <Stack.Screen name={"SignUp"} component={SignUpComponent}/>
+                {/*회원가입 폼*/}
+                <Stack.Screen name={"SignUpName"} component={SignUpNameForm}/>
+                <Stack.Screen name={"SignUpId"} component={SignUpIdForm}/>
+                <Stack.Screen name={"SignUpPw"} component={SignUpPwForm}/>
+                <Stack.Screen name={"SignUpEmail"} component={SignUpEmailForm}/>
+                <Stack.Screen name={"SignUpBirthDate"} component={SignUpBirthDateForm}/>
+                <Stack.Screen name={"SignUpComplete"} component={SignUpCompleteForm}/>
 
                 {/*로그인 컴포넌트*/}
                 <Stack.Screen name={"Login"} component={LoginComponent}/>

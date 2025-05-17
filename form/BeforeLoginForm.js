@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {
   View,
   ImageBackground,
@@ -8,11 +8,19 @@ import {
   TouchableOpacity
 } from 'react-native';
 import {useNavigation} from "@react-navigation/native";
+import {CommonUtils} from "../components/common/CommonUtils";
 
 const {width, height} = Dimensions.get("window");
 
 const BeforeLoginForm = () => {
   const navigation = useNavigation();
+
+  useEffect(() => {
+    CommonUtils.noGoBack();
+    setTimeout(() => {
+      navigation.replace("Login");
+    }, 2000);
+  }, []);
 
   return (
       <View style={styles.loading_FormContainer}>
@@ -28,11 +36,11 @@ const BeforeLoginForm = () => {
             <Text style={styles.subTitle}>일상을 더욱 스마트하고 트렌디하게</Text>
           </View>
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate("LoginForm")}>
-          <View style={styles.btnFiststsrt}>
-            <Text style={styles.buttontext}>시작하기</Text>
-          </View>
-        </TouchableOpacity>
+        {/*<TouchableOpacity onPress={() => navigation.navigate("LoginForm")}>*/}
+        {/*  <View style={styles.btnFiststsrt}>*/}
+        {/*    <Text style={styles.buttontext}>시작하기</Text>*/}
+        {/*  </View>*/}
+        {/*</TouchableOpacity>*/}
       </View>
   );
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,16 @@ import {
   TouchableOpacity
 } from 'react-native';
 import {useNavigation} from "@react-navigation/native";
+import {CommonUtils} from "../components/common/CommonUtils";
 
 const { width, height } = Dimensions.get('window');
 
 export default function StartForm() {
   const navigation = useNavigation();
+
+  useEffect(() => {
+    CommonUtils.noGoBack();
+  }, []);
 
   return (
       <View style={styles.start_FormContainer}>
@@ -24,7 +29,7 @@ export default function StartForm() {
         <View style={styles.start_Logo}>
           <ImageBackground style={styles.yozmin_charater_v1_0011} source={require('../assets/char_logo.jpeg')}/>
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate("BeforeLogin")}>
+        <TouchableOpacity onPress={() => navigation.replace("TabNavigator")}>
           <View style={styles.btnStart}>
             <Text style={styles.lbStart}>
               {`시작하기`}
