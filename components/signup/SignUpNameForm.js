@@ -54,7 +54,8 @@ const SignUpNameForm = () => {
                          setName(value);
                          setError("");
                        }}/>
-            <TouchableOpacity style={styles.cancelBtn} onPress={() => setName("")}>
+            <TouchableOpacity style={{flex: 1, marginBottom: 15, justifyContent: "center", alignItems: "center"}}
+                              onPress={() => setName("")}>
               <Svg width="20" height="21" viewBox="0 0 20 21" fill="none" >
                 <Circle cx="10" cy="10.5" r="10" fill="#C7C7C7"/>
                 <Path d="M5.80005 6.30005L14.3 14.8" stroke="white" strokeWidth="2"/>
