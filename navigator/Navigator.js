@@ -1,4 +1,4 @@
-import {createStackNavigator} from "@react-navigation/native/src/__stubs__/createStackNavigator";
+import {createStackNavigator} from '@react-navigation/stack';
 import {NavigationContainer} from "@react-navigation/native";
 import TabNavigator from "./TabNavigator";
 import LoginComponent from "../components/login/LoginComponent";
@@ -31,48 +31,48 @@ const Navigator = () => {
         <NavigationContainer>
             <Stack.Navigator initialRouteName={"BeforeLogin"}>
                 {/*디자인 폼*/}
-                <Stack.Screen name={"BeforeLogin"} component={BeforeLoginForm}/>
-                <Stack.Screen name={"LoginForm"} component={LoginForm}/>
-                <Stack.Screen name={"StartForm"} component={StartForm}/>
+                <Stack.Screen name={"BeforeLogin"} component={BeforeLoginForm} options={{headerShown: false}}/>
+                <Stack.Screen name={"LoginForm"} component={LoginForm} options={{headerShown: false}}/>
+                <Stack.Screen name={"StartForm"} component={StartForm} options={{headerShown: false}}/>
 
                 {/*회원가입 컴포넌트*/}
-                <Stack.Screen name={"SignUp"} component={SignUpComponent}/>
+                <Stack.Screen name={"SignUp"} component={SignUpComponent} options={{headerShown: false}}/>
                 {/*회원가입 폼*/}
-                <Stack.Screen name={"SignUpName"} component={SignUpNameForm}/>
-                <Stack.Screen name={"SignUpId"} component={SignUpIdForm}/>
-                <Stack.Screen name={"SignUpPw"} component={SignUpPwForm}/>
-                <Stack.Screen name={"SignUpEmail"} component={SignUpEmailForm}/>
-                <Stack.Screen name={"SignUpBirthDate"} component={SignUpBirthDateForm}/>
-                <Stack.Screen name={"SignUpComplete"} component={SignUpCompleteForm}/>
+                <Stack.Screen name={"SignUpName"} component={SignUpNameForm} options={{headerShown: false}}/>
+                <Stack.Screen name={"SignUpId"} component={SignUpIdForm} options={{headerShown: false}}/>
+                <Stack.Screen name={"SignUpPw"} component={SignUpPwForm} options={{headerShown: false}}/>
+                <Stack.Screen name={"SignUpEmail"} component={SignUpEmailForm} options={{headerShown: false}}/>
+                <Stack.Screen name={"SignUpBirthDate"} component={SignUpBirthDateForm} options={{headerShown: false}}/>
+                <Stack.Screen name={"SignUpComplete"} component={SignUpCompleteForm} options={{headerShown: false}}/>
 
                 {/*로그인 컴포넌트*/}
-                <Stack.Screen name={"Login"} component={LoginComponent}/>
+                <Stack.Screen name={"Login"} component={LoginComponent} options={{headerShown: false}}/>
                 {/*회원가입 컴포넌트*/}
-                <Stack.Screen name={"LoginRegister"} component={RegisterComponent}/>
+                <Stack.Screen name={"LoginRegister"} component={RegisterComponent} options={{headerShown: false}}/>
                 {/*하단 바 네비게이터*/}
-                <Stack.Screen name={"TabNavigator"} component={TabNavigator}/>
+                <Stack.Screen name={"TabNavigator"} component={TabNavigator} options={{headerShown: false}}/>
                 {/*설정 컴포넌트 */}
-                <Stack.Screen name={"SettingsScreen"} component={SettingsScreen}/>
+                <Stack.Screen name={"SettingsScreen"} component={SettingsScreen} options={{headerShown: false}}/>
                 {/* 일반설정 컴포넌트 */}
-                <Stack.Screen name="GeneralSettings" component={GeneralSettings} /> 
+                <Stack.Screen name="GeneralSettings" component={GeneralSettings} options={{headerShown: false}}/>
                 {/* 알림설정 컴포넌트 */}
-                <Stack.Screen name="Notification" component={Notification} /> 
+                <Stack.Screen name="Notification" component={Notification} options={{headerShown: false}}/>
                 {/* 게시글 상세화면 컴포넌트 */}
-                <Stack.Screen name="PostDetail" component={PostDetailComponent} />
+                <Stack.Screen name="PostDetail" component={PostDetailComponent} options={{headerShown: false}}/>
                 {/* 북마크 컴포넌트 */}
-                <Stack.Screen name="Bookmark" component={BookmarkComponent} />
+                <Stack.Screen name="Bookmark" component={BookmarkComponent} options={{headerShown: false}}/>
                 {/* 옷장장 컴포넌트 */}
-                <Stack.Screen name="Closet" component={ClosetComponent} />
+                <Stack.Screen name="Closet" component={ClosetComponent} options={{headerShown: false}}/>
                 {/* ------------------------- 뉴스 연결 네비게이션 ------------------------ */}
                 {/* 뉴스 목록 페이지 */}
-                <Stack.Screen name="NewsList" component={NewsComponent}/>
+                <Stack.Screen name="NewsList" component={NewsComponent} options={{headerShown: false}}/>
                 {/* 뉴스 상세 페이지 */}
-                <Stack.Screen name="NewsDetail" component={NewsDetailComponent}/>
+                <Stack.Screen name="NewsDetail" component={NewsDetailComponent} options={{headerShown: false}}/>
                 {/* ------------------------- 뉴스 연결 네비게이션 ------------------------ */}
                 {/*트렌드 탭 내 네비게이터*/}
-                <Stack.Screen name={"TrendNavigator"} component={TrendNavigator}/>
+                <Stack.Screen name={"TrendNavigator"} component={TrendNavigator} options={{headerShown: false}}/>
                 {/*영화 정보 상세*/}
-                <Stack.Screen name={"TrendMovieDetail"} component={MovieDetailComponent}/>
+                <Stack.Screen name={"TrendMovieDetail"} component={MovieDetailComponent} options={{headerShown: false}}/>
             </Stack.Navigator>
         </NavigationContainer>
     );

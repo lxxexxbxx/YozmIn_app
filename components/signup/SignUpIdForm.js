@@ -5,6 +5,7 @@ import {useNavigation} from "@react-navigation/native";
 import PageTitleComponent from "../../components/common/PageTitleComponent";
 import {useUserStore} from "../../stores/UserStore";
 import {CommonUtils} from "../common/CommonUtils";
+import supabase from "../../supabase";
 
 const { width, height } = Dimensions.get('window');
 
@@ -21,7 +22,7 @@ const SignUpIdForm = () => {
     if(store.user_id) setId(store.user_id);
   }, []);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     setError("");
     setId(id.trim());
 
@@ -31,8 +32,29 @@ const SignUpIdForm = () => {
       return;
     }
 
+    const isDup = await dupCheck();
+    if(isDup) return;
+
     store.setter.setId(id);
     navigation.replace("SignUpPw");
+  }
+
+  // 중복확인
+  const dupCheck = async () => {
+    const response = await supabase
+        .from("user")
+        .select("*", { count: "exact", head: true })
+        .like("user_id", `${id}`);
+
+    if(response.status === 200) {
+      if(response.count > 0) {
+        setError("중복된 아이디입니다.");
+        return true;
+      }
+    }
+    else console.log("중복확인 실패:", response.error);
+
+    return false;
   }
 
   return (
@@ -54,7 +76,8 @@ const SignUpIdForm = () => {
                          setId(value);
                          setError("");
                        }}/>
-            <TouchableOpacity style={styles.cancelBtn} onPress={() => setId("")}>
+            <TouchableOpacity style={{flex: 1, marginBottom: 15, justifyContent: "center", alignItems: "center"}}
+                              onPress={() => setId("")}>
               <Svg width="20" height="21" viewBox="0 0 20 21" fill="none" >
                 <Circle cx="10" cy="10.5" r="10" fill="#C7C7C7"/>
                 <Path d="M5.80005 6.30005L14.3 14.8" stroke="white" strokeWidth="2"/>

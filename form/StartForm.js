@@ -16,7 +16,7 @@ export default function StartForm() {
   const navigation = useNavigation();
 
   useEffect(() => {
-    CommonUtils.noGoBack();
+    // CommonUtils.noGoBack();
   }, []);
 
   return (

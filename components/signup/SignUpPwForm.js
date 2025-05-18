@@ -12,6 +12,7 @@ import {useNavigation} from "@react-navigation/native";
 import PageTitleComponent from "../../components/common/PageTitleComponent";
 import {useUserStore} from "../../stores/UserStore";
 import {CommonUtils} from "../common/CommonUtils";
+import SHA256 from "crypto-js/sha256";
 
 const {width, height} = Dimensions.get('window');
 
@@ -57,7 +58,9 @@ const SignUpPwForm = () => {
       return;
     }
 
-    store.setter.setPw(pwCheck);
+    const hashedPw = SHA256(pwCheck).toString();
+
+    store.setter.setPw(hashedPw);
     navigation.replace("SignUpEmail");
   }
 
@@ -75,13 +78,13 @@ const SignUpPwForm = () => {
             {"비밀번호"}
           </Text>
           <View style={{flexDirection: "row"}}>
-            <TextInput style={styles.inputBox} value={pw}
+            <TextInput style={styles.inputBox} value={pw} autoComplete={"password"}
                        placeholder={"비밀번호"} secureTextEntry={pwHide}
                        onChangeText={(value) => {
                          setPw(value);
                          setPwError("");
                        }}/>
-            <TouchableOpacity style={styles.cancelBtn}
+            <TouchableOpacity style={{flex: 1, marginBottom: 15, justifyContent: "center", alignItems: "center"}}
                               onPress={() => setPwHide(!pwHide)}>
               {!pwHide ? <Image
                   source={require("../../assets/eye_opened.jpeg")}/> : <Image
@@ -101,7 +104,7 @@ const SignUpPwForm = () => {
                          setPwCheck(value);
                          setPwCheckError("");
                        }}/>
-            <TouchableOpacity style={styles.cancelBtn}
+            <TouchableOpacity style={{flex: 1, marginBottom: 15, justifyContent: "center", alignItems: "center"}}
                               onPress={() => setPwCheckHide(!pwCheckHide)}>
               {!pwCheckHide ? <Image
                   source={require("../../assets/eye_opened.jpeg")}/> : <Image
