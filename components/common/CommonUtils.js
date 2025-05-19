@@ -1,4 +1,5 @@
 import axios from "axios";
+import {BackHandler} from "react-native";
 
 const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_API_KEY;
 const SEARCH_ENGINE_ID = process.env.EXPO_PUBLIC_SEARCH_ENGINE_ID;
@@ -117,5 +118,12 @@ export const CommonUtils = {
             console.error("Gemini API Error:", error);
             return [];
         }
+    },
+    noGoBack: function () {
+        const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
+            return true; // ← true를 반환하면 뒤로가기 방지
+        });
+
+        return () => backHandler.remove(); // cleanup
     },
 }

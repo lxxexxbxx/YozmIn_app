@@ -1,35 +1,115 @@
-import {StyleSheet, Text, TextInput, View, Dimensions, Button, TouchableOpacity} from "react-native";
+import {StyleSheet, Text, TextInput, View, Dimensions, Button, TouchableOpacity, Image} from "react-native";
 import React, {useEffect, useState} from "react";
 import KakaoLoginComponent from "./KakaoLoginComponent";
 import {useNavigation} from "@react-navigation/native";
+import {CommonUtils} from "../common/CommonUtils";
+import supabase from "../../supabase";
+import SHA256 from "crypto-js/sha256";
+import {Circle, Path, Svg} from "react-native-svg";
+import Toast from "react-native-toast-message";
 
 const {width, height} = Dimensions.get("window");
 
-const LoginComponent = (registered) => {
+const LoginComponent = () => {
     const navigation = useNavigation();
 
     const [id, setId] = useState("");
-    const [password, setPassword] = useState("");
+    const [pw, setPw] = useState("");
+
+    const [idError, setIdError] = useState("");
+    const [pwError, setPwError] = useState("");
+
+    const [pwHide, setPwHide] = useState(true);
 
     useEffect(() => {
-        let data = registered.route.params;
-        if (!!data) {
-            setId(data.id);
-            setPassword(data.password);
-        } else {
-            setId("");
-            setPassword("");
-        }
+        CommonUtils.noGoBack();
     });
+
+    const login = async () => {
+        setIdError("");
+        setPwError("");
+        setId(id.trim());
+        setPw(pw.trim());
+
+        if(!id) {
+            setIdError("아이디를 입력해주세요.");
+            return;
+        }
+        if(!pw) {
+            setPwError("비밀번호를 입력해주세요.");
+            return;
+        }
+
+        const hashedPw = SHA256(pw).toString();
+
+        const response = await supabase
+            .from("user")
+            .select("*", { count: "exact"})
+            .eq("user_id", `${id}`);
+
+        if(response.status === 200) {
+            if(response.data.length && response.count) {
+                console.log(response.data[0].password, hashedPw);
+                if(response.data[0].password === hashedPw) {
+                    console.log("로그인:", response.data[0].user_id);
+                    // 성공 메시지
+                    Toast.show({
+                        type: 'success',
+                        text1: '로그인 성공',
+                        text2: `${ response.data[0].name}님, 환영합니다 👋`,
+                    });
+                    navigation.replace("TabNavigator")
+                }
+                else {
+                    setPwError("비밀번호가 다릅니다.\n다시 입력해주세요.");
+                    return;
+                }
+            }
+        }
+        else console.log("조회 실패:", response.error);
+
+        setPwError("아이디 또는 비밀번호가 다릅니다.");
+    }
 
     return (
         <View style={styles.container}>
             <Text style={styles.title}>요즘사람</Text>
-            <TextInput style={styles.inputBox} value={id} onChangeText={setId} placeholder={"아이디"}/>
-            <TextInput style={styles.inputBox} value={password} onChangeText={setPassword} secureTextEntry={true}
-                       autoComplete={"password"} placeholder={"비밀번호"}/>
-            <Button title={"로그인"} onPress={() => navigation.navigate("TabNavigator")}/>
-            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("LoginRegister")}>
+            <View style={styles.inputContainer}>
+                <View style={{flexDirection: "row"}}>
+                    <TextInput style={styles.inputBox} value={id}
+                               placeholder={"아이디"}
+                               onChangeText={(value) => {
+                                   setId(value);
+                                   setIdError("");
+                               }}/>
+                    <TouchableOpacity style={{flex: 1, marginBottom: 15, justifyContent: "center", alignItems: "center"}}
+                                      onPress={() => setId("")}>
+                        <Svg width="20" height="21" viewBox="0 0 20 21" fill="none" >
+                            <Circle cx="10" cy="10.5" r="10" fill="#C7C7C7"/>
+                            <Path d="M5.80005 6.30005L14.3 14.8" stroke="white" strokeWidth="2"/>
+                            <Path d="M5.80005 14.8L14.3 6.30005" stroke="white" strokeWidth="2"/>
+                        </Svg>
+                    </TouchableOpacity>
+                </View>
+                {idError ? <Text style={{ color: 'red' }}>{idError}</Text> : null}
+                <View style={{flexDirection: "row"}}>
+                    <TextInput style={styles.inputBox} value={pw}
+                               placeholder={"비밀번호"} secureTextEntry={pwHide}
+                               onChangeText={(value) => {
+                                   setPw(value);
+                                   setPwError("");
+                               }}/>
+                    <TouchableOpacity style={{flex: 1, marginBottom: 15, justifyContent: "center", alignItems: "center"}}
+                                      onPress={() => setPwHide(!pwHide)}>
+                        {!pwHide ? <Image
+                            source={require("../../assets/eye_opened.jpeg")}/> : <Image
+                            source={require("../../assets/eye_closed.jpeg")}/>}
+                    </TouchableOpacity>
+                </View>
+                {pwError ? <Text style={{ color: 'red' }}>{pwError}</Text> : null}
+            </View>
+            <Button title={"로그인"} onPress={() => login()}/>
+            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("SignUp")}>
                 <Text>회원가입</Text>
             </TouchableOpacity>
             <KakaoLoginComponent/>
@@ -55,8 +135,12 @@ const styles = StyleSheet.create({
         textAlign: "center",
         fontSize: 10,
     },
+    inputContainer: {
+        // alignItems: "center",
+        marginBottom: 20,
+    },
     inputBox: {
-        width: width - 20 * 2,
+        width: width - 80,
         marginBottom: 20,
         borderBottomWidth: 1,
     },

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {
   View,
   ImageBackground,
@@ -8,18 +8,26 @@ import {
   TouchableOpacity
 } from 'react-native';
 import {useNavigation} from "@react-navigation/native";
+import {CommonUtils} from "../components/common/CommonUtils";
 
 const {width, height} = Dimensions.get("window");
 
-const BeforeLoginComponent = () => {
+const BeforeLoginForm = () => {
   const navigation = useNavigation();
+
+  useEffect(() => {
+    CommonUtils.noGoBack();
+    setTimeout(() => {
+      navigation.replace("Login");
+    }, 2000);
+  }, []);
 
   return (
       <View style={styles.loading_FormContainer}>
         <View style={styles.loadingTitle}>
           <View style={styles.yozmin_Logo}>
             <ImageBackground style={styles.yozmin_Logo_v1}
-                             source={require("../../assets/Yozmin_Logo_v0.1.png")}/>
+                             source={require("../assets/Yozmin_Logo_v0.1.png")}/>
           </View>
           <View style={styles.lbMainTitle}>
             <Text style={styles.mainTitle}>요즘사람</Text>
@@ -28,11 +36,11 @@ const BeforeLoginComponent = () => {
             <Text style={styles.subTitle}>일상을 더욱 스마트하고 트렌디하게</Text>
           </View>
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-          <View style={styles.btnFiststsrt}>
-            <Text style={styles.buttontext}>시작하기</Text>
-          </View>
-        </TouchableOpacity>
+        {/*<TouchableOpacity onPress={() => navigation.navigate("LoginForm")}>*/}
+        {/*  <View style={styles.btnFiststsrt}>*/}
+        {/*    <Text style={styles.buttontext}>시작하기</Text>*/}
+        {/*  </View>*/}
+        {/*</TouchableOpacity>*/}
       </View>
   );
 }
@@ -91,4 +99,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default BeforeLoginComponent;
+export default BeforeLoginForm;
