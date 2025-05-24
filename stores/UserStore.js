@@ -8,11 +8,24 @@ export const useUserStore = create((set) =>({
   birth_date: "",
 
   setter: {
+    setClear: function () {set({
+      name: "",
+      user_id: "",
+      password: "",
+      email: "",
+      birth_date: "",
+    })},
+    setUser: function (name, userId, email, birthDate) {set({
+        name: name,
+        user_id: userId,
+        email: email,
+        birth_date: birthDate,
+    })},
     setName: function (value) {set({name: value})},
     setId: function (value) {set({user_id: value})},
     setPw: function (value) {set({password: value})},
     setEmail: function (value) {set({email: value})},
     setBirthDate: function (value) {set({birth_date: value})},
-  }
+  },
 
 }));

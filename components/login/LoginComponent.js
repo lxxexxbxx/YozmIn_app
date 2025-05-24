@@ -7,11 +7,13 @@ import supabase from "../../supabase";
 import SHA256 from "crypto-js/sha256";
 import {Circle, Path, Svg} from "react-native-svg";
 import Toast from "react-native-toast-message";
+import {useUserStore} from "../../stores/UserStore";
 
 const {width, height} = Dimensions.get("window");
 
 const LoginComponent = () => {
     const navigation = useNavigation();
+    const store = useUserStore();
 
     const [id, setId] = useState("");
     const [pw, setPw] = useState("");
@@ -51,13 +53,20 @@ const LoginComponent = () => {
             if(response.data.length && response.count) {
                 console.log(response.data[0].password, hashedPw);
                 if(response.data[0].password === hashedPw) {
-                    console.log("로그인:", response.data[0].user_id);
+                    console.log("user_id:", response.data[0].user_id);
                     // 성공 메시지
                     Toast.show({
                         type: 'success',
                         text1: '로그인 성공',
                         text2: `${ response.data[0].name}님, 환영합니다 👋`,
                     });
+                    store.setter.setClear();
+                    store.setter.setUser(
+                        response.data[0].name,
+                        response.data[0].user_id,
+                        response.data[0].email,
+                        response.data[0].birth_date
+                    )
                     navigation.replace("TabNavigator")
                 }
                 else {

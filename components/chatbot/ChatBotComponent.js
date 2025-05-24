@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { CommonUtils } from "../common/CommonUtils";
 import TypingText from "./TypingText";
+import {useUserStore} from "../../stores/UserStore";
 
 const { height } = Dimensions.get("window");
 
@@ -19,6 +20,8 @@ const ChatBotComponent = () => {
     const [input, setInput] = useState(""); // 사용자 입력값
     const [messages, setMessages] = useState([]); // 대화 메시지 배열
     const scrollRef = useRef(null);
+
+    const store = useUserStore();
 
     // 채팅 시각(시, 분)
     const getTime = () => {
@@ -48,11 +51,11 @@ const ChatBotComponent = () => {
         }, 100);
     };
 
-    const user = {
-        name: "홍길동",
-        category: "영화/드라마",
-    };
-
+    // const user = {
+    //     name: "홍길동",
+    //     category: "영화/드라마",
+    // };
+    //
     // // 최초 진입 시 챗봇 멘트
     // const onFirst = async () => {
     //     await setInput(`안녕? 내 이름은 ${user.name}이야. ${user.category}에 대한 오늘의 추천 정보 좀 알려줄래?`);
@@ -87,6 +90,19 @@ const ChatBotComponent = () => {
             </View>
         );
     };
+    // 접속 시 인사 및 요약 정보 제공
+    const init = async () => {
+        if(store.name) {
+            const prompt = `사용자명: ${store.name}\n 다음 사용자명을 가진 사용자에게 반갑게 인사하며 오늘의 날씨와 주요 뉴스를 간략하게 3줄 요약해서 답변해줘.`;
+            const response = await CommonUtils.fetchGemini(prompt);
+            const botMessage = { role: "llm", text: response, time: getTime() };
+            setMessages(prev => [...prev, botMessage]);
+        }
+    }
+
+    useEffect(() => {
+        init();
+    }, []);
 
     return (
         <View style={styles.inner}>

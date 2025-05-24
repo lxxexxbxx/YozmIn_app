@@ -48,19 +48,11 @@ const SignUpCompleteForm = () => {
     else console.log("등록 실패:", response.error);
   }
 
-  const resetSignUpUser = () => {
-    store.setter.setName("");
-    store.setter.setName("");
-    store.setter.setName("");
-    store.setter.setName("");
-    store.setter.setName("");
-  }
-
   useEffect(() => {
     CommonUtils.noGoBack();
     insertUser();
+    store.setter.setClear();
     setTimeout(() => {
-      resetSignUpUser();
       navigation.replace("TabNavigator");
     }, 3000);
   }, []);
