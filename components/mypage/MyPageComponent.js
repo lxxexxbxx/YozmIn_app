@@ -1,12 +1,62 @@
-import React from 'react';
-import { Text, View, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Text, View, TouchableOpacity, Image, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Entypo from "react-native-vector-icons/Entypo";
+import supabase from '../../supabase';
+import { useUserStore } from "../../stores/UserStore";
 
 const MyPageComponent = () => {
+    const store = useUserStore();
+    const userId = store.user_id;
+    const name = store.name;
+
+    
     const navigation = useNavigation();
+    const [characterName, setCharacterName] = useState('');
+    const [level, setLevel] = useState(0);
+    const [coin, setCoin] = useState(0);
+    const [userName, setUserName] = useState('');
+
+    const fetchCharacterData = async (userId) => {
+        const { data, error } = await supabase
+            .from('mypage')
+            .select(`
+                mp_Name,
+                mp_Level,
+                mp_Coin,
+                user (
+                    name
+                )
+            `)
+            .eq('user_id', userId)
+            .single();
+
+        if (error) {
+            console.error("데이터 조회 실패:", error);
+            Alert.alert("오류", "마이페이지 데이터를 불러오는 데 실패했습니다.");
+        } else {
+            setCharacterName(data.mp_Name);
+            setLevel(data.mp_Level);
+            setCoin(data.mp_Coin);
+            setUserName(data.user?.name || '');
+        }
+    };
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            
+
+            if (!userId) {
+                Alert.alert("오류", "로그인 정보가 없습니다.");
+                return;
+            }
+            await fetchCharacterData(userId);
+        };
+
+        fetchUserData();
+    }, []);
 
     return (
         <View style={styles.container}>
@@ -15,12 +65,12 @@ const MyPageComponent = () => {
                 <View style={styles.profileInfo}>
                     <Image style={styles.profileImage} source={require("../../assets/User.jpg")} />
                     <View>
-                        <Text style={styles.username}>이재혁</Text>
-                        <Text style={styles.level}>Lv. 99</Text>
+                        <Text style={styles.username}>{name}</Text>
+                        <Text style={styles.level}>Lv. {level}</Text>
                     </View>
                 </View>
 
-                {/* Settings & Bookmark Icons (Right-Aligned) */}
+                {/* Settings & Bookmark Icons */}
                 <View style={styles.headerRight}>
                     <TouchableOpacity onPress={() => navigation.navigate('SettingsScreen')}>
                         <Ionicons name="settings" size={24} color="black" style={styles.iconSpacing} />
@@ -32,16 +82,16 @@ const MyPageComponent = () => {
                 </View>
             </View>
 
-            {/* Character Section (Rounded Box with White Background) */}
+            {/* Character Box */}
             <View style={styles.characterBox}>
                 <View style={styles.characterHeader}>
-                    <Text style={styles.characterTitle}>(캐릭터 이름)</Text>
+                    <Text style={styles.characterTitle}>{characterName}</Text>
                     <MaterialCommunityIcons name="currency-usd" size={24} color="gold" />
-                    <Text style={styles.money}>555</Text>
+                    <Text style={styles.money}>{coin} 원</Text>
                 </View>
+
                 <Image style={styles.tino} source={require("../../assets/tino.jpg")} />
 
-                {/* Bottom Navigation (Right-Aligned) */}
                 <View style={styles.bottomNav}>
                     <View style={styles.iconRow}>
                         <TouchableOpacity onPress={() => navigation.navigate('ShopScreen')}>
@@ -62,7 +112,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
-        backgroundColor: '#f5f5f5', // 회색 배경
+        backgroundColor: '#f5f5f5',
         marginTop: 50,
     },
     header: {
@@ -92,13 +142,13 @@ const styles = StyleSheet.create({
     headerRight: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'flex-end', // 아이콘을 오른쪽 정렬
+        justifyContent: 'flex-end',
     },
     iconSpacing: {
-        marginRight: 10, // 아이콘 사이 간격 추가
+        marginRight: 10,
     },
     characterBox: {
-        backgroundColor: 'white', // 캐릭터 영역은 흰색
+        backgroundColor: 'white',
         padding: 20,
         borderRadius: 20,
         alignItems: 'center',
@@ -113,8 +163,9 @@ const styles = StyleSheet.create({
     money: {
         fontSize: 18,
         fontWeight: 'bold',
-        textDecorationLine: 'underline', // 밑줄 추가
+        textDecorationLine: 'underline',
         color: 'black',
+        marginLeft: 5,
     },
     characterTitle: {
         fontSize: 18,
@@ -127,7 +178,7 @@ const styles = StyleSheet.create({
     },
     bottomNav: {
         flexDirection: 'row',
-        justifyContent: 'flex-end', // 오른쪽 정렬
+        justifyContent: 'flex-end',
         width: '100%',
         marginTop: 10,
     },
