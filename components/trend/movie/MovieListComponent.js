@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {View, FlatList, Image, Text, TouchableOpacity, StyleSheet, SafeAreaView} from "react-native";
+import {FlatList, Image, Text, TouchableOpacity, StyleSheet, SafeAreaView} from "react-native";
 import axios from "axios";
 import {useNavigation} from "@react-navigation/native";
 
@@ -39,7 +39,20 @@ export default function MovieListComponent({ category }) {
                 "page": 1
             },
         });
-        setContents(response.data.results);
+
+        const bannedKeywords = ["19", "야한", "에로", "노출", "새엄마", "엄마", "가슴", "무삭제", "무삭제판"];
+
+        const filteredResults = response.data.results.filter(movie => {
+            // title 또는 name 사용 (title이 없으면 name 사용)
+            const title = (movie.title || movie.name || "").toLowerCase();
+
+            // 금칙어가 제목에 포함되면 true, 포함 안되면 false
+            const hasBannedWord = bannedKeywords.some(keyword => title.includes(keyword.toLowerCase()));
+
+            return !hasBannedWord;  // 금칙어가 없으면 유지
+        });
+
+        setContents(filteredResults);
     };
 
     const renderItem = ({ item }) => (
