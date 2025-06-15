@@ -23,6 +23,7 @@ import SignUpBirthDateForm from "../components/signup/SignUpBirthDateForm";
 import SignUpEmailForm from "../components/signup/SignUpEmailForm";
 import SignUpCompleteForm from "../components/signup/SignUpCompleteForm";
 import SignUpComponent from "../components/signup/SignUpComponent";
+import SelectCategoryForm from "../components/signup/SelectCategoryForm";
 
 const Stack = createStackNavigator();
 
@@ -44,6 +45,7 @@ const Navigator = () => {
                 <Stack.Screen name={"SignUpEmail"} component={SignUpEmailForm} options={{headerShown: false}}/>
                 <Stack.Screen name={"SignUpBirthDate"} component={SignUpBirthDateForm} options={{headerShown: false}}/>
                 <Stack.Screen name={"SignUpComplete"} component={SignUpCompleteForm} options={{headerShown: false}}/>
+                <Stack.Screen name={"SelectCategory"} component={SelectCategoryForm} options={{headerShown: false}}/>
 
                 {/*로그인 컴포넌트*/}
                 <Stack.Screen name={"Login"} component={LoginComponent} options={{headerShown: false}}/>
@@ -61,7 +63,7 @@ const Navigator = () => {
                 <Stack.Screen name="PostDetail" component={PostDetailComponent} options={{headerShown: false}}/>
                 {/* 북마크 컴포넌트 */}
                 <Stack.Screen name="Bookmark" component={BookmarkComponent} options={{headerShown: false}}/>
-                {/* 옷장장 컴포넌트 */}
+                {/* 옷장 컴포넌트 */}
                 <Stack.Screen name="Closet" component={ClosetComponent} options={{headerShown: false}}/>
                 {/* ------------------------- 뉴스 연결 네비게이션 ------------------------ */}
                 {/* 뉴스 목록 페이지 */}
