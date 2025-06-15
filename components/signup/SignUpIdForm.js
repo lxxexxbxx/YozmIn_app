@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, Dimensions, TouchableOpacity, TextInput} from 'react-native';
+import {View, Text, StyleSheet, Dimensions, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform} from 'react-native';
 import { Svg, Path, Circle } from 'react-native-svg';
 import {useNavigation} from "@react-navigation/native";
 import PageTitleComponent from "../../components/common/PageTitleComponent";
@@ -58,77 +58,66 @@ const SignUpIdForm = () => {
   }
 
   return (
-      <View style={styles.FormContainer}>
-        <PageTitleComponent title={"회원가입"} darkMode={false} backToStack={"SignUpName"}></PageTitleComponent>
-        <View style={styles.fNull1}/>
-        <View style={styles.textContainer}>
-          <Text style={styles.text}>
-            {"아이디를 입력해주세요."}
-          </Text>
-        </View>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>
-            {"아이디"}
-          </Text>
-          <View style={{flexDirection: "row"}}>
-            <TextInput style={styles.inputBox} value={id} placeholder={"아이디"}
-                       onChangeText={(value) => {
-                         setId(value);
-                         setError("");
-                       }}/>
-            <TouchableOpacity style={{flex: 1, marginBottom: 15, justifyContent: "center", alignItems: "center"}}
-                              onPress={() => setId("")}>
-              <Svg width="20" height="21" viewBox="0 0 20 21" fill="none" >
-                <Circle cx="10" cy="10.5" r="10" fill="#C7C7C7"/>
-                <Path d="M5.80005 6.30005L14.3 14.8" stroke="white" strokeWidth="2"/>
-                <Path d="M5.80005 14.8L14.3 6.30005" stroke="white" strokeWidth="2"/>
-              </Svg>
-            </TouchableOpacity>
-          </View>
-          {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
-        </View>
-        <View style={styles.fNull2}/>
-        <TouchableOpacity onPress={() => {handleNext()}}>
-          <View style={styles.btnContainer}>
-            <Text style={styles.btn}>
-              {"다음"}
+      <KeyboardAvoidingView style={styles.Container}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <View style={styles.FormContainer}>
+          <PageTitleComponent title={"회원가입"} darkMode={false} backToStack={"SignUpName"}></PageTitleComponent>
+          <View style={styles.textContainer}>
+            <Text style={styles.text}>
+              {"아이디를 입력해주세요."}
             </Text>
           </View>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>
+              {"아이디"}
+            </Text>
+            <View style={{flexDirection: "row"}}>
+              <TextInput style={styles.inputBox} value={id} placeholder={"아이디"}
+                         onChangeText={(value) => {
+                           setId(value);
+                           setError("");
+                         }}/>
+              <TouchableOpacity style={{flex: 1, marginBottom: 15, justifyContent: "center", alignItems: "center"}}
+                                onPress={() => setId("")}>
+                <Svg width="20" height="21" viewBox="0 0 20 21" fill="none" >
+                  <Circle cx="10" cy="10.5" r="10" fill="#C7C7C7"/>
+                  <Path d="M5.80005 6.30005L14.3 14.8" stroke="white" strokeWidth="2"/>
+                  <Path d="M5.80005 14.8L14.3 6.30005" stroke="white" strokeWidth="2"/>
+                </Svg>
+              </TouchableOpacity>
+            </View>
+            {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
+          </View>
+          <TouchableOpacity onPress={() => {handleNext()}}>
+            <View style={styles.btnContainer}>
+              <Text style={styles.btn}>
+                {"다음"}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
   )
 }
 
 const styles = StyleSheet.create({
+  Container: {
+    flex: 1,
+    backgroundColor: "white"
+  },
   FormContainer: {
-    position: "relative",
-    flexShrink: 0,
     backgroundColor: "rgba(255, 255, 255, 1)",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    justifyContent: "flex-end",
-    rowGap: 0,
-  },
-  fNull1: {
-    position: "relative",
-    flexShrink: 0,
-    height: height * 0.075,
-    width: width * 0.87,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "flex-start",
-    rowGap: 0,
   },
   textContainer: {
-    position: "relative",
-    flexShrink: 0,
     display: "flex",
-    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    rowGap: height * 0.012,
     paddingVertical: height * 0.04,
+    marginBottom: height * 0.05
   },
   text: {
     position: "absolute",
@@ -142,14 +131,6 @@ const styles = StyleSheet.create({
   inputContainer: {
     display: "flex",
     flexDirection: "column",
-    alignItems: "flex-start",
-    rowGap: 0,
-  },
-  lbName: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "flex-start",
-    rowGap: 0,
   },
   label: {
     textAlign: "left",
@@ -158,31 +139,16 @@ const styles = StyleSheet.create({
     fontWeight: 700,
   },
   inputBox: {
-    width: width * 0.72,
-    marginBottom: 20,
+    width: width * 0.8,
+    marginBottom: height * 0.01,
     borderBottomWidth: 1,
   },
-  fNull2: {
-    position: "relative",
-    flexShrink: 0,
-    height: height * 0.45,
-    width: width * 0.98,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    rowGap: height * 0.012,
-    paddingHorizontal: width * 0.18,
-    paddingVertical: height * 0.018,
-  },
   btnContainer: {
-    position: "relative",
-    flexShrink: 0,
+    marginTop: height * 0.1,
     height: height * 0.073,
     width: width * 0.78,
     backgroundColor: "rgba(118, 166, 255, 1)",
     display: "flex",
-    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
     rowGap: height * 0.012,
@@ -191,12 +157,10 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
   btn: {
-    position: "absolute",
     textAlign: "center",
     color: "rgba(255, 255, 255, 1)",
     fontFamily: "Share",
-    fontSize: width * 0.07,
-    fontWeight: 400,
+    fontSize: width * 0.05,
   }
 });
 
