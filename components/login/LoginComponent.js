@@ -65,7 +65,8 @@ const LoginComponent = () => {
                         response.data[0].name,
                         response.data[0].user_id,
                         response.data[0].email,
-                        response.data[0].birth_date
+                        response.data[0].birth_date,
+                        response.data[0].categories,
                     )
                     navigation.replace("TabNavigator")
                 }
