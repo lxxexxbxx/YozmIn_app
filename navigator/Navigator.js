@@ -24,6 +24,7 @@ import SignUpEmailForm from "../components/signup/SignUpEmailForm";
 import SignUpCompleteForm from "../components/signup/SignUpCompleteForm";
 import SignUpComponent from "../components/signup/SignUpComponent";
 import SelectCategoryForm from "../components/signup/SelectCategoryForm";
+import GameDetailComponent from "../components/trend/game/GameDetailComponent";
 
 const Stack = createStackNavigator();
 
@@ -75,6 +76,8 @@ const Navigator = () => {
                 <Stack.Screen name={"TrendNavigator"} component={TrendNavigator} options={{headerShown: false}}/>
                 {/*영화 정보 상세*/}
                 <Stack.Screen name={"TrendMovieDetail"} component={MovieDetailComponent} options={{headerShown: false}}/>
+                {/*게임 정보 상세*/}
+                <Stack.Screen name={"GameDetail"} component={GameDetailComponent} options={{headerShown: false}}/>
             </Stack.Navigator>
         </NavigationContainer>
     );
