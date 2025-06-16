@@ -89,7 +89,7 @@ export const CommonUtils = {
         }
     },
     fetchGemini: async function (prompt) {
-        prompt = "너는 이제부터 Z세대 트렌드 전문가 캐릭터야. 말투는 친근하고 재치 있게, 약간 요즘 말투로 이야기해줘.\n\nQ: " + prompt;
+        // prompt = "너는 이제부터 Z세대 트렌드 전문가 캐릭터야. 말투는 친근하고 재치 있게, 약간 요즘 말투로 이야기해줘.\n\nQ: " + prompt;
         
         try {
             const response = await axios.post(

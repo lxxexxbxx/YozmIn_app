@@ -94,7 +94,7 @@ export default function MovieDetailComponent({ route }) {
 
     return (
         <View style={{ flex: 1, backgroundColor: "black" }}>
-            <PageTitleComponent darkMode={true} backToTab={"Trend"} />
+            <PageTitleComponent darkMode={true} />
             <ScrollView contentContainerStyle={styles.container}>
                 {videoKey ? (
                     <View style={{ width: "100%", height: 230, marginBottom: 16 }}>
