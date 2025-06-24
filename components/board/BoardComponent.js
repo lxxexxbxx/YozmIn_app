@@ -4,22 +4,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import supabase from '../../supabase';
 import ImageUploader from '../../Images/ImageUploader';
+import { useUserStore } from "../../stores/UserStore";
 
-const TEST_USER_ID = 'f0334b06-3076-4858-8cb7-47b3804f0696'; // 실제 존재하는 유효한 uuid (로그인 연동 시 실제 사용자 ID로 변경)
-
-const { width } = Dimensions.get('window'); // 화면 너비 가져오기
+const { width } = Dimensions.get('window');
 
 const BoardComponent = () => {
     const navigation = useNavigation();
     const [posts, setPosts] = useState([]);
     const [message, setMessage] = useState('');
-    const [uploadedImageUrl, setUploadedImageUrl] = useState(null); // ImageUploader로부터 받은 공개 URL 저장
-    const [isImageUploading, setIsImageUploading] = useState(false); // 이미지 업로드 중인지 여부 (전송 버튼 비활성화용)
+    const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
+    const [isImageUploading, setIsImageUploading] = useState(false);
 
-    const imageUploaderRef = useRef(null); 
+    const imageUploaderRef = useRef(null);
 
+    const userStore = useUserStore();
+    const currentUserId = userStore.user_id;
     const fetchPosts = async () => {
-        console.log('Fetching posts...');
         const { data: postData, error } = await supabase
             .from('post')
             .select('*')
@@ -30,39 +30,43 @@ const BoardComponent = () => {
             return;
         }
 
-        const { data: likeData } = await supabase
-            .from('post_like')
-            .select('post_id')
-            .eq('user_id', TEST_USER_ID);
-
-        const likedPostIds = likeData?.map((like) => like.post_id) || [];
+        // 로그인 여부와 관계없이 게시글을 가져오므로, currentUserId가 없어도 진행
+        let likedPostIds = [];
+        if (currentUserId) { // currentUserId가 있을 때만 좋아요 여부 확인
+            const { data: likeData } = await supabase
+                .from('post_like')
+                .select('post_id')
+                .eq('user_id', currentUserId);
+            likedPostIds = likeData?.map((like) => like.post_id) || [];
+        }
 
         const formattedPosts = postData.map((post) => ({
-            id: post.post_id.toString(),
+            id: post.post_id.toString(), // postId는 여전히 숫자형으로 가정하고 toString
             text: post.content,
             image: post.image_url ? { uri: post.image_url } : null,
             likes: post.like_cnt,
             comments: post.comment_cnt || 0,
             hasLiked: likedPostIds.includes(post.post_id),
-            isMine: post.user_id === TEST_USER_ID,
+            isMine: post.user_id === currentUserId, // 내 게시글 여부 확인
         }));
 
         setPosts(formattedPosts);
-        console.log('Posts fetched and set.');
+        // console.log('게시글 불러오기 완료.');
     };
 
+    // useFocusEffect는 화면이 포커스될 때마다 fetchPosts를 호출
     useFocusEffect(
         useCallback(() => {
             fetchPosts();
-        }, [])
+        }, [currentUserId]) // currentUserId가 변경될 때도 다시 불러오도록 의존성 배열에 추가
     );
 
     useEffect(() => {
         const channel = supabase
             .channel('realtime-posts')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'post' }, (payload) => {
-                console.log('📡 실시간 변경 감지:', payload);
-                fetchPosts();
+                // console.log('📡 실시간 변경 감지:', payload);
+                fetchPosts(); // 게시글 변경 시 다시 불러오기
             })
             .subscribe();
 
@@ -89,13 +93,20 @@ const BoardComponent = () => {
             return;
         }
 
+        if (!currentUserId) {
+             Alert.alert('오류', '사용자 정보가 없어 게시글을 작성할 수 없습니다. 로그인 상태를 확인해주세요.');
+             console.warn("게시글 작성 실패: currentUserId가 없습니다.");
+             return;
+        }
+
+
         try {
             const postData = {
                 content: message,
                 image_url: uploadedImageUrl,
                 like_cnt: 0,
                 comment_cnt: 0,
-                user_id: TEST_USER_ID,
+                user_id: currentUserId, // UserStore에서 가져온 user_id 사용
             };
 
             const { data, error } = await supabase.from('post').insert([postData]);
@@ -114,7 +125,7 @@ const BoardComponent = () => {
                 imageUploaderRef.current.resetImage();
             }
 
-            fetchPosts();
+            fetchPosts(); // 게시글 작성 후 목록 갱신
         } catch (e) {
             console.error('❗ 예외 발생:', e);
             Alert.alert('오류', '게시글 제출 중 알 수 없는 오류가 발생했습니다.');
@@ -122,21 +133,35 @@ const BoardComponent = () => {
     };
 
     const toggleLike = async (postId, hasLiked) => {
+
+        if (!currentUserId) { // 로그인 여부 확인 제거 (UUID 오류 해결 위해)
+             Alert.alert('오류', '좋아요를 누르려면 로그인해야 합니다.'); // 사용자 경험을 위해 경고는 유지
+             return;
+        }
+
         try {
+            let rpcResponse;
             if (hasLiked) {
-                await supabase.rpc('unlike_post', {
+                rpcResponse = await supabase.rpc('unlike_post', {
                     p_post_id: postId,
-                    p_user_id: TEST_USER_ID,
+                    p_user_id: currentUserId,
                 });
             } else {
-                await supabase.rpc('like_post', {
+                rpcResponse = await supabase.rpc('like_post', {
                     p_post_id: postId,
-                    p_user_id: TEST_USER_ID,
+                    p_user_id: currentUserId,
                 });
             }
-            fetchPosts();
+
+            if (rpcResponse.error) {
+                console.error('❌ 좋아요/취소 RPC 오류:', rpcResponse.error.message);
+                return; // 에러 발생 시 더 이상 진행하지 않음
+            }
+
+            fetchPosts(); // 좋아요 상태 변경 후 게시물 다시 가져오기
         } catch (e) {
-            console.error('❌ 좋아요 토글 에러 (RPC):', e);
+            console.error('❌ 좋아요 토글 에러 (RPC):', e.message);
+            Alert.alert('오류', `좋아요 처리 중 오류가 발생했습니다: ${e.message}`);
         }
     };
 
@@ -145,6 +170,7 @@ const BoardComponent = () => {
             postId: post.id,
             hasLiked: post.hasLiked,
             likeCount: post.likes,
+            // user_id는 PostDetail에서 필요하다면 UserStore를 통해 직접 가져오도록 합니다.
         });
     };
 
@@ -180,7 +206,7 @@ const BoardComponent = () => {
                 data={posts}
                 renderItem={renderPost}
                 keyExtractor={(item) => item.id}
-                inverted
+                inverted // 최신 게시글이 아래로 오도록 (채팅처럼)
             />
             {/* 게시글 작성 입력창 및 미리보기 영역 */}
             <View style={styles.inputWrapper}>
@@ -214,9 +240,9 @@ const BoardComponent = () => {
                         onUploadSuccess={handleImageUploadSuccess}
                         onUploadStart={handleImageUploadStatusChange}
                         onUploadEnd={handleImageUploadStatusChange}
-                        style={styles.imageUploaderButton} // 새 스타일 적용
+                        style={styles.imageUploaderButton}
                     />
-                    
+
                     <TextInput
                         style={styles.input}
                         placeholder="메시지를 입력하세요..."
@@ -228,7 +254,7 @@ const BoardComponent = () => {
                     <TouchableOpacity
                         onPress={handleSend}
                         disabled={isImageUploading || (!message.trim() && !uploadedImageUrl)}
-                        style={styles.sendButton} // 새 스타일 적용
+                        style={styles.sendButton}
                     >
                         <Ionicons
                             name="send"
@@ -286,7 +312,7 @@ const styles = StyleSheet.create({
     footerText: { fontSize: 12, color: '#666', marginLeft: 5 },
     iconSpacing: { marginLeft: 15 },
     postImage: { width: '100%', height: 150, marginTop: 5, borderRadius: 10 },
-    
+
     inputWrapper: {
         paddingBottom: 10,
         backgroundColor: '#F5F5F5',
@@ -295,7 +321,7 @@ const styles = StyleSheet.create({
     },
     commentInputContainer: {
         flexDirection: 'row',
-        alignItems: 'center', // 여전히 flex-end를 유지하여 TextInput이 늘어날 때 하단 정렬 유지
+        alignItems: 'center',
         paddingHorizontal: 10,
         paddingVertical: 8,
         backgroundColor: '#fff',
@@ -314,15 +340,12 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         backgroundColor: '#F0F0F0',
         fontSize: 16,
-        // TextInput 자체는 높이 변화에 따라 동적으로 조절되므로,
-        // 명시적인 alignSelf를 주지 않아도 됩니다.
     },
-    // ImageUploader 버튼과 Send 버튼을 세로 중앙에 정렬하기 위한 스타일
     imageUploaderButton: {
-        alignSelf: 'center', // 이 컴포넌트 내부의 컨테이너를 중앙 정렬
+        alignSelf: 'center',
     },
     sendButton: {
-        alignSelf: 'center', // 이 버튼을 중앙 정렬
+        alignSelf: 'center',
     },
     largeImagePreviewContainer: {
         alignSelf: 'center',

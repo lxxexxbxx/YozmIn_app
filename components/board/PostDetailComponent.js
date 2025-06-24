@@ -42,17 +42,21 @@ const PostDetailComponent = ({ route, navigation }) => {
     };
 
     const fetchPost = async () => {
+        // profiles 조인 구문 제거, post 테이블만 선택
         const { data, error } = await supabase
             .from('post')
-            .select('*')
+            .select(`*`) // profiles 조인 제거
             .eq('post_id', postId)
             .single();
 
         if (error) {
             console.error('포스트 로딩 실패:', error);
+            setPost(null);
             return;
         }
-        setPost(data);
+        // 가져온 post 데이터에 작성자 정보 추가
+        const postWithProfile = await loadUserProfile(data);
+        setPost(postWithProfile);
         setLikeCount(data.like_cnt || 0);
     };
 
@@ -71,9 +75,10 @@ const PostDetailComponent = ({ route, navigation }) => {
     };
 
     const fetchComments = async () => {
+        // profiles 조인 구문 제거, comment 테이블만 선택
         const { data, error } = await supabase
             .from('comment')
-            .select('*')
+            .select(`*`) // profiles 조인 제거
             .eq('post_id', postId)
             .order('created_at', { ascending: true });
 
@@ -81,10 +86,35 @@ const PostDetailComponent = ({ route, navigation }) => {
             console.error('댓글 로딩 실패:', error);
             return;
         }
-
-        const commentsWithLikes = await loadCommentLikes(data || []);
+        // 각 댓글에 작성자 정보 추가
+        const commentsWithProfiles = await Promise.all(
+            (data || []).map(comment => loadUserProfile(comment))
+        );
+        const commentsWithLikes = await loadCommentLikes(commentsWithProfiles);
         setComments(commentsWithLikes);
     };
+
+    // user_id를 기반으로 profiles에서 사용자 정보 가져오는 함수
+    const loadUserProfile = async (item) => {
+        if (!item || !item.user_id) {
+            return { ...item, profiles: { user_name: '익명', profile_image: null } };
+        }
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('user_name, profile_image')
+            .eq('user_id', item.user_id) // profiles 테이블의 user_id 컬럼으로 검색 (만약 profiles의 PK가 id이고 user_id 컬럼이 없다면 .eq('id', item.user_id)로 변경)
+            .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116은 데이터 없음 오류이므로 무시
+            console.warn(`프로필 로딩 실패 for user_id ${item.user_id}:`, error.message);
+        }
+
+        return {
+            ...item,
+            profiles: data || { user_name: '익명', profile_image: null }
+        };
+    };
+
 
     const loadCommentLikes = async (commentsData) => {
         if (!currentUserId || commentsData.length === 0) {
@@ -109,39 +139,71 @@ const PostDetailComponent = ({ route, navigation }) => {
 
     const toggleCommentLike = async (index) => {
         if (!currentUserId) {
-            // 사용자에게 알림 팝업 추가
             Alert.alert('알림', '로그인 후 댓글에 좋아요를 누를 수 있습니다.');
             return;
         }
-        const updated = [...comments];
-        const comment = updated[index];
-        const isNowLiked = !comment.isLiked;
+        
+        // 현재 댓글 상태를 복사하고, UI에 즉시 반영
+        const updatedComments = [...comments];
+        const commentToUpdate = updatedComments[index];
+        const isCurrentlyLiked = commentToUpdate.isLiked;
 
-        comment.isLiked = isNowLiked;
-        comment.likeCount = (comment.likeCount || 0) + (isNowLiked ? 1 : -1);
-        setComments(updated);
+        // UI를 미리 업데이트 (낙관적 업데이트)
+        commentToUpdate.isLiked = !isCurrentlyLiked;
+        commentToUpdate.likeCount = isCurrentlyLiked ? Math.max(0, (commentToUpdate.likeCount || 0) - 1) : (commentToUpdate.likeCount || 0) + 1;
+        setComments(updatedComments);
 
         try { 
-            if (isNowLiked) {
-                const { error } = await supabase
-                    .from('comment_like')
-                    .insert([{ user_id: currentUserId, comment_id: comment.id }]);
-                if (error) throw error;
-            } else {
+            if (isCurrentlyLiked) { // 좋아요 취소
                 const { error } = await supabase
                     .from('comment_like')
                     .delete()
                     .eq('user_id', currentUserId)
-                    .eq('comment_id', comment.id);
+                    .eq('comment_id', commentToUpdate.id);
                 if (error) throw error;
+
+                // Supabase에서 comment 테이블의 like_cnt를 감소시키는 RPC 호출
+                const { error: rpcError } = await supabase.rpc('decrement_comment_like_count', {
+                    p_comment_id: commentToUpdate.id
+                });
+                if (rpcError) throw rpcError;
+
+            } else { // 좋아요 추가
+                const { error } = await supabase
+                    .from('comment_like')
+                    .insert([{ user_id: currentUserId, comment_id: commentToUpdate.id }]);
+                if (error) throw error;
+
+                // Supabase에서 comment 테이블의 like_cnt를 증가시키는 RPC 호출
+                const { error: rpcError } = await supabase.rpc('increment_comment_like_count', {
+                    p_comment_id: commentToUpdate.id
+                });
+                if (rpcError) throw rpcError;
             }
+            // 서버와 동기화 (선택 사항: 필요한 경우에만 전체 댓글을 다시 가져옴)
+            // await fetchComments(); // 낙관적 업데이트를 사용하므로 굳이 다시 호출할 필요는 없을 수 있음
+                                    // 하지만 정확한 최신 상태를 보장하려면 호출하는 것이 좋음.
+                                    // 이 경우, 좋아요 수 동기화에 초점.
+            const { data: updatedCommentData, error: fetchError } = await supabase
+                .from('comment')
+                .select('like_cnt')
+                .eq('id', commentToUpdate.id)
+                .single();
+            if (fetchError) throw fetchError;
+
+            // UI 업데이트 다시 한번 (서버에서 가져온 최신 좋아요 수로)
+            const finalUpdatedComments = [...comments];
+            finalUpdatedComments[index].likeCount = updatedCommentData.like_cnt || 0;
+            setComments(finalUpdatedComments);
+
         } catch (error) {
             console.error('댓글 좋아요 작업 실패:', error);
             Alert.alert('오류', `댓글 좋아요 변경 중 오류가 발생했습니다: ${error.message}`);
-            // 에러 발생 시 UI 상태 원복
-            comment.isLiked = !isNowLiked; 
-            comment.likeCount = (comment.likeCount || 0) + (isNowLiked ? -1 : 1);
-            setComments([...updated]); 
+            // 오류 발생 시 UI를 이전 상태로 되돌림
+            const revertedComments = [...comments];
+            revertedComments[index].isLiked = isCurrentlyLiked;
+            revertedComments[index].likeCount = isCurrentlyLiked ? (revertedComments[index].likeCount || 0) + 1 : Math.max(0, (revertedComments[index].likeCount || 0) - 1);
+            setComments(revertedComments);
         }
     };
 
@@ -162,7 +224,6 @@ const PostDetailComponent = ({ route, navigation }) => {
 
     const toggleBookmark = async () => {
         if (!currentUserId) {
-            // 사용자에게 알림 팝업 추가
             Alert.alert('알림', '로그인 후 게시글을 북마크할 수 있습니다.');
             return;
         }
@@ -192,7 +253,6 @@ const PostDetailComponent = ({ route, navigation }) => {
 
     const toggleLike = async () => {
         if (!currentUserId) {
-            // 사용자에게 알림 팝업 추가
             Alert.alert('알림', '로그인 후 좋아요를 누를 수 있습니다.');
             return; 
         }
@@ -223,7 +283,6 @@ const PostDetailComponent = ({ route, navigation }) => {
 
     const addComment = async () => {
         if (!currentUserId) {
-            // 사용자에게 알림 팝업 추가
             Alert.alert('알림', '로그인 후 댓글을 작성할 수 있습니다.');
             return;
         }
@@ -260,12 +319,8 @@ const PostDetailComponent = ({ route, navigation }) => {
 
     const incrementViewCount = async () => {
         try {
-            // postId가 UUID 타입일 것이므로, RPC 함수 호출 시 명시적으로 타입 변환
-            // SQL 함수 인자가 uuid 타입으로 변경되었다면, 이 부분은 그대로 둬도 됩니다.
-            // 하지만 만약을 위해 명시적인 캐스팅을 사용할 수 있습니다.
-            // 예: p_post_id: postId.toString() 또는 그냥 postId
             const { error } = await supabase.rpc('increment_post_view_count', {
-                p_post_id: postId, // SQL 함수 인자가 uuid 타입일 경우 'postId' 그대로 전달
+                p_post_id: postId, 
             });
             if (error) {
                 console.error('조회수 증가 실패:', error);
@@ -285,7 +340,6 @@ const PostDetailComponent = ({ route, navigation }) => {
             await checkBookmarkStatus();
             await fetchComments(); 
             
-            // 조회수 증가 함수 호출 (게시글 로딩 후)
             await incrementViewCount();
 
             setLoading(false);
@@ -302,8 +356,9 @@ const PostDetailComponent = ({ route, navigation }) => {
 
     const renderComment = ({ item, index }) => (
         <View style={styles.comment}>
-            <Image source={{ uri: item.profile_image || 'https://via.placeholder.com/40' }} style={styles.commentProfileImage} />
+            <Image source={{ uri: item.profiles?.profile_image || 'https://via.placeholder.com/40' }} style={styles.commentProfileImage} />
             <View style={styles.commentContent}>
+                <Text style={styles.commentUserName}>{item.profiles?.user_name || '익명'}</Text>
                 <Text>{item.comment}</Text>
                 <TouchableOpacity onPress={() => toggleCommentLike(index)} style={styles.commentLikeButton}>
                     <FontAwesome name={item.isLiked ? 'heart' : 'heart-o'} size={16} color="gray" />
@@ -320,8 +375,8 @@ const PostDetailComponent = ({ route, navigation }) => {
                     <FontAwesome name="arrow-left" size={24} color="black" />
                 </TouchableOpacity>
                 <View style={styles.profileContainer}>
-                    <Image source={{ uri: post.profile_image || 'https://via.placeholder.com/40' }} style={styles.profileImage} />
-                    <Text style={styles.profileName}>{post.user_name || '익명'}</Text>
+                    <Image source={{ uri: post.profiles?.profile_image || 'https://via.placeholder.com/40' }} style={styles.profileImage} />
+                    <Text style={styles.profileName}>{post.profiles?.user_name || '익명'}</Text>
                 </View>
             </View>
 
@@ -381,7 +436,7 @@ const PostDetailComponent = ({ route, navigation }) => {
                     <FlatList
                         data={comments}
                         renderItem={renderComment}
-                        keyExtractor={(item) => item.id}
+                        keyExtractor={(item) => item.id.toString()}
                         scrollEnabled={false}
                     />
                 </View>
@@ -415,6 +470,7 @@ const styles = StyleSheet.create({
     comment: { flexDirection: 'row', padding: 10, borderBottomWidth: 1, borderColor: '#eee' },
     commentProfileImage: { width: 30, height: 30, borderRadius: 15, marginRight: 8 },
     commentContent: { marginLeft: 10, flex: 1 },
+    commentUserName: { fontWeight: 'bold', marginBottom: 2 }, 
     commentLikeButton: { flexDirection: 'row', alignItems: 'center', marginTop: 5 },
     commentLikeCount: { marginLeft: 5 },
 });
