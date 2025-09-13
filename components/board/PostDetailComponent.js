@@ -10,7 +10,7 @@ const PostDetailComponent = ({ route, navigation }) => {
     const { postId } = route.params;
     
     const userStore = useUserStore();
-    const currentUserId = userStore.user_id; // UserStore에서 현재 사용자 ID 가져오기
+    const currentUserId = userStore.user_id;
 
     const [post, setPost] = useState(null);
     const [isLiked, setIsLiked] = useState(false);
@@ -20,7 +20,6 @@ const PostDetailComponent = ({ route, navigation }) => {
     const [newComment, setNewComment] = useState('');
     const [loading, setLoading] = useState(true);
 
-    // 사용자 ID가 없을 때 더 명확한 경고를 콘솔에 표시
     useEffect(() => {
         if (!currentUserId) {
             console.warn("현재 로그인된 사용자 ID가 없습니다. 일부 기능(좋아요, 북마크, 댓글 등)은 로그인 후 이용해주세요.");
@@ -42,10 +41,9 @@ const PostDetailComponent = ({ route, navigation }) => {
     };
 
     const fetchPost = async () => {
-        // profiles 조인 구문 제거, post 테이블만 선택
         const { data, error } = await supabase
             .from('post')
-            .select(`*`) // profiles 조인 제거
+            .select(`*`)
             .eq('post_id', postId)
             .single();
 
@@ -54,7 +52,6 @@ const PostDetailComponent = ({ route, navigation }) => {
             setPost(null);
             return;
         }
-        // 가져온 post 데이터에 작성자 정보 추가
         const postWithProfile = await loadUserProfile(data);
         setPost(postWithProfile);
         setLikeCount(data.like_cnt || 0);
@@ -75,10 +72,9 @@ const PostDetailComponent = ({ route, navigation }) => {
     };
 
     const fetchComments = async () => {
-        // profiles 조인 구문 제거, comment 테이블만 선택
         const { data, error } = await supabase
             .from('comment')
-            .select(`*`) // profiles 조인 제거
+            .select(`*`)
             .eq('post_id', postId)
             .order('created_at', { ascending: true });
 
@@ -86,7 +82,6 @@ const PostDetailComponent = ({ route, navigation }) => {
             console.error('댓글 로딩 실패:', error);
             return;
         }
-        // 각 댓글에 작성자 정보 추가
         const commentsWithProfiles = await Promise.all(
             (data || []).map(comment => loadUserProfile(comment))
         );
@@ -94,24 +89,23 @@ const PostDetailComponent = ({ route, navigation }) => {
         setComments(commentsWithLikes);
     };
 
-    // user_id를 기반으로 profiles에서 사용자 정보 가져오는 함수
     const loadUserProfile = async (item) => {
         if (!item || !item.user_id) {
-            return { ...item, profiles: { user_name: '익명', profile_image: null } };
+            return { ...item, profiles: { username: '익명', profile_image: null } };
         }
         const { data, error } = await supabase
             .from('profiles')
-            .select('user_name, profile_image')
-            .eq('user_id', item.user_id) // profiles 테이블의 user_id 컬럼으로 검색 (만약 profiles의 PK가 id이고 user_id 컬럼이 없다면 .eq('id', item.user_id)로 변경)
+            .select('username, profile_image')
+            .eq('user_id', item.user_id)
             .single();
 
-        if (error && error.code !== 'PGRST116') { // PGRST116은 데이터 없음 오류이므로 무시
+        if (error && error.code !== 'PGRST116') {
             console.warn(`프로필 로딩 실패 for user_id ${item.user_id}:`, error.message);
         }
 
         return {
             ...item,
-            profiles: data || { user_name: '익명', profile_image: null }
+            profiles: data || { username: '익명', profile_image: null }
         };
     };
 
@@ -143,18 +137,16 @@ const PostDetailComponent = ({ route, navigation }) => {
             return;
         }
         
-        // 현재 댓글 상태를 복사하고, UI에 즉시 반영
         const updatedComments = [...comments];
         const commentToUpdate = updatedComments[index];
         const isCurrentlyLiked = commentToUpdate.isLiked;
 
-        // UI를 미리 업데이트 (낙관적 업데이트)
         commentToUpdate.isLiked = !isCurrentlyLiked;
-        commentToUpdate.likeCount = isCurrentlyLiked ? Math.max(0, (commentToUpdate.likeCount || 0) - 1) : (commentToUpdate.likeCount || 0) + 1;
+        commentToToUpdate.likeCount = isCurrentlyLiked ? Math.max(0, (commentToUpdate.likeCount || 0) - 1) : (commentToUpdate.likeCount || 0) + 1;
         setComments(updatedComments);
 
         try { 
-            if (isCurrentlyLiked) { // 좋아요 취소
+            if (isCurrentlyLiked) {
                 const { error } = await supabase
                     .from('comment_like')
                     .delete()
@@ -162,28 +154,22 @@ const PostDetailComponent = ({ route, navigation }) => {
                     .eq('comment_id', commentToUpdate.id);
                 if (error) throw error;
 
-                // Supabase에서 comment 테이블의 like_cnt를 감소시키는 RPC 호출
                 const { error: rpcError } = await supabase.rpc('decrement_comment_like_count', {
                     p_comment_id: commentToUpdate.id
                 });
                 if (rpcError) throw rpcError;
 
-            } else { // 좋아요 추가
+            } else {
                 const { error } = await supabase
                     .from('comment_like')
                     .insert([{ user_id: currentUserId, comment_id: commentToUpdate.id }]);
                 if (error) throw error;
 
-                // Supabase에서 comment 테이블의 like_cnt를 증가시키는 RPC 호출
                 const { error: rpcError } = await supabase.rpc('increment_comment_like_count', {
                     p_comment_id: commentToUpdate.id
                 });
                 if (rpcError) throw rpcError;
             }
-            // 서버와 동기화 (선택 사항: 필요한 경우에만 전체 댓글을 다시 가져옴)
-            // await fetchComments(); // 낙관적 업데이트를 사용하므로 굳이 다시 호출할 필요는 없을 수 있음
-                                    // 하지만 정확한 최신 상태를 보장하려면 호출하는 것이 좋음.
-                                    // 이 경우, 좋아요 수 동기화에 초점.
             const { data: updatedCommentData, error: fetchError } = await supabase
                 .from('comment')
                 .select('like_cnt')
@@ -191,7 +177,6 @@ const PostDetailComponent = ({ route, navigation }) => {
                 .single();
             if (fetchError) throw fetchError;
 
-            // UI 업데이트 다시 한번 (서버에서 가져온 최신 좋아요 수로)
             const finalUpdatedComments = [...comments];
             finalUpdatedComments[index].likeCount = updatedCommentData.like_cnt || 0;
             setComments(finalUpdatedComments);
@@ -199,7 +184,6 @@ const PostDetailComponent = ({ route, navigation }) => {
         } catch (error) {
             console.error('댓글 좋아요 작업 실패:', error);
             Alert.alert('오류', `댓글 좋아요 변경 중 오류가 발생했습니다: ${error.message}`);
-            // 오류 발생 시 UI를 이전 상태로 되돌림
             const revertedComments = [...comments];
             revertedComments[index].isLiked = isCurrentlyLiked;
             revertedComments[index].likeCount = isCurrentlyLiked ? (revertedComments[index].likeCount || 0) + 1 : Math.max(0, (revertedComments[index].likeCount || 0) - 1);
@@ -302,6 +286,13 @@ const PostDetailComponent = ({ route, navigation }) => {
             return;
         }
 
+        const { error: rpcError } = await supabase.rpc('increment_comment_count', {
+            p_post_id: postId,
+        });
+        if (rpcError) {
+            console.error('❌ 댓글 수 증가 RPC 호출 실패:', rpcError.message);
+        }
+
         await fetchComments();
         setNewComment('');
     };
@@ -358,7 +349,7 @@ const PostDetailComponent = ({ route, navigation }) => {
         <View style={styles.comment}>
             <Image source={{ uri: item.profiles?.profile_image || 'https://via.placeholder.com/40' }} style={styles.commentProfileImage} />
             <View style={styles.commentContent}>
-                <Text style={styles.commentUserName}>{item.profiles?.user_name || '익명'}</Text>
+                <Text style={styles.commentUserName}>{item.profiles?.username || '익명'}</Text>
                 <Text>{item.comment}</Text>
                 <TouchableOpacity onPress={() => toggleCommentLike(index)} style={styles.commentLikeButton}>
                     <FontAwesome name={item.isLiked ? 'heart' : 'heart-o'} size={16} color="gray" />
@@ -376,7 +367,7 @@ const PostDetailComponent = ({ route, navigation }) => {
                 </TouchableOpacity>
                 <View style={styles.profileContainer}>
                     <Image source={{ uri: post.profiles?.profile_image || 'https://via.placeholder.com/40' }} style={styles.profileImage} />
-                    <Text style={styles.profileName}>{post.profiles?.user_name || '익명'}</Text>
+                    <Text style={styles.profileName}>{post.profiles?.username || '익명'}</Text>
                 </View>
             </View>
 
