@@ -2,14 +2,14 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useKeyStore} from "../../../stores/KeyStore";
 
-const { NAVER_CLIENT_ID, NAVER_CLIENT_SECRET } = useKeyStore.getState();
-
 // 뉴스 데이터를 저장할 키
 const STORAGE_KEY = 'news_titles';
 // 뉴스 데이터 유효 시간 (예: 1시간 = 3600000ms)
 const EXPIRATION_TIME = 3600000;
 
 export const fetchNewsTitles = async () => {
+    const { NAVER_CLIENT_ID, NAVER_CLIENT_SECRET } = useKeyStore.getState();
+
     try {
         // ✅ 1. 로컬 저장소에서 데이터 확인
         const storedData = await AsyncStorage.getItem(STORAGE_KEY);
@@ -59,6 +59,8 @@ export const fetchNewsTitles = async () => {
     }
 };
 export const fetchNewsDetail = async (title) => {
+    const { NAVER_CLIENT_ID, NAVER_CLIENT_SECRET } = useKeyStore.getState();
+
     try {
         console.log(`🔎 뉴스 검색: ${title}`);
 
