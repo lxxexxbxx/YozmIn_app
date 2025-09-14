@@ -13,7 +13,6 @@ import {
 import { CommonUtils } from "../common/CommonUtils";
 import TypingText from "./TypingText";
 import {useUserStore} from "../../stores/UserStore";
-import {useKeyStore} from "../../stores/KeyStore";
 
 const { height } = Dimensions.get("window");
 
@@ -22,8 +21,7 @@ const ChatBotComponent = () => {
     const [messages, setMessages] = useState([]); // 대화 메시지 배열
     const scrollRef = useRef(null);
 
-    const userStore = useUserStore();
-    const keyStore = useKeyStore();
+    const store = useUserStore();
 
     // 채팅 시각(시, 분)
     const getTime = () => {
@@ -94,8 +92,8 @@ const ChatBotComponent = () => {
     };
     // 접속 시 인사 및 요약 정보 제공
     const init = async () => {
-        if(userStore.name && keyStore.GOOGLE_API_KEY) {
-            const prompt = `사용자명: ${userStore.name}\n 다음 사용자명을 가진 사용자에게 반갑게 인사하며 오늘의 날씨와 주요 뉴스를 간략하게 3줄 요약해서 답변해줘.`;
+        if(store.name) {
+            const prompt = `사용자명: ${store.name}\n 다음 사용자명을 가진 사용자에게 반갑게 인사하며 오늘의 날씨와 주요 뉴스를 간략하게 3줄 요약해서 답변해줘.`;
             const response = await CommonUtils.fetchGemini(prompt);
             const botMessage = { role: "llm", text: response, time: getTime() };
             setMessages(prev => [...prev, botMessage]);

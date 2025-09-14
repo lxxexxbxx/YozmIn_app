@@ -8,14 +8,12 @@ import SHA256 from "crypto-js/sha256";
 import {Circle, Path, Svg} from "react-native-svg";
 import Toast from "react-native-toast-message";
 import {useUserStore} from "../../stores/UserStore";
-import {useKeyStore} from "../../stores/KeyStore";
 
 const {width, height} = Dimensions.get("window");
 
 const LoginComponent = () => {
     const navigation = useNavigation();
-    const userStore = useUserStore();
-    const keyStore = useKeyStore();
+    const store = useUserStore();
 
     const [id, setId] = useState("");
     const [pw, setPw] = useState("");
@@ -53,6 +51,7 @@ const LoginComponent = () => {
 
         if(response.status === 200) {
             if(response.data.length && response.count) {
+                console.log(response.data[0].password, hashedPw);
                 if(response.data[0].password === hashedPw) {
                     console.log("user_id:", response.data[0].user_id);
                     // 성공 메시지
@@ -61,23 +60,15 @@ const LoginComponent = () => {
                         text1: '로그인 성공',
                         text2: `${ response.data[0].name}님, 환영합니다 👋`,
                     });
-                    userStore.setter.setClear();
-                    userStore.setter.setUser(
+                    store.setter.setClear();
+                    store.setter.setUser(
                         response.data[0].name,
                         response.data[0].user_id,
                         response.data[0].email,
                         response.data[0].birth_date,
                         response.data[0].categories,
-                    );
-                    keyStore.setter.setClear();
-                    await keyStore.setter.setKey();
-
-                    if (useKeyStore.getState().GOOGLE_API_KEY) {
-                        navigation.replace("TabNavigator");
-                    } else {
-                        console.warn("⚠️ 키 로드 실패");
-                    }
-                    // navigation.replace("TabNavigator")
+                    )
+                    navigation.replace("TabNavigator")
                 }
                 else {
                     setPwError("비밀번호가 다릅니다.\n다시 입력해주세요.");

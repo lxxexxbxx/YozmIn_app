@@ -10,15 +10,13 @@ import {
 import axios from "axios";
 import PageTitleComponent from "../../common/PageTitleComponent";
 import Icon from "react-native-vector-icons/FontAwesome";
+import { WebView } from "react-native-webview";
 import { useNavigation } from "@react-navigation/native";
-import YoutubePlayer from "react-native-youtube-iframe";
-import {useKeyStore} from "../../../stores/KeyStore";
+
+const TMDB_API_KEY = process.env.EXPO_PUBLIC_TMDB_API_KEY;
+const BASE_URL = "https://api.themoviedb.org/3";
 
 export default function MovieDetailComponent({ route }) {
-    const keyStore = useKeyStore();
-    const TMDB_API_KEY = keyStore.TMDB_API_KEY;
-    const BASE_URL = "https://api.themoviedb.org/3";
-
     const { id, type } = route.params;
     const navigation = useNavigation();
 
@@ -100,20 +98,11 @@ export default function MovieDetailComponent({ route }) {
             <ScrollView contentContainerStyle={styles.container}>
                 {videoKey ? (
                     <View style={{ width: "100%", height: 230, marginBottom: 16 }}>
-                        <YoutubePlayer
-                            height={230}
-                            play={true}
-                            videoId={videoKey}
-                            initialPlayerParams={{
-                                controls: true,           // 컨트롤러 표시 여부
-                                modestbranding: true,     // 유튜브 로고 최소화
-                                rel: false,               // 관련 동영상 표시 안 함
-                                mute: 1,                  // 자동재생 가능하도록 음소거
-                            }}
-                            onError={(e) => {
-                                console.warn("YouTube error:", e);
-                                setVideoKey(null); // 오류 시 포스터 fallback
-                            }}
+                        <WebView
+                            source={{ uri: `https://www.youtube.com/embed/${videoKey}?autoplay=1&mute=1&controls=1` }}
+                            style={{ flex: 1, borderRadius: 12 }}
+                            javaScriptEnabled
+                            allowsFullscreenVideo
                         />
                     </View>
                 ) : (

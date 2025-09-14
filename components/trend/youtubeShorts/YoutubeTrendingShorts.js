@@ -2,12 +2,10 @@ import {SafeAreaView} from "react-native";
 import React, {useEffect, useState} from "react";
 import axios from "axios";
 import ShortsList from "./ShortsList";
-import {useKeyStore} from "../../../stores/KeyStore";
+
+const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_API_KEY; // Gemini 2.0 API 키
 
 const YoutubeTrendingShorts = () => {
-  const keyStore = useKeyStore();
-  const GOOGLE_API_KEY = keyStore.GOOGLE_API_KEY; // Gemini 2.0 API 키
-
   const [trendingShorts, setTrendingShorts] = useState();
   const maxResults = 5; // 검색 쇼츠 개수
 

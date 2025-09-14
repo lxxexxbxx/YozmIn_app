@@ -3,6 +3,7 @@ import ChatBotComponent from "../chatbot/ChatBotComponent";
 import {useEffect} from "react";
 import {useNavigation} from "@react-navigation/native";
 import {useUserStore} from "../../stores/UserStore";
+import supabase from "../../supabase";
 
 const HomeComponent = () => {
     const navigation = useNavigation();
