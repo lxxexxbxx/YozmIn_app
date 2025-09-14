@@ -1,8 +1,8 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useKeyStore} from "../../../stores/KeyStore";
 
-const { NAVER_CLIENT_ID, NAVER_CLIENT_SECRET } = useKeyStore.getState();
+const NAVER_CLIENT_ID = process.env.EXPO_PUBLIC_NAVER_CLIENT_ID;
+const NAVER_CLIENT_SECRET = process.env.EXPO_PUBLIC_NAVER_CLIENT_SECRET;
 
 // 뉴스 데이터를 저장할 키
 const STORAGE_KEY = 'news_titles';

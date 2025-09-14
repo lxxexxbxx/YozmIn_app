@@ -1,12 +1,11 @@
 import axios from "axios";
 import {BackHandler} from "react-native";
-import {useKeyStore} from "../../stores/KeyStore";
 
+const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_API_KEY;
+const SEARCH_ENGINE_ID = process.env.EXPO_PUBLIC_SEARCH_ENGINE_ID;
 
 export const CommonUtils = {
     googleSearch: async function (searchWord, dateRestrict) {
-        const { GOOGLE_API_KEY, SEARCH_ENGINE_ID } = useKeyStore.getState();
-
         try {
             const url = `https://www.googleapis.com/customsearch/v1?q=${searchWord}&cx=${SEARCH_ENGINE_ID}&dateRestrict=${dateRestrict}&key=${GOOGLE_API_KEY}`;
 
@@ -25,8 +24,6 @@ export const CommonUtils = {
         }
     },
     fetchGeminiTrendKeywords: async function (keywords) {
-        const { GOOGLE_API_KEY, SEARCH_ENGINE_ID } = useKeyStore.getState();
-
         try {
             const prompt = `
         최근 유행하는 밈과 챌린지에 대한 검색 결과를 분석하고, 밈이나 챌린지 키워드들을 정리해서 오늘 기준 한국에서 가장 핫한 키워드 5개만 나열해줘. 
@@ -93,8 +90,7 @@ export const CommonUtils = {
     },
     fetchGemini: async function (prompt) {
         // prompt = "너는 이제부터 Z세대 트렌드 전문가 캐릭터야. 말투는 친근하고 재치 있게, 약간 요즘 말투로 이야기해줘.\n\nQ: " + prompt;
-        const { GOOGLE_API_KEY, SEARCH_ENGINE_ID } = useKeyStore.getState();
-
+        
         try {
             const response = await axios.post(
                 `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GOOGLE_API_KEY}`,
@@ -111,11 +107,12 @@ export const CommonUtils = {
                     }
                 },
                 {
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
+                    // headers: {
+                    //     "Content-Type": "application/json"
+                    // }
                 }
             );
+
             return response.data?.candidates?.[0]?.content?.parts?.[0]?.text + "\n";
         } catch (error) {
             console.error("Gemini API Error:", error);

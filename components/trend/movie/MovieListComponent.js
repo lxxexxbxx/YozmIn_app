@@ -2,13 +2,11 @@ import React, { useEffect, useState } from "react";
 import {FlatList, Image, Text, TouchableOpacity, StyleSheet, SafeAreaView} from "react-native";
 import axios from "axios";
 import {useNavigation} from "@react-navigation/native";
-import {useKeyStore} from "../../../stores/KeyStore";
+
+const TMDB_API_KEY = process.env.EXPO_PUBLIC_TMDB_API_KEY;
+const BASE_URL = "https://api.themoviedb.org/3";
 
 export default function MovieListComponent({ category }) {
-    const keyStore = useKeyStore();
-    const TMDB_API_KEY = keyStore.TMDB_API_KEY;
-    const BASE_URL = "https://api.themoviedb.org/3";
-
     const navigation = useNavigation();
     const [contents, setContents] = useState([]);
 
@@ -36,16 +34,13 @@ export default function MovieListComponent({ category }) {
                 "language": "ko-KR",
                 "sort_by": "popularity.desc",
                 "with_origin_country": "KR",
-                'certification.gte': 'ALL',
-                'certification.lte': '19',
-                certification_country: 'KR',
                 "first_air_date.gte": oneMonthAgo,  // 한 달 이내에 첫 방영된 시리즈
                 "include_adult": false,
                 "page": 1
             },
         });
 
-        const bannedKeywords = ["19", "야한", "에로", "노출", "새엄마", "엄마", "가슴", "무삭제", "무삭제판", "동창회", "섹스"];
+        const bannedKeywords = ["19", "야한", "에로", "노출", "새엄마", "엄마", "가슴", "무삭제", "무삭제판"];
 
         const filteredResults = response.data.results.filter(movie => {
             // title 또는 name 사용 (title이 없으면 name 사용)

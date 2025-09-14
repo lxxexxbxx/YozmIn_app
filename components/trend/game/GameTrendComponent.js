@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
 import axios from 'axios';
-import {useKeyStore} from "../../../stores/KeyStore";
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.9;
 
-const GameTrendComponent = ({ navigation }) => {
-    const keyStore = useKeyStore();
-    const IGDB_CLIENT_ID = keyStore.IGDB_CLIENT_ID;
-    const IGDB_ACCESS_TOKEN = keyStore.IGDB_ACCESS_TOKEN;
+const IGDB_CLIENT_ID = process.env.EXPO_PUBLIC_IGDB_CLIENT_ID;
+const IGDB_ACCESS_TOKEN = process.env.EXPO_PUBLIC_IGDB_ACCESS_TOKEN;
 
+const GameTrendComponent = ({ navigation }) => {
     const [games, setGames] = useState([]);
     const [loading, setLoading] = useState(true);
 
