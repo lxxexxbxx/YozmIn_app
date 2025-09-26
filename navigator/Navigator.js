@@ -13,7 +13,7 @@ import BookmarkComponent from "../components/bookmark/BookmarkComponent";
 import ClosetComponent from "../components/closet/ClosetComponent";
 import BeforeLoginForm from "../form/BeforeLoginForm";
 import MovieDetailComponent from "../components/trend/movie/MovieDetailComponent";
-import TrendNavigator from "../components/trend/trendNavigator/TrendNavigator";
+import TrendNavigator from "../components/trend/TrendNavigator";
 import StartForm from "../form/StartForm";
 import LoginForm from "../form/LoginForm";
 import SignUpNameForm from "../components/signup/SignUpNameForm";
@@ -23,7 +23,7 @@ import SignUpBirthDateForm from "../components/signup/SignUpBirthDateForm";
 import SignUpEmailForm from "../components/signup/SignUpEmailForm";
 import SignUpCompleteForm from "../components/signup/SignUpCompleteForm";
 import SignUpComponent from "../components/signup/SignUpComponent";
-import SelectCategoryForm from "../components/signup/SelectCategoryForm";
+import SelectCategoryForm from "../components/home/SelectCategoryForm";
 import GameDetailComponent from "../components/trend/game/GameDetailComponent";
 
 const Stack = createStackNavigator();
