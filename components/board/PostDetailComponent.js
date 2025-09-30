@@ -7,14 +7,12 @@ import * as Clipboard from 'expo-clipboard';
 import { FontAwesome } from '@expo/vector-icons';
 import supabase from '../../supabase';
 import { useUserStore } from "../../stores/UserStore";
-import { useActionSheet } from '@expo/react-native-action-sheet';
 
 const PostDetailComponent = ({ route, navigation }) => {
     const { postId } = route.params;
     
     const userStore = useUserStore();
     const currentUserId = userStore.user_id;
-    const { showActionSheetWithOptions } = useActionSheet();
 
     const [post, setPost] = useState(null);
     const [isLiked, setIsLiked] = useState(false);
@@ -85,7 +83,7 @@ const PostDetailComponent = ({ route, navigation }) => {
             .eq('post_id', postId)
             .eq('is_deleted', false)
             .order('created_at', { ascending: true });
-
+    
         if (error) {
             console.error('댓글 로딩 실패:', error);
             return;
@@ -178,7 +176,7 @@ const PostDetailComponent = ({ route, navigation }) => {
             finalUpdatedComments[index].likeCount = updatedCommentData.like_cnt || 0;
             setComments(finalUpdatedComments);
 
-        } catch (error) { 
+        } catch (error) {
             console.error('댓글 좋아요 작업 실패:', error);
         }
     };
@@ -243,7 +241,7 @@ const PostDetailComponent = ({ route, navigation }) => {
                 });
             }
             await fetchLikeCount(); 
-        } catch (e) { 
+        } catch (e) {
             console.error('❌ 좋아요 토글 에러 (RPC):', e);
             setIsLiked(prev => !prev);
         }
@@ -321,6 +319,33 @@ const PostDetailComponent = ({ route, navigation }) => {
             });
         } catch (error) {
             console.error('공유 실패:', error);
+        }
+    };
+
+    const onReportPost = async () => {
+        if (!currentUserId) {
+            Alert.alert('알림', '로그인 후 신고할 수 있습니다.');
+            return;
+        }
+        try {
+            const payload = {
+                target_type: 'post',
+                target_id: String(postId),
+                reporter_id: currentUserId,
+            };
+            const { error } = await supabase.from('reports').insert(payload);
+            if (error) {
+                if (error.code === '23505' || (error.message && error.message.toLowerCase().includes('duplicate'))) {
+                    Alert.alert('알림', '이미 신고한 게시글입니다.');
+                } else {
+                    console.error('게시글 신고 실패:', error);
+                    Alert.alert('오류', '게시글 신고 중 오류가 발생했습니다.');
+                }
+                return;
+            }
+            Alert.alert('신고 접수', '게시글 신고가 접수되었습니다. 검토 후 조치됩니다.');
+        } catch (e) {
+            console.error('게시글 신고 예외:', e);
         }
     };
 
@@ -461,13 +486,16 @@ const PostDetailComponent = ({ route, navigation }) => {
                                 <View style={styles.actionGroup}>
                                     <View style={styles.actionButton}>
                                         <FontAwesome name="eye" size={24} color="gray" />
-                                        <Text style={styles.actionText}>{post.view_count || 0}</Text> 
+                                        <Text style={styles.actionText}>{post.view_count || 0}</Text>
                                     </View>
                                     <TouchableOpacity onPress={toggleBookmark} style={styles.actionButton}>
                                         <FontAwesome name={isBookmarked ? 'bookmark' : 'bookmark-o'} size={24} color="gray" />
                                     </TouchableOpacity>
                                     <TouchableOpacity onPress={sharePost} style={styles.actionButton}>
                                         <FontAwesome name="share-alt" size={24} color="gray" />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={onReportPost} style={styles.actionButton}>
+                                        <FontAwesome name="exclamation-circle" size={24} color="gray" />
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -486,15 +514,15 @@ const PostDetailComponent = ({ route, navigation }) => {
                                     placeholder="댓글을 입력하세요..."
                                     placeholderTextColor="gray"
                                 />
-                                <TouchableOpacity 
-                                    onPress={addComment} 
+                                <TouchableOpacity
+                                    onPress={addComment}
                                     style={styles.sendButton}
-                                    disabled={!newComment.trim()} 
+                                    disabled={!newComment.trim()}
                                 >
-                                    <FontAwesome 
-                                        name="arrow-right" 
-                                        size={20} 
-                                        color={!newComment.trim() ? '#AAA' : 'white'} 
+                                    <FontAwesome
+                                        name="arrow-right"
+                                        size={20}
+                                        color={!newComment.trim() ? '#AAA' : 'white'}
                                     />
                                 </TouchableOpacity>
                             </View>
@@ -513,12 +541,10 @@ const styles = StyleSheet.create({
     profileContainer: { flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'center' },
     profileImage: { width: 40, height: 40, borderRadius: 20 },
     profileName: { marginLeft: 10, fontSize: 16 },
-
     contentContainer: { paddingBottom: 20, backgroundColor: 'white' },
     image: { width: '100%', height: undefined, aspectRatio: 1.6, resizeMode: 'cover' },
     postContainer: { padding: 12 },
     text: { fontSize: 16, marginBottom: 10 },
-
     actionsContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 8 },
     actionButton: { flexDirection: 'row', alignItems: 'center', marginRight: 16 },
     actionText: { marginLeft: 6, fontSize: 14 },
@@ -591,6 +617,11 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 1,
         backgroundColor: '#f0f0f0'
+    },
+    noCommentsText: {
+        textAlign: 'center',
+        color: 'gray',
+        marginTop: 20,
     }
 });
 
