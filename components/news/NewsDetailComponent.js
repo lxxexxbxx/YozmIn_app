@@ -99,17 +99,21 @@ export default function NewsDetailComponent() {
     // --- Helper Functions ---
     const startTyping = (fullText, setter, speed = 40) => {
         if (typeof fullText !== 'string' || !fullText) return;
-        setter('');
-        let index = 0;
+
+        setter(''); // 텍스트를 비우는 것은 동일
+        let currentLength = 1; // ⭐️ 인덱스 대신 길이를 기준으로 시작 (1부터)
+
         const interval = setInterval(() => {
-            if (index < fullText.length) {
-                setter((prev) => prev + fullText.charAt(index));
-                index++;
+            if (currentLength <= fullText.length) {
+                // ⭐️ 이전 값(prev)에 더하는 대신, 원본에서 직접 자릅니다.
+                setter(fullText.substring(0, currentLength));
+                currentLength++; // 길이를 1 늘립니다.
             } else {
                 clearInterval(interval);
             }
         }, speed);
-        return () => clearInterval(interval);
+
+        return () => clearInterval(interval); // 클린업 함수는 동일
     };
 
     // --- Conditional Rendering ---
