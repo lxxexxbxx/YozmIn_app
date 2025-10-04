@@ -1,63 +1,174 @@
+// NewsDetailComponent.js
+
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, SafeAreaView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import supabase from '../../supabase';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+
+
+import { fetchCrawledNewsContent } from './NewsAPI/NaverNewsDetailAPIComponent'; // 1. 크롤링 함수 임포트
+import { fetchNewsDetails, extractKeywordFromTitle } from './NewsAPI/GeminiAPIDetailComponent';          // 2. Gemini 요약 함수 임포트
 
 export default function NewsDetailComponent() {
-    const [news, setNews] = useState([]);
+    // --- React Navigation Hooks ---
     const navigation = useNavigation();
+    const route = useRoute();
+    const { keyword } = route.params; // `keyword`는 뉴스 제목(title)입니다.
 
+    // --- Component State ---
+    const [newsDetail, setNewsDetail] = useState(null);
+    const [loading, setLoading] = useState(true);
+    // ⭐️ 로딩 메시지를 동적으로 변경하기 위한 state 추가
+    const [loadingMessage, setLoadingMessage] = useState('AI가 뉴스를 분석하고 있습니다... 🤖');
+
+    // --- Typing Animation State ---
+    const [backgroundDisplay, setBackgroundDisplay] = useState('');
+    const [summaryDisplay, setSummaryDisplay] = useState('');
+
+    // --- useEffect Hooks ---
     useEffect(() => {
-        // 탭 바 숨기기
-        navigation.getParent()?.setOptions({
-            tabBarStyle: { display: 'none' },
-        });
-
-        // 언마운트 시 탭 바 복구
+        navigation.getParent()?.setOptions({ tabBarStyle: { display: 'none' } });
         return () => {
-            navigation.getParent()?.setOptions({
-                tabBarStyle: undefined,
-            });
+            navigation.getParent()?.setOptions({ tabBarStyle: undefined });
         };
     }, [navigation]);
 
+    // ⭐️ 여기가 핵심 수정 부분입니다. ⭐️
     useEffect(() => {
-        fetchNews();
-    }, []);
+        const getNewsDetails = async () => {
+            if (keyword) { // `keyword`는 "정부 전산망 마비..." 같은 긴 원본 제목입니다.
+                setLoading(true);
 
-    const fetchNews = async () => {
-        const { data, error } = await supabase
-            .from('news_top10')
-            .select('*');
+                // --- 1단계: 긴 제목에서 핵심 키워드 추출 ---
+                setLoadingMessage('핵심 키워드를 추출하고 있어요... 🧠');
+                const searchKeyword = await extractKeywordFromTitle(keyword);
 
-        if (error) {
-            console.error(error);
-        } else {
-            console.log("Fetched Data:", data);
-            setNews(data);
+                if (!searchKeyword) {
+                    console.error("키워드 추출 실패. 작업을 중단합니다.");
+                    setLoading(false);
+                    return;
+                }
+
+                // --- 2단계: 추출된 키워드로 뉴스 기사 크롤링 ---
+                setLoadingMessage(`'${searchKeyword}'(으)로 뉴스를 찾고 있어요... 🔍`);
+                const crawledContent = await fetchCrawledNewsContent(searchKeyword);
+
+                if (!crawledContent) {
+                    console.error("크롤링 실패. 작업을 중단합니다.");
+                    setNewsDetail(null);
+                    setLoading(false);
+                    return;
+                }
+
+                // --- 3단계: 크롤링 본문과 '원본 제목'으로 최종 요약 요청 ---
+                setLoadingMessage('AI가 기사를 읽고 요약하는 중... 🤖');
+                // ⭐️ fetchNewsDetails에는 원본 제목(keyword)을 그대로 전달합니다.
+                const rawText = await fetchNewsDetails(crawledContent, keyword);
+
+                // ... 이하 JSON 파싱 및 state 설정 로직은 동일 ...
+                if (rawText && typeof rawText === 'string') {
+                    try {
+                        const startIndex = rawText.indexOf('{');
+                        const endIndex = rawText.lastIndexOf('}');
+                        if (startIndex > -1 && endIndex > -1) {
+                            const jsonString = rawText.substring(startIndex, endIndex + 1);
+                            const parsedDetails = JSON.parse(jsonString);
+                            setNewsDetail(parsedDetails);
+                        } else {
+                            setNewsDetail(null);
+                        }
+                    } catch (error) {
+                        console.error("🚨 NewsDetailComponent에서 JSON 파싱 오류:", error);
+                        setNewsDetail(null);
+                    }
+                } else {
+                    setNewsDetail(null);
+                }
+                setLoading(false);
+            }
+        };
+        getNewsDetails();
+    }, [keyword]);
+
+    useEffect(() => {
+        if (newsDetail) {
+            startTyping(newsDetail.background_info, setBackgroundDisplay, 30);
+            startTyping(newsDetail.summary, setSummaryDisplay, 50);
         }
+    }, [newsDetail]);
+
+    // --- Helper Functions ---
+    const startTyping = (fullText, setter, speed = 40) => {
+        if (typeof fullText !== 'string' || !fullText) return;
+        setter('');
+        let index = 0;
+        const interval = setInterval(() => {
+            if (index < fullText.length) {
+                setter((prev) => prev + fullText.charAt(index));
+                index++;
+            } else {
+                clearInterval(interval);
+            }
+        }, speed);
+        return () => clearInterval(interval);
     };
 
-    return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-            <View style={{ flex: 1, padding: 20 }}>
-                {/* 🔙 커스텀 뒤로가기 버튼 */}
-                <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 10 }}>
-                    <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{'← 뒤로가기'}</Text>
-                </TouchableOpacity>
+    // --- Conditional Rendering ---
+    if (loading) {
+        return (
+            <SafeAreaView style={styles.center}>
+                <ActivityIndicator size="large" color="#007AFF" />
+                {/* ⭐️ 동적 로딩 메시지 표시 */}
+                <Text style={styles.loadingText}>{loadingMessage}</Text>
+            </SafeAreaView>
+        );
+    }
 
-                <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Top 10 뉴스</Text>
-                <FlatList
-                    data={news}
-                    keyExtractor={(item) => item.news_id.toString()}
-                    renderItem={({ item }) => (
-                        <View style={{ padding: 10, borderBottomWidth: 1, borderColor: '#ccc' }}>
-                            <Text style={{ fontSize: 16 }}>{item.title}</Text>
-                            <Text>{item.content_summarize}</Text>
-                        </View>
-                    )}
-                />
-            </View>
+    if (!newsDetail) {
+        return (
+            <SafeAreaView style={styles.center}>
+                <Text>뉴스 정보를 불러오지 못했습니다. 😢</Text>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 20 }}>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#007AFF' }}>{'← 뒤로가기'}</Text>
+                </TouchableOpacity>
+            </SafeAreaView>
+        );
+    }
+
+    // --- Main Render ---
+    return (
+        <SafeAreaView style={styles.container}>
+            <ScrollView contentContainerStyle={styles.scrollView}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 20 }}>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#007AFF' }}>{'← 뒤로가기'}</Text>
+                </TouchableOpacity>
+                <View style={styles.titleContainer}>
+                    <Text style={styles.titleText}>📰 {newsDetail.title}</Text>
+                </View>
+                <View style={styles.sectionContainer}>
+                    <Text style={styles.sectionContent}>{newsDetail.content_summarize}</Text>
+                </View>
+                <View style={[styles.sectionContainer, { backgroundColor: '#fffbea' }]}>
+                    <Text style={styles.sectionTitle}>📘 배경 지식</Text>
+                    <Text style={styles.sectionContent}>{backgroundDisplay}</Text>
+                </View>
+                <View style={[styles.sectionContainer, { backgroundColor: '#e8f5e9' }]}>
+                    <Text style={styles.sectionTitle}>📝 AI 요약</Text>
+                    <Text style={styles.sectionContent}>{summaryDisplay}</Text>
+                </View>
+            </ScrollView>
         </SafeAreaView>
     );
 }
+
+// --- Styles ---
+const styles = StyleSheet.create({
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f2f2f2' },
+    loadingText: { marginTop: 15, fontSize: 16, color: '#555' },
+    container: { flex: 1, backgroundColor: '#f2f2f2' },
+    scrollView: { padding: 20, paddingBottom: 40 },
+    titleContainer: { backgroundColor: '#e0f7fa', paddingVertical: 15, paddingHorizontal: 20, borderRadius: 12, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 2 },
+    titleText: { fontSize: 22, fontWeight: 'bold', color: '#00796B', textAlign: 'center' },
+    sectionContainer: { backgroundColor: '#ffffff', borderRadius: 10, padding: 15, marginBottom: 20, elevation: 2 },
+    sectionTitle: { fontSize: 18, fontWeight: '600', marginBottom: 8 },
+    sectionContent: { fontSize: 15, color: '#444', lineHeight: 22 },
+});
