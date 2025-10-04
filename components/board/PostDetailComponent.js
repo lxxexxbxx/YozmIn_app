@@ -7,6 +7,7 @@ import * as Clipboard from 'expo-clipboard';
 import { FontAwesome } from '@expo/vector-icons';
 import supabase from '../../supabase';
 import { useUserStore } from "../../stores/UserStore";
+import dayjs from './day';
 
 const PostDetailComponent = ({ route, navigation }) => {
     const { postId } = route.params;
@@ -478,6 +479,8 @@ const PostDetailComponent = ({ route, navigation }) => {
                         {post.image_url && <Image source={{ uri: post.image_url }} style={styles.image} />}
                         <View style={styles.postContainer}>
                             <Text style={styles.text}>{post.content || '내용 없음'}</Text>
+                            <Text>{dayjs.utc(post.created_at).tz('Asia/Seoul').fromNow()}</Text>
+
                             <View style={styles.actionsContainer}>
                                 <TouchableOpacity onPress={toggleLike} style={styles.actionButton}>
                                     <FontAwesome name={isLiked ? 'heart' : 'heart-o'} size={24} color="red" />
@@ -545,6 +548,7 @@ const styles = StyleSheet.create({
     image: { width: '100%', height: undefined, aspectRatio: 1.6, resizeMode: 'cover' },
     postContainer: { padding: 12 },
     text: { fontSize: 16, marginBottom: 10 },
+    postDate: { fontSize: 12, color: 'gray', marginTop: 4},      
     actionsContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 8 },
     actionButton: { flexDirection: 'row', alignItems: 'center', marginRight: 16 },
     actionText: { marginLeft: 6, fontSize: 14 },

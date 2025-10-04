@@ -5,6 +5,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import supabase from '../../supabase';
 import ImageUploader from '../../Images/ImageUploader';
 import { useUserStore } from "../../stores/UserStore";
+import dayjs from './day';
 
 const { width } = Dimensions.get('window');
 
@@ -16,9 +17,9 @@ const BoardComponent = () => {
     const [isImageUploading, setIsImageUploading] = useState(false);
 
     const imageUploaderRef = useRef(null);
-
     const userStore = useUserStore();
     const currentUserId = userStore.user_id;
+    
     const fetchPosts = useCallback(async () => {
         const { data: postData, error } = await supabase
             .from('post')
@@ -47,6 +48,8 @@ const BoardComponent = () => {
             comments: post.comment_cnt || 0,
             hasLiked: likedPostIds.includes(post.post_id),
             isMine: post.user_id === currentUserId,
+            created_at: post.created_at,
+            profileImage: post.profiles?.avatar_url ? { uri: post.profiles.avatar_url } : require('../../assets/User.jpg')
         }));
 
         setPosts(formattedPosts);
@@ -71,13 +74,8 @@ const BoardComponent = () => {
         };
     }, [fetchPosts]);
 
-    const handleImageUploadSuccess = (url) => {
-        setUploadedImageUrl(url);
-    };
-
-    const handleImageUploadStatusChange = (status) => {
-        setIsImageUploading(status);
-    };
+    const handleImageUploadSuccess = (url) => setUploadedImageUrl(url);
+    const handleImageUploadStatusChange = (status) => setIsImageUploading(status);
 
     const handleSend = async () => {
         if (isImageUploading) {
@@ -88,13 +86,10 @@ const BoardComponent = () => {
             Alert.alert('경고', '내용 또는 사진을 입력해주세요.');
             return;
         }
-
         if (!currentUserId) {
-             Alert.alert('오류', '사용자 정보가 없어 게시글을 작성할 수 없습니다. 로그인 상태를 확인해주세요.');
-             console.warn("게시글 작성 실패: currentUserId가 없습니다.");
-             return;
+            Alert.alert('오류', '사용자 정보가 없어 게시글을 작성할 수 없습니다. 로그인 상태를 확인해주세요.');
+            return;
         }
-
 
         try {
             const postData = {
@@ -104,60 +99,40 @@ const BoardComponent = () => {
                 comment_cnt: 0,
                 user_id: currentUserId,
             };
-
             const { data, error } = await supabase.from('post').insert([postData]);
-
             if (error) {
-                console.error('❌ 게시글 저장 실패:', error.message);
                 Alert.alert('오류', `게시글 저장 실패: ${error.message}`);
                 return;
             }
 
-            Alert.alert('성공', '게시글이 성공적으로 작성되었습니다!');
             setMessage('');
             setUploadedImageUrl(null);
-
-            if (imageUploaderRef.current && imageUploaderRef.current.resetImage) {
-                imageUploaderRef.current.resetImage();
-            }
-
+            if (imageUploaderRef.current?.resetImage) imageUploaderRef.current.resetImage();
             fetchPosts();
         } catch (e) {
-            console.error('❗ 예외 발생:', e);
             Alert.alert('오류', '게시글 제출 중 알 수 없는 오류가 발생했습니다.');
         }
     };
 
     const toggleLike = async (postId, hasLiked) => {
-
         if (!currentUserId) {
-              Alert.alert('오류', '좋아요를 누르려면 로그인해야 합니다.');
-              return;
+            Alert.alert('오류', '좋아요를 누르려면 로그인해야 합니다.');
+            return;
         }
-
         try {
             let rpcResponse;
             if (hasLiked) {
-                rpcResponse = await supabase.rpc('unlike_post', {
-                    p_post_id: postId,
-                    p_user_id: currentUserId,
-                });
+                rpcResponse = await supabase.rpc('unlike_post', { p_post_id: postId, p_user_id: currentUserId });
             } else {
-                rpcResponse = await supabase.rpc('like_post', {
-                    p_post_id: postId,
-                    p_user_id: currentUserId,
-                });
+                rpcResponse = await supabase.rpc('like_post', { p_post_id: postId, p_user_id: currentUserId });
             }
-
             if (rpcResponse.error) {
-                console.error('❌ 좋아요/취소 RPC 오류:', rpcResponse.error.message);
+                console.error('좋아요/취소 RPC 오류:', rpcResponse.error.message);
                 return;
             }
-
             fetchPosts();
         } catch (e) {
-            console.error('❌ 좋아요 토글 에러 (RPC):', e.message);
-            Alert.alert('오류', `좋아요 처리 중 오류가 발생했습니다: ${e.message}`);
+            console.error('좋아요 토글 에러:', e.message);
         }
     };
 
@@ -174,7 +149,7 @@ const BoardComponent = () => {
             onPress={() => handlePress(item)}
             style={[styles.postContainer, item.isMine ? styles.myPost : styles.otherPost]}
         >
-            <Image source={item.profileImage || require('../../assets/User.jpg')} style={styles.profileImage} />
+            <Image source={item.profileImage} style={styles.profileImage} />
             <View style={styles.bubble}>
                 {item.image && <Image source={item.image} style={styles.postImage} />}
                 <Text style={styles.content}>{item.text}</Text>
@@ -189,6 +164,7 @@ const BoardComponent = () => {
                     <Text style={styles.footerText}>{item.likes}</Text>
                     <Ionicons name="chatbubble-outline" size={20} color="black" style={styles.iconSpacing} />
                     <Text style={styles.footerText}>{item.comments}</Text>
+                    <Text style={styles.postDate}>{item.created_at? dayjs.utc(item.created_at).tz("Asia/Seoul").fromNow(): '시간 없음'}</Text>
                 </View>
             </View>
         </TouchableOpacity>
@@ -197,12 +173,17 @@ const BoardComponent = () => {
     return (
         <View style={styles.container}>
             <Text style={styles.notice}>최신 트렌드를 사람들과 공유 해보세요!</Text>
-            <FlatList
-                data={posts}
-                renderItem={renderPost}
-                keyExtractor={(item) => item.id}
-                inverted
-            />
+            {posts && posts.length > 0 ? (
+                <FlatList
+                    data={posts}
+                    renderItem={renderPost}
+                    keyExtractor={(item) => item.id}
+                    inverted
+                />
+            ) : (
+                <Text style={{ padding: 10 }}>게시물이 없습니다.</Text>
+            )}
+
             <View style={styles.inputWrapper}>
                 {uploadedImageUrl && (
                     <View style={styles.largeImagePreviewContainer}>
@@ -211,9 +192,7 @@ const BoardComponent = () => {
                             <TouchableOpacity
                                 onPress={() => {
                                     setUploadedImageUrl(null);
-                                    if (imageUploaderRef.current && imageUploaderRef.current.resetImage) {
-                                        imageUploaderRef.current.resetImage();
-                                    }
+                                    imageUploaderRef.current?.resetImage?.();
                                 }}
                                 style={styles.removeLargeImageButton}
                             >
@@ -259,6 +238,7 @@ const BoardComponent = () => {
         </View>
     );
 };
+
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F5F5F5' },
     notice: {
@@ -298,11 +278,12 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.22,
         shadowRadius: 2.22,
     },
-    content: { fontSize: 14, color: 'black' },
+    content: { fontSize: 14, color: 'black', marginTop: 5 },
     postFooter: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
     footerText: { fontSize: 12, color: '#666', marginLeft: 5 },
     iconSpacing: { marginLeft: 15 },
     postImage: { width: '100%', height: 150, marginTop: 5, borderRadius: 10 },
+    postDate: { fontSize: 12, color: 'gray', marginLeft: 10},  
 
     inputWrapper: {
         paddingBottom: 10,
