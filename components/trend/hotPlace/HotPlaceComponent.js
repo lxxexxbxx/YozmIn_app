@@ -15,12 +15,6 @@ import * as Location from "expo-location";
 import axios from "axios";
 import {useKeyStore} from "../../../stores/KeyStore";
 
-/** 🔑 API Keys */
-const KAKAO_JS_KEY = useKeyStore.getState().KAKAO_JS_KEY;
-const KAKAO_REST_API_KEY = useKeyStore.getState().KAKAO_REST_API_KEY;
-const NAVER_CLIENT_ID = useKeyStore.getState().NAVER_CLIENT_ID;
-const NAVER_CLIENT_SECRET = useKeyStore.getState().NAVER_CLIENT_SECRET;
-
 /** 기본 설정 */
 const SEARCH_RADIUS_M = 3000; // 3km
 const TARGET_AGE_VECTOR = [0.05, 0.45, 0.35, 0.1, 0.05];
@@ -65,6 +59,8 @@ const WEIGHTS = {
 
 /** 카카오 로컬 검색 */
 async function kakaoSearchKeyword(category, userLocation) {
+    const KAKAO_REST_API_KEY = useKeyStore.getState().KAKAO_REST_API_KEY;
+
     const keyword = category === "cafe" ? "카페" : category === "food" ? "맛집" : "관광명소";
     const url = "https://dapi.kakao.com/v2/local/search/keyword.json";
     const params = {
@@ -85,6 +81,9 @@ async function kakaoSearchKeyword(category, userLocation) {
 
 /** 네이버 데이터랩(트렌드) — 연령/성별은 단순 예시값 */
 async function naverTrendEnrich(places) {
+    const NAVER_CLIENT_ID = useKeyStore.getState().NAVER_CLIENT_ID;
+    const NAVER_CLIENT_SECRET = useKeyStore.getState().NAVER_CLIENT_SECRET;
+
     if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) return places;
     try {
         const headers = {
@@ -134,6 +133,8 @@ function calcScore(p, category, includeCongestion) {
 }
 
 export default function HotPlaceScreen() {
+    const KAKAO_JS_KEY = useKeyStore.getState().KAKAO_JS_KEY;
+
     const [category, setCategory] = useState("tour");
     const [includeCongestion, setIncludeCongestion] = useState(true);
     const [openOnly, setOpenOnly] = useState(true);
