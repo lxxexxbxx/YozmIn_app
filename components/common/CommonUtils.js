@@ -1,11 +1,13 @@
 import axios from "axios";
 import {BackHandler} from "react-native";
 import {useKeyStore} from "../../stores/KeyStore";
+import CryptoJS from "react-native-crypto-js";
 
+const SECRET_KEY = "***REMOVED***";
 
 export const CommonUtils = {
     googleSearch: async function (searchWord, dateRestrict) {
-        const { GOOGLE_API_KEY, SEARCH_ENGINE_ID } = useKeyStore.getState();
+        const {GOOGLE_API_KEY, SEARCH_ENGINE_ID} = useKeyStore.getState();
 
         try {
             const url = `https://www.googleapis.com/customsearch/v1?q=${searchWord}&cx=${SEARCH_ENGINE_ID}&dateRestrict=${dateRestrict}&key=${GOOGLE_API_KEY}`;
@@ -25,7 +27,7 @@ export const CommonUtils = {
         }
     },
     fetchGeminiTrendKeywords: async function (keywords) {
-        const { GOOGLE_API_KEY, SEARCH_ENGINE_ID } = useKeyStore.getState();
+        const {GOOGLE_API_KEY, SEARCH_ENGINE_ID} = useKeyStore.getState();
 
         try {
             const prompt = `
@@ -93,7 +95,7 @@ export const CommonUtils = {
     },
     fetchGemini: async function (prompt) {
         // prompt = "너는 이제부터 Z세대 트렌드 전문가 캐릭터야. 말투는 친근하고 재치 있게, 약간 요즘 말투로 이야기해줘.\n\nQ: " + prompt;
-        const { GOOGLE_API_KEY, SEARCH_ENGINE_ID } = useKeyStore.getState();
+        const {GOOGLE_API_KEY, SEARCH_ENGINE_ID} = useKeyStore.getState();
 
         try {
             const response = await axios.post(
@@ -128,5 +130,37 @@ export const CommonUtils = {
         });
 
         return () => backHandler.remove(); // cleanup
+    },
+    decryptKey: function (encryptedBase64) {
+        try {
+            // Python에서 넘어온 Base64 디코드
+            const rawData = CryptoJS.enc.Base64.parse(encryptedBase64);
+
+            // IV와 암호문 분리
+            const iv = CryptoJS.lib.WordArray.create(
+                rawData.words.slice(0, 16 / 4), // 16바이트 → wordArray 4개
+                16
+            );
+            const ciphertext = CryptoJS.lib.WordArray.create(
+                rawData.words.slice(16 / 4),
+                rawData.sigBytes - 16
+            );
+
+            // AES 복호화
+            const decrypted = CryptoJS.AES.decrypt(
+                {ciphertext: ciphertext},
+                CryptoJS.enc.Utf8.parse(SECRET_KEY),
+                {
+                    iv: iv,
+                    mode: CryptoJS.mode.CBC,
+                    padding: CryptoJS.pad.Pkcs7,
+                }
+            );
+
+            return decrypted.toString(CryptoJS.enc.Utf8);
+        } catch (e) {
+            console.error("❌ 복호화 에러:", e);
+            return null;
+        }
     },
 }
