@@ -41,7 +41,8 @@ const ChatBotComponent = () => {
         setMessages(prev => [...prev, userMessage]);
         setInput(""); // inputbox 초기화
 
-        const response = await CommonUtils.fetchGemini(input); // LLM API 호출
+        // const response = await CommonUtils.fetchGemini(input); // LLM API 호출
+        const response = await CommonUtils.fetchChatGPT(input); // LLM API 호출
         // 권한(유저/LLM), 텍스트(입력/답변 값), 채팅 시각(시,분)
         const botMessage = { role: "llm", text: response, time: getTime() };
         // 기존 messages 배열에 botMessage 추가한 배열 생성 > setMessages
@@ -95,8 +96,17 @@ const ChatBotComponent = () => {
     // 접속 시 인사 및 요약 정보 제공
     const init = async () => {
         if(userStore.name && keyStore.GOOGLE_API_KEY) {
-            const prompt = `사용자명: ${userStore.name}\n 다음 사용자명을 가진 사용자에게 반갑게 인사하며 오늘의 날씨와 주요 뉴스를 간략하게 3줄 요약해서 답변해줘.`;
-            const response = await CommonUtils.fetchGemini(prompt);
+            const prompt = `
+            사용자명: ${userStore.name}\n 다음 사용자명을 가진 사용자에게 반갑게 인사하며 오늘의 날씨와 주요 뉴스를 아래 규칙에 맞게 답변해줘.
+            
+            !!규칙!!
+            1. 주요 뉴스는 넘버링 붙여서 3개만 주요 정보 요약해서 제공(간략하게 요약하되 주요 키워드 등 주요 정보는 포함되어야 함.)
+            2. 답변 내용에는 인터넷 주소 링크나 불필요한 특수문자, 기호 등은 제거하여 제공
+            
+            이 규칙대로 사용자에게 친근하고 친절하게 간략한 오늘의 정보 제공 해줘.
+            `;
+            // const response = await CommonUtils.fetchGemini(prompt);
+            const response = await CommonUtils.fetchChatGPT(prompt);
             const botMessage = { role: "llm", text: response, time: getTime() };
             setMessages(prev => [...prev, botMessage]);
         }
