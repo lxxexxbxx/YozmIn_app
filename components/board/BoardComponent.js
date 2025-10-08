@@ -19,7 +19,7 @@ const BoardComponent = () => {
 
     const userStore = useUserStore();
     const currentUserId = userStore.user_id;
-    const fetchPosts = async () => {
+    const fetchPosts = useCallback(async () => {
         const { data: postData, error } = await supabase
             .from('post')
             .select('*')
@@ -30,9 +30,8 @@ const BoardComponent = () => {
             return;
         }
 
-        // 로그인 여부와 관계없이 게시글을 가져오므로, currentUserId가 없어도 진행
         let likedPostIds = [];
-        if (currentUserId) { // currentUserId가 있을 때만 좋아요 여부 확인
+        if (currentUserId) {
             const { data: likeData } = await supabase
                 .from('post_like')
                 .select('post_id')
@@ -41,39 +40,36 @@ const BoardComponent = () => {
         }
 
         const formattedPosts = postData.map((post) => ({
-            id: post.post_id.toString(), // postId는 여전히 숫자형으로 가정하고 toString
+            id: post.post_id,
             text: post.content,
             image: post.image_url ? { uri: post.image_url } : null,
             likes: post.like_cnt,
             comments: post.comment_cnt || 0,
             hasLiked: likedPostIds.includes(post.post_id),
-            isMine: post.user_id === currentUserId, // 내 게시글 여부 확인
+            isMine: post.user_id === currentUserId,
         }));
 
         setPosts(formattedPosts);
-        // console.log('게시글 불러오기 완료.');
-    };
+    }, [currentUserId]);
 
-    // useFocusEffect는 화면이 포커스될 때마다 fetchPosts를 호출
     useFocusEffect(
         useCallback(() => {
             fetchPosts();
-        }, [currentUserId]) // currentUserId가 변경될 때도 다시 불러오도록 의존성 배열에 추가
+        }, [fetchPosts])
     );
 
     useEffect(() => {
         const channel = supabase
             .channel('realtime-posts')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'post' }, (payload) => {
-                // console.log('📡 실시간 변경 감지:', payload);
-                fetchPosts(); // 게시글 변경 시 다시 불러오기
+                fetchPosts();
             })
             .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, []);
+    }, [fetchPosts]);
 
     const handleImageUploadSuccess = (url) => {
         setUploadedImageUrl(url);
@@ -106,7 +102,7 @@ const BoardComponent = () => {
                 image_url: uploadedImageUrl,
                 like_cnt: 0,
                 comment_cnt: 0,
-                user_id: currentUserId, // UserStore에서 가져온 user_id 사용
+                user_id: currentUserId,
             };
 
             const { data, error } = await supabase.from('post').insert([postData]);
@@ -125,7 +121,7 @@ const BoardComponent = () => {
                 imageUploaderRef.current.resetImage();
             }
 
-            fetchPosts(); // 게시글 작성 후 목록 갱신
+            fetchPosts();
         } catch (e) {
             console.error('❗ 예외 발생:', e);
             Alert.alert('오류', '게시글 제출 중 알 수 없는 오류가 발생했습니다.');
@@ -134,9 +130,9 @@ const BoardComponent = () => {
 
     const toggleLike = async (postId, hasLiked) => {
 
-        if (!currentUserId) { // 로그인 여부 확인 제거 (UUID 오류 해결 위해)
-             Alert.alert('오류', '좋아요를 누르려면 로그인해야 합니다.'); // 사용자 경험을 위해 경고는 유지
-             return;
+        if (!currentUserId) {
+              Alert.alert('오류', '좋아요를 누르려면 로그인해야 합니다.');
+              return;
         }
 
         try {
@@ -155,10 +151,10 @@ const BoardComponent = () => {
 
             if (rpcResponse.error) {
                 console.error('❌ 좋아요/취소 RPC 오류:', rpcResponse.error.message);
-                return; // 에러 발생 시 더 이상 진행하지 않음
+                return;
             }
 
-            fetchPosts(); // 좋아요 상태 변경 후 게시물 다시 가져오기
+            fetchPosts();
         } catch (e) {
             console.error('❌ 좋아요 토글 에러 (RPC):', e.message);
             Alert.alert('오류', `좋아요 처리 중 오류가 발생했습니다: ${e.message}`);
@@ -170,7 +166,6 @@ const BoardComponent = () => {
             postId: post.id,
             hasLiked: post.hasLiked,
             likeCount: post.likes,
-            // user_id는 PostDetail에서 필요하다면 UserStore를 통해 직접 가져오도록 합니다.
         });
     };
 
@@ -206,11 +201,9 @@ const BoardComponent = () => {
                 data={posts}
                 renderItem={renderPost}
                 keyExtractor={(item) => item.id}
-                inverted // 최신 게시글이 아래로 오도록 (채팅처럼)
+                inverted
             />
-            {/* 게시글 작성 입력창 및 미리보기 영역 */}
             <View style={styles.inputWrapper}>
-                {/* 사진 미리보기 영역 (댓글창 위쪽) */}
                 {uploadedImageUrl && (
                     <View style={styles.largeImagePreviewContainer}>
                         <Image source={{ uri: uploadedImageUrl }} style={styles.largeImagePreview} />
@@ -234,7 +227,6 @@ const BoardComponent = () => {
                 )}
 
                 <View style={styles.commentInputContainer}>
-                    {/* ImageUploader 컴포넌트: 작은 사진 버튼 역할 (미리보기 없음) */}
                     <ImageUploader
                         ref={imageUploaderRef}
                         onUploadSuccess={handleImageUploadSuccess}
@@ -267,7 +259,6 @@ const BoardComponent = () => {
         </View>
     );
 };
-
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F5F5F5' },
     notice: {
@@ -380,6 +371,4 @@ const styles = StyleSheet.create({
     largeActivityIndicator: {
         position: 'absolute',
     }
-});
-
-export default BoardComponent;
+});export default BoardComponent;
