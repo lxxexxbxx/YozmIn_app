@@ -10,7 +10,6 @@ import PostDetailComponent from '../components/board/PostDetailComponent';
 import NewsComponent from "../components/news/NewsComponent";
 import NewsDetailComponent from "../components/news/NewsDetailComponent";
 import BookmarkComponent from "../components/bookmark/BookmarkComponent";
-import ClosetComponent from "../components/closet/ClosetComponent";
 import BeforeLoginForm from "../form/BeforeLoginForm";
 import MovieDetailComponent from "../components/trend/movie/MovieDetailComponent";
 import TrendNavigator from "../components/trend/TrendNavigator";
@@ -25,6 +24,9 @@ import SignUpCompleteForm from "../components/signup/SignUpCompleteForm";
 import SignUpComponent from "../components/signup/SignUpComponent";
 import SelectCategoryForm from "../components/home/SelectCategoryForm";
 import GameDetailComponent from "../components/trend/game/GameDetailComponent";
+import ShopComponent from "../components/shop/ShopComponent";
+import ClosetScreen from "../components/closet/ClosetScreen";
+import TodayQuestsScreen from '../components/quest/TodayQuestsScreen';
 
 const Stack = createStackNavigator();
 
@@ -65,7 +67,6 @@ const Navigator = () => {
                 {/* 북마크 컴포넌트 */}
                 <Stack.Screen name="Bookmark" component={BookmarkComponent} options={{headerShown: false}}/>
                 {/* 옷장 컴포넌트 */}
-                <Stack.Screen name="Closet" component={ClosetComponent} options={{headerShown: false}}/>
                 {/* ------------------------- 뉴스 연결 네비게이션 ------------------------ */}
                 {/* 뉴스 목록 페이지 */}
                 <Stack.Screen name="NewsList" component={NewsComponent} options={{headerShown: false}}/>
@@ -78,6 +79,13 @@ const Navigator = () => {
                 <Stack.Screen name={"TrendMovieDetail"} component={MovieDetailComponent} options={{headerShown: false}}/>
                 {/*게임 정보 상세*/}
                 <Stack.Screen name={"GameDetail"} component={GameDetailComponent} options={{headerShown: false}}/>
+
+
+                <Stack.Screen name="Shop" component={ShopComponent} options={{ headerShown: false }} />
+
+                <Stack.Screen name="closet" component={ClosetScreen} options={{ headerShown: false }} />
+
+                <Stack.Screen name="TodayQuests" component={TodayQuestsScreen} options={{ headerShown: false }} />
             </Stack.Navigator>
         </NavigationContainer>
     );
