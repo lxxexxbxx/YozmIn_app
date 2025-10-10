@@ -1,5 +1,5 @@
 import YoutubeTrendingShorts from "./youtubeShorts/YoutubeTrendingShorts";
-import TrendNavigator from "./trendNavigator/TrendNavigator";
+import TrendNavigator from "./TrendNavigator";
 import SlidingSearchCard from "../common/SlidingSearchCard";
 
 const TrendComponent = () => {

@@ -1,11 +1,13 @@
 import axios from "axios";
 import {BackHandler} from "react-native";
 import {useKeyStore} from "../../stores/KeyStore";
+import CryptoJS from "react-native-crypto-js";
 
+const SECRET_KEY = "dktitcn1212!dktitcn1212!!@#$%^&*";
 
 export const CommonUtils = {
     googleSearch: async function (searchWord, dateRestrict) {
-        const { GOOGLE_API_KEY, SEARCH_ENGINE_ID } = useKeyStore.getState();
+        const {GOOGLE_API_KEY, SEARCH_ENGINE_ID} = useKeyStore.getState();
 
         try {
             const url = `https://www.googleapis.com/customsearch/v1?q=${searchWord}&cx=${SEARCH_ENGINE_ID}&dateRestrict=${dateRestrict}&key=${GOOGLE_API_KEY}`;
@@ -25,7 +27,7 @@ export const CommonUtils = {
         }
     },
     fetchGeminiTrendKeywords: async function (keywords) {
-        const { GOOGLE_API_KEY, SEARCH_ENGINE_ID } = useKeyStore.getState();
+        const {GOOGLE_API_KEY, SEARCH_ENGINE_ID} = useKeyStore.getState();
 
         try {
             const prompt = `
@@ -93,7 +95,7 @@ export const CommonUtils = {
     },
     fetchGemini: async function (prompt) {
         // prompt = "너는 이제부터 Z세대 트렌드 전문가 캐릭터야. 말투는 친근하고 재치 있게, 약간 요즘 말투로 이야기해줘.\n\nQ: " + prompt;
-        const { GOOGLE_API_KEY, SEARCH_ENGINE_ID } = useKeyStore.getState();
+        const {GOOGLE_API_KEY, SEARCH_ENGINE_ID} = useKeyStore.getState();
 
         try {
             const response = await axios.post(
@@ -116,10 +118,63 @@ export const CommonUtils = {
                     }
                 }
             );
-            return response.data?.candidates?.[0]?.content?.parts?.[0]?.text + "\n";
+            return response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
         } catch (error) {
             console.error("Gemini API Error:", error);
             return [];
+        }
+    },
+    fetchChatGPT: async function (prompt) {
+        const OPENAI_API_KEY = useKeyStore.getState().OPENAI_API_KEY;
+        const API_ENDPOINT = 'https://api.openai.com/v1/responses';
+
+        if (!OPENAI_API_KEY) {
+            console.error("OPENAI_API_KEY가 설정되지 않았습니다.");
+            return;
+        }
+
+        // 1. 요청 본문(Body) 데이터 구성
+        const requestBody = {
+            model: "gpt-4o-mini", // 웹 검색 지원 모델
+            input: prompt,
+
+            // ⭐ 핵심: tools 배열에 web_search_preview 툴을 명시
+            tools: [
+                { type: "web_search_preview" }
+            ],
+
+            // (선택 사항) 기타 매개변수:
+            // temperature: 0.7,
+            // search_context_size: "high",
+        };
+
+        try {
+            // 2. Axios를 사용하여 POST 요청 전송
+            const response = await axios.post(
+                API_ENDPOINT,
+                requestBody,
+                {
+                    // 3. Headers 설정 (Authorization 필수)
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${OPENAI_API_KEY}`
+                    }
+                }
+            );
+
+            // 4. 응답 데이터 처리
+            console.log("AI 응답:");
+            console.log(response.data);
+            console.log(response.data.output.length);
+
+            let result = response.data
+            result = result.output[result.output.length - 1].content[0];
+            console.log(result);
+
+            return result.text
+
+        } catch (error) {
+            console.error("API 호출 오류:", error.response ? error.response.data : error.message);
         }
     },
     noGoBack: function () {
@@ -128,5 +183,37 @@ export const CommonUtils = {
         });
 
         return () => backHandler.remove(); // cleanup
+    },
+    decryptKey: function (encryptedBase64) {
+        try {
+            // Python에서 넘어온 Base64 디코드
+            const rawData = CryptoJS.enc.Base64.parse(encryptedBase64);
+
+            // IV와 암호문 분리
+            const iv = CryptoJS.lib.WordArray.create(
+                rawData.words.slice(0, 16 / 4), // 16바이트 → wordArray 4개
+                16
+            );
+            const ciphertext = CryptoJS.lib.WordArray.create(
+                rawData.words.slice(16 / 4),
+                rawData.sigBytes - 16
+            );
+
+            // AES 복호화
+            const decrypted = CryptoJS.AES.decrypt(
+                {ciphertext: ciphertext},
+                CryptoJS.enc.Utf8.parse(SECRET_KEY),
+                {
+                    iv: iv,
+                    mode: CryptoJS.mode.CBC,
+                    padding: CryptoJS.pad.Pkcs7,
+                }
+            );
+
+            return decrypted.toString(CryptoJS.enc.Utf8);
+        } catch (e) {
+            console.error("❌ 복호화 에러:", e);
+            return null;
+        }
     },
 }
