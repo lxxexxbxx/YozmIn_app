@@ -1,9 +1,9 @@
 import React from "react";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
-import MovieListComponent from "../movie/MovieListComponent";
+import MovieListComponent from "./movie/MovieListComponent";
 import {Dimensions, Platform, StatusBar, View} from "react-native";
-import GameTrendComponent from "../game/GameTrendComponent";
-import {useUserStore} from "../../../stores/UserStore";
+import {useUserStore} from "../../stores/UserStore";
+import HotPlaceComponent from "./hotPlace/HotPlaceComponent";
 
 const Tab = createMaterialTopTabNavigator();
 const {height} = Dimensions.get("window");
@@ -18,7 +18,7 @@ export default function TrendNavigator() {
         <View style={{flex: 1, marginTop: Platform.OS === "ios" ? height * 0.04 : statusBarHeight}}>
             {/*<PageTitleComponent backToTab={"Trend"}/>*/}
             <Tab.Navigator>
-                {categories.some(c => ["ent_movie", "ent_drama", "ent_game"].includes(c)) ? (
+                {categories.length > 0 ? (
                     <>
                         {categories.includes("ent_movie") && (
                             <Tab.Screen name="인기 영화">
@@ -30,8 +30,8 @@ export default function TrendNavigator() {
                                 {() => <MovieListComponent category="tv_popular" />}
                             </Tab.Screen>
                         )}
-                        {categories.includes("ent_game") && (
-                            <Tab.Screen name={"인기 게임"} component={GameTrendComponent}/>
+                        {(categories.includes("food_restaurant") || categories.includes("food_coffee") || categories.includes("food_dessert") || categories.includes("food_sushi")) && (
+                            <Tab.Screen name={"🔥핫플"} component={HotPlaceComponent}/>
                         )}
                     </>
                     ) : (
