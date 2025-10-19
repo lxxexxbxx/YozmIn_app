@@ -1,14 +1,15 @@
+import React from 'react';
 import Navigator from "./navigator/Navigator";
 import Toast from "react-native-toast-message";
+import { ThemeProvider } from './components/settings/theme/ThemeContext';
 
-// 메인 앱 구동
 const App = () => {
-  return (
-      <>
-        <Navigator/>
-        <Toast/>
-      </>
-  );
+    return (
+        <ThemeProvider>
+            <Navigator/>
+            <Toast/>
+        </ThemeProvider>
+    );
 }
 
 export default App;
