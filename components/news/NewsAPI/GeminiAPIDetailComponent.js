@@ -55,6 +55,55 @@ export const extractKeywordFromTitle = async (title) => {
     }
 };
 
+export const reextractKeyword = async (title) => {
+    const GEMINI_API_KEY = useKeyStore.getState().GOOGLE_API_KEY;
+    console.log(`🔹 Gemini API에 키워드 추출 요청: "${title}"`);
+
+    if (!title) return null;
+
+    try {
+        const prompt = `
+        다음 키워드에서 기사 검색시 중요하지 않은 단어들을 제거해줘.
+        
+
+        키워드: "${title}"
+        
+        예시:
+        문장: "정부 전산망 마비 및 복구 노력"
+        키워드: "전산망 마비"
+
+        문장: "의대 정원 확대 및 의정 갈등 심화"
+        키워드: "의대 정원 확대"
+        
+        잘못된 예시 :
+        문장 : 대통령실 조직 개편 및 인선 변화
+        키워드 : 조직 개편, 인선 변화
+        올바른 키워드 : 대통령실 조직 개편
+        `
+        ;
+
+        const response = await axios.post(
+            `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+            {
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+                generationConfig: {
+                    temperature: 0.2,
+                    maxOutputTokens: 50,
+                }
+            },
+            { headers: { "Content-Type": "application/json" } }
+        );
+
+        const keyword = response.data.candidates?.[0]?.content?.parts?.[0]?.text.trim() || null;
+        console.log(`✅ 추출된 키워드: "${keyword}"`);
+        return keyword;
+
+    } catch (error) {
+        console.error("🚨 Gemini API 키워드 추출 오류:", error);
+        return title; // 실패 시 원본 제목을 그대로 반환
+    }
+};
+
 // ⭐️ 함수 인자를 (crawledContent, title)로 변경
 export const fetchNewsDetails = async (crawledContent, title) => {
     const GEMINI_API_KEY = useKeyStore.getState().GOOGLE_API_KEY;
