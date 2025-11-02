@@ -6,7 +6,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 
 
 import { fetchCrawledNewsContent } from './NewsAPI/NaverNewsDetailAPIComponent'; // 1. 크롤링 함수 임포트
-import { fetchNewsDetails, extractKeywordFromTitle } from './NewsAPI/GeminiAPIDetailComponent';          // 2. Gemini 요약 함수 임포트
+import {fetchNewsDetails, extractKeywordFromTitle, reextractKeyword} from './NewsAPI/GeminiAPIDetailComponent';          // 2. Gemini 요약 함수 임포트
 
 export default function NewsDetailComponent() {
     // --- React Navigation Hooks ---
@@ -32,7 +32,7 @@ export default function NewsDetailComponent() {
         };
     }, [navigation]);
 
-    // ⭐️ 여기가 핵심 수정 부분입니다. ⭐️
+
     useEffect(() => {
         const getNewsDetails = async () => {
             if (keyword) { // `keyword`는 "정부 전산망 마비..." 같은 긴 원본 제목입니다.
@@ -49,11 +49,41 @@ export default function NewsDetailComponent() {
                 }
 
                 // --- 2단계: 추출된 키워드로 뉴스 기사 크롤링 ---
-                setLoadingMessage(`'${searchKeyword}'(으)로 뉴스를 찾고 있어요... 🔍`);
-                const crawledContent = await fetchCrawledNewsContent(searchKeyword);
+                let crawledContent = null;
+
+                for (let attempt = 1; attempt <= 3 && !crawledContent; attempt++) {
+                    setLoadingMessage(
+                        `'${searchKeyword}'(으)로 뉴스를 찾고 있어요... 🔍 (시도 ${attempt}/3)`
+                    );
+
+                    try {
+                        // 1) 원 키워드로 시도
+                        crawledContent = await fetchCrawledNewsContent(searchKeyword);
+
+                        // 2) 실패 시 키워드 보정 후 재시도
+                        if (!crawledContent) {
+                            console.warn(`크롤링 실패(원 키워드). 재보정 시도 ${attempt}/3`);
+                            const newSearchKeyword = await reextractKeyword(searchKeyword);
+
+                            if (newSearchKeyword && newSearchKeyword !== searchKeyword) {
+                                setLoadingMessage(
+                                    `키워드를 보정했어요: '${newSearchKeyword}'로 재검색 중... 🔎`
+                                );
+                                crawledContent = await fetchCrawledNewsContent(newSearchKeyword);
+                            }
+                        }
+                    } catch (e) {
+                        console.error(`크롤링 중 오류 (시도 ${attempt}/3):`, e);
+                    }
+
+                    // 3) 다음 시도 전 짧은 백오프
+                    if (!crawledContent && attempt < 3) {
+                        await new Promise((r) => setTimeout(r, 800));
+                    }
+                }
 
                 if (!crawledContent) {
-                    console.error("크롤링 실패. 작업을 중단합니다.");
+                    console.error("🚨 크롤링 3회 실패. 작업을 중단합니다.");
                     setNewsDetail(null);
                     setLoading(false);
                     return;
