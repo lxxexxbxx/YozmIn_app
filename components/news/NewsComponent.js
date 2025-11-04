@@ -1,20 +1,48 @@
 import React, { useEffect, useState } from "react";
-import { Text, View, FlatList, ActivityIndicator, SafeAreaView, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
+import {
+    Text,
+    View,
+    FlatList,
+    ActivityIndicator,
+    SafeAreaView,
+    StyleSheet,
+    TouchableOpacity,
+    Dimensions,
+    ScrollView
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetchNewsTitles } from "./NewsAPI/NaverNewsAPIComponents";
 import { fetchNewsTrends } from "./NewsAPI/GeminiAPIComponent";
 
 const { width } = Dimensions.get("window");
 
+// 뉴스 카테고리 키워드
+const CATEGORIES = [
+    { key: "all", label: "전체", query: "뉴스" },
+    { key: "politics", label: "정치", query: "정치" },
+    { key: "economy", label: "경제", query: "경제" },
+    { key: "society", label: "사회", query: "사회" },
+    { key: "it_science", label: "IT/과학", query: "IT" },
+    { key: "world", label: "국제", query: "국제" },
+    { key: "sports", label: "스포츠", query: "스포츠" },
+    { key: "entertainment", label: "연예", query: "연예" },
+];
+
 const NewsComponent = ({ navigation }) => {
     const [newsTopics, setNewsTopics] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedCategory, setSelectedCategory] = useState("all");
 
-    const fetchAndAnalyzeNews = async () => {
+    const fetchAndAnalyzeNews = async (categoryKey = "all") => {
         try {
             setLoading(true);
+
+            const categoryObject = CATEGORIES.find(cat => cat.key === categoryKey);
+            const query = categoryObject ? categoryObject.query : CATEGORIES[0].query;
+
+            console.log(`🔹 ${categoryObject.label} 카테고리 뉴스 가져오는 중...`)
             console.log("🔹 네이버 뉴스 API에서 최신 뉴스 1000개 가져오는 중...");
-            const newsTitles = await fetchNewsTitles();
+            const newsTitles = await fetchNewsTitles(query);
             console.log("✅ 뉴스 1000개 가져오기 완료!");
 
             const topics = await fetchNewsTrends(newsTitles);
@@ -31,15 +59,21 @@ const NewsComponent = ({ navigation }) => {
             console.log("🗑 기존 뉴스 데이터 삭제 중...");
             await AsyncStorage.removeItem("news_titles");
             console.log("✅ 뉴스 데이터 삭제 완료!");
-            await fetchAndAnalyzeNews();
+            await fetchAndAnalyzeNews(selectedCategory);
         } catch (error) {
             console.error("🚨 뉴스 데이터 삭제 오류:", error);
         }
     };
 
+    const handleCategoryChange = (category) => {
+        setSelectedCategory(category);
+        fetchAndAnalyzeNews(category);
+    };
+
     useEffect(() => {
-        fetchAndAnalyzeNews();
+        fetchAndAnalyzeNews(selectedCategory);
     }, []);
+
 
     return (
         <SafeAreaView style={styles.container}>
@@ -47,12 +81,37 @@ const NewsComponent = ({ navigation }) => {
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>요즘 사람이 알아야 할</Text>
                 <Text style={styles.mainTitle}>
-                    금일 뉴스 <Text style={{ fontWeight: "bold", textDecorationLine: "underline" }}>TOP 10</Text>📰
+                    금일 뉴스 <Text style={{ fontWeight: "bold", textDecorationLine: "underline" }}>TOP 5</Text>📰
                 </Text>
                 <TouchableOpacity style={styles.refreshButton} onPress={refreshNewsData}>
                     <Text style={styles.refreshText}>🔄 뉴스 새로고침</Text>
                 </TouchableOpacity>
             </View>
+            {/* ✅ 카테고리 탭 */}
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.tabContainer}
+                contentContainerStyle={styles.tabContentContainer}
+            >
+                {CATEGORIES.map((category) => (
+                    <TouchableOpacity
+                        key={category.key}
+                        style={[
+                            styles.tabButton,
+                            selectedCategory === category.key && styles.tabButtonActive
+                        ]}
+                        onPress={() => handleCategoryChange(category.key)}
+                    >
+                        <Text style={[
+                            styles.tabText,
+                            selectedCategory === category.key && styles.tabTextActive
+                        ]}>
+                            {category.label}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
 
             {/* ✅ 뉴스 목록 컨테이너 */}
             <View style={styles.newsContainer}>
@@ -124,6 +183,33 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontSize: 16,
         fontWeight: "bold",
+    },
+    tabContainer: {
+        maxHeight: 35,
+        marginHorizontal: 10,
+        marginBottom: 10,
+    },
+    tabContentContainer: {
+        paddingHorizontal: 10,
+        gap: 10,
+    },
+    tabButton: {
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 20,
+        backgroundColor: "#E5E5EA",
+        marginRight: 10,
+    },
+    tabButtonActive: {
+        backgroundColor: "#007AFF",
+    },
+    tabText: {
+        fontSize: 14,
+        fontWeight: "600",
+        color: "#666",
+    },
+    tabTextActive: {
+        color: "#fff",
     },
     newsContainer: {
         flex: 1,
