@@ -1,4 +1,3 @@
-// screens/ClosetScreen.js
 import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
@@ -15,21 +14,20 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import supabase from "../../supabase";
 import { useUserStore } from "../../stores/UserStore";
+import { pushQuest } from "../quest/Quests";
 
-// 캐릭터 스테이지 & 좌표 스케일(칸 단위)
+
 const CELL_SIZE = 70;
 const STAGE_W = 260;
 const STAGE_H = 260;
 const OFFSET_X = 0;
 const OFFSET_Y = 0;
 
-// 카테고리/탭
 const TABS = ["모자", "악세서리", "배경"];
 const KO_TO_CATEGORY = { 모자: "HAT", 악세서리: "ACCESSORY", 배경: "BACKGROUND" };
 const CATEGORY_TO_ICON = { HAT: "hat-fedora", ACCESSORY: "glasses", BACKGROUND: "image-area" };
 const CATS = ["HAT", "ACCESSORY", "BACKGROUND"];
 
-// DB name → 로컬 이미지 매핑(파일 존재해야 함)
 const IMAGE_BY_DB_NAME = {
   "black cap": require("../../assets/black cap.png"),
   "black sunglasses": require("../../assets/black sunglasses.png"),
@@ -59,7 +57,6 @@ const ClosetItemCard = ({ item, selected, onPreview, onEquipToggle }) => {
         )}
       </View>
 
-      {/* 장착/해제 버튼 */}
       <TouchableOpacity style={[styles.equipBtn, item.equipped && styles.equipBtnOn]} onPress={() => onEquipToggle(item)}>
         <Text style={[styles.equipBtnText, item.equipped && { color: "#fff" }]}>
           {item.equipped ? "해제" : "장착"}
@@ -74,15 +71,14 @@ export default function ClosetScreen() {
   const { user_id: userId } = useUserStore();
 
   const [tab, setTab] = useState("모자");
-  const [ownedItems, setOwnedItems] = useState([]); // 내 옷장 아이템
-  const [wearing, setWearing] = useState({ HAT: null, ACCESSORY: null, BACKGROUND: null }); // 화면 프리뷰 상태
+  const [ownedItems, setOwnedItems] = useState([]);
+  const [wearing, setWearing] = useState({ HAT: null, ACCESSORY: null, BACKGROUND: null });
   const [loading, setLoading] = useState(false);
 
   const { width } = useWindowDimensions();
   const isWide = width >= 720;
   const numColumns = isWide ? 3 : 2;
 
-  // 내 옷장 불러오기: user_items → shop_items join (두 번에 나눠서)
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -133,7 +129,6 @@ export default function ClosetScreen() {
         if (!cancelled) {
           setOwnedItems(merged);
 
-          // 초기 프리뷰: equipped=true인 것들을 카테고리별로 세팅
           const initWear = { HAT: null, ACCESSORY: null, BACKGROUND: null };
           for (const it of merged) {
             if (it.equipped && CATS.includes(it.category)) {
@@ -151,7 +146,6 @@ export default function ClosetScreen() {
     return () => { cancelled = true; };
   }, [userId]);
 
-  // 현재 탭 아이템
   const listItems = useMemo(() => {
     const cat = KO_TO_CATEGORY[tab];
     return ownedItems
@@ -159,60 +153,72 @@ export default function ClosetScreen() {
       .sort((a, b) => (a.y - b.y) || (a.x - b.x));
   }, [tab, ownedItems]);
 
-  // 프리뷰(입혀보기): 카테고리 단일 선택
   const handlePreview = (item) => {
     setWearing((prev) => ({ ...prev, [item.category]: item }));
   };
 
-  // 장착/해제
   const handleEquipToggle = async (item) => {
     try {
       if (!userId) return;
       const itemNo = Number(item.id);
       if (!itemNo) return;
-
+  
+      // ✅ 이미 착용 중인 아이템 클릭 → 해제
       if (item.equipped) {
-        // 이미 장착 → 해당 아이템만 해제
-        const { error } = await supabase
+        await supabase
           .from("user_items")
           .update({ equipped: false })
           .eq("user_id", userId)
           .eq("item_no", itemNo);
-        if (error) throw error;
-
+  
         setOwnedItems((prev) =>
-          prev.map((it) => (it.id === item.id ? { ...it, equipped: false } : it))
+          prev.map((it) =>
+            it.id === item.id ? { ...it, equipped: false } : it
+          )
         );
         setWearing((prev) => ({ ...prev, [item.category]: null }));
+  
+        + await pushQuest(6, userId);
         return;
       }
-
-      // 장착 안됨 → 같은 카테고리 전부 해제 후 이 아이템만 장착
-      const { error: err1 } = await supabase
+  
+      // ✅ 착용 변경 로직
+      await supabase
         .from("user_items")
         .update({ equipped: false })
         .eq("user_id", userId)
         .eq("category", item.category);
-      if (err1) throw err1;
-
-      const { error: err2 } = await supabase
+  
+      await supabase
         .from("user_items")
         .update({ equipped: true })
         .eq("user_id", userId)
         .eq("item_no", itemNo);
-      if (err2) throw err2;
-
+  
       setOwnedItems((prev) =>
         prev.map((it) =>
-          it.category === item.category ? { ...it, equipped: it.id === item.id } : it
+          it.category === item.category
+            ? { ...it, equipped: it.id === item.id }
+            : it
         )
       );
-      setWearing((prev) => ({ ...prev, [item.category]: { ...item, equipped: true } }));
+      setWearing((prev) => ({
+        ...prev,
+        [item.category]: { ...item, equipped: true },
+      }));
+  
+      // ✅ 착용 상태가 변경된 경우에만 퀘스트 갱신
+      await supabase.rpc("update_quest_progress", {
+        p_quest_no: 6,
+        p_user_id: userId,
+      });
+  
+      console.log("🎯 코스튬 변경 완료 및 퀘스트 갱신");
     } catch (e) {
-      console.log("equip toggle error:", e);
+      console.error("❌ equip toggle error:", e);
     }
   };
-
+  
   return (
     <View style={styles.screen}>
       <ScrollView
@@ -220,7 +226,6 @@ export default function ClosetScreen() {
         contentContainerStyle={[styles.scrollContent, { flexDirection: isWide ? "row" : "column" }]}
         keyboardShouldPersistTaps="handled"
       >
-        {/* 왼쪽: 캐릭터 미리보기 */}
         <View style={[styles.leftPanel, isWide ? styles.leftPanelWide : styles.leftPanelNarrow]}>
           <View style={styles.previewHeader}>
             <Text style={styles.title}>옷장</Text>
@@ -269,11 +274,9 @@ export default function ClosetScreen() {
                 );
               })}
             </View>
-            {/* wearingBar 삭제됨 */}
           </View>
         </View>
 
-        {/* 오른쪽: 옷장 리스트 */}
         <View style={[styles.rightPanel, isWide ? styles.rightPanelWide : styles.rightPanelNarrow]}>
           <View style={styles.rowBetween}>
             <Text style={styles.sectionTitle}>내 아이템</Text>
@@ -330,7 +333,6 @@ const styles = StyleSheet.create({
   contentScroll: { flex: 1 },
   scrollContent: { padding: 16 },
 
-  // 미리보기 패널
   leftPanel: {
     backgroundColor: "#fff",
     borderRadius: 16,
@@ -385,7 +387,6 @@ const styles = StyleSheet.create({
   },
   overlayImage: { width: CELL_SIZE, height: CELL_SIZE, resizeMode: "contain" },
 
-  // 오른쪽 패널
   rightPanel: {
     backgroundColor: "#fff",
     borderRadius: 16,
@@ -406,7 +407,6 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 13, fontWeight: "600", color: "#626773" },
   tabTextActive: { color: "#2F80ED" },
 
-  // 카드
   cardThumb: { width: 40, height: 40, resizeMode: "contain" },
   itemCard: {
     flex: 1,
@@ -430,7 +430,6 @@ const styles = StyleSheet.create({
   badgeOff: { backgroundColor: "#D8DEE9", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
   badgeText: { fontSize: 11, fontWeight: "700", color: "#fff" },
 
-  // 버튼
   secondaryBtn: {
     flexDirection: "row",
     alignItems: "center",

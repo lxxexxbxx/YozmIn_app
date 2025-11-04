@@ -1,6 +1,8 @@
 import {create} from "zustand";
 import supabase from "../supabase";
-import {CommonUtils} from "../components/common/CommonUtils";
+import CryptoJS from "react-native-crypto-js";
+
+const SECRET_KEY = "dktitcn1212!dktitcn1212!!@#$%^&*";
 
 export const useKeyStore = create((set, get) =>({
     GOOGLE_API_KEY: "",
@@ -32,6 +34,38 @@ export const useKeyStore = create((set, get) =>({
             KAKAO_REST_API_KEY: "",
             KAKAO_ADMIN_KEY: "",
         })},
+        decryptKey: function (encryptedBase64) {
+            try {
+                // Python에서 넘어온 Base64 디코드
+                const rawData = CryptoJS.enc.Base64.parse(encryptedBase64);
+    
+                // IV와 암호문 분리
+                const iv = CryptoJS.lib.WordArray.create(
+                    rawData.words.slice(0, 16 / 4), // 16바이트 → wordArray 4개
+                    16
+                );
+                const ciphertext = CryptoJS.lib.WordArray.create(
+                    rawData.words.slice(16 / 4),
+                    rawData.sigBytes - 16
+                );
+    
+                // AES 복호화
+                const decrypted = CryptoJS.AES.decrypt(
+                    {ciphertext: ciphertext},
+                    CryptoJS.enc.Utf8.parse(SECRET_KEY),
+                    {
+                        iv: iv,
+                        mode: CryptoJS.mode.CBC,
+                        padding: CryptoJS.pad.Pkcs7,
+                    }
+                );
+    
+                return decrypted.toString(CryptoJS.enc.Utf8);
+            } catch (e) {
+                console.error("❌ 복호화 에러:", e);
+                return null;
+            }
+        },
         setKey: async function () {
             const { data, error } = await supabase.from("api_keys").select("*");
             if (error) {
@@ -40,7 +74,7 @@ export const useKeyStore = create((set, get) =>({
             }
 
             data.forEach((li) => {
-                set({ [li.service]: CommonUtils.decryptKey(li.api_key) });
+                set({ [li.service]: this.decryptKey(li.api_key) });
             });
         },
     },

@@ -7,6 +7,7 @@ export const useUserStore = create((set) =>({
   email: "",
   birth_date: "",
   categories: "",
+  coin : 0,
 
   setter: {
     setClear: function () {set({
@@ -16,6 +17,7 @@ export const useUserStore = create((set) =>({
       email: "",
       birth_date: "",
       categories: "",
+      coin : 0,
     })},
     setUser: function (name, userId, email, birthDate, categories) {set({
         name: name,
@@ -29,7 +31,10 @@ export const useUserStore = create((set) =>({
     setPw: function (value) {set({password: value})},
     setEmail: function (value) {set({email: value})},
     setBirthDate: function (value) {set({birth_date: value})},
-    setCategories: function (value) {set({categories: value})}
+    setCategories: function (value) {set({categories: value})},
+    setCoin: function (value) {set({ coin: Number(value) || 0 })}
   },
+  
+  setCoin: (value) => set({ coin: Number(value) || 0 }),
 
 }));
