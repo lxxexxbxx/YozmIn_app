@@ -76,39 +76,20 @@ const ShopItemCard = ({ item, onPreview, onBuy }) => {
 
 const ShopComponent = () => {
   const navigation = useNavigation();
-  const { user_id: userId } = useUserStore();
+  const store = useUserStore();
+  const userId = store.user_id;
+  const coin = store.coin;
+  const setGlobalCoin = store.setCoin; // setter
 
   const [tab, setTab] = useState("모자");
   const [dbItems, setDbItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [overlayItem, setOverlayItem] = useState(null);
-  const [coin, setCoin] = useState(0);
   const [ownedNos, setOwnedNos] = useState(new Set());
 
   const { width } = useWindowDimensions();
   const isWide = width >= 720;
   const numColumns = isWide ? 3 : 2;
-
-  // 코인 로드
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        if (!userId) return;
-        const { data, error } = await supabase
-          .from("mypage")
-          .select("mp_Coin")
-          .eq("user_id", userId)
-          .single();
-        if (!cancelled && !error && data) setCoin(Number(data.mp_Coin) || 0);
-      } catch (e) {
-        console.log("loadCoin:", e);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [userId]);
 
   // 보유 아이템 로드
   useEffect(() => {
@@ -116,10 +97,7 @@ const ShopComponent = () => {
     (async () => {
       try {
         if (!userId) return;
-        const { data, error } = await supabase
-          .from("user_items")
-          .select("item_no")
-          .eq("user_id", userId);
+        const { data, error } = await supabase.from("user_items").select("item_no").eq("user_id", userId);
         if (!cancelled && !error && Array.isArray(data)) {
           setOwnedNos(new Set(data.map((d) => Number(d.item_no))));
         }
@@ -138,9 +116,7 @@ const ShopComponent = () => {
     (async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from("shop_items")
-          .select("no, name, category, price, x, y");
+        const { data, error } = await supabase.from("shop_items").select("no, name, category, price, x, y");
         if (error) {
           console.error("[shop_items] select error:", error);
           return;
@@ -214,11 +190,12 @@ const ShopComponent = () => {
               return;
             }
 
+            // 1) user_items에 추가
             const { error: insertErr } = await supabase.from("user_items").insert([
               {
                 user_id: userId,
                 item_no: itemNo,
-                category: item.category, // 테이블에 없으면 삭제
+                category: item.category,
                 equipped: false,
               },
             ]);
@@ -228,6 +205,7 @@ const ShopComponent = () => {
               return;
             }
 
+            // 2) mypage 코인 차감 (서버의 mp_Coin과 동기화)
             const newCoin = coin - item.price;
             const { data: updated, error: coinErr } = await supabase
               .from("mypage")
@@ -235,8 +213,19 @@ const ShopComponent = () => {
               .eq("user_id", userId)
               .select("mp_Coin")
               .single();
-            if (!coinErr) setCoin(Number(updated?.mp_Coin) || newCoin);
 
+            if (coinErr) {
+              console.error("mypage coin update error:", coinErr);
+              Alert.alert("오류", "코인 차감에 실패했습니다.");
+              // (선택) 롤백: user_items 삭제 고려 가능
+              return;
+            }
+
+            // 3) 전역 코인 상태 갱신
+            const updatedCoinValue = (updated && updated.mp_Coin) ? Number(updated.mp_Coin) : newCoin;
+            setGlobalCoin(updatedCoinValue);
+
+            // 4) UI 반영
             setOwnedNos((prev) => new Set([...prev, itemNo]));
             Alert.alert("완료", "구매가 완료되었습니다.");
           } catch (e) {
@@ -261,9 +250,7 @@ const ShopComponent = () => {
             <Text style={styles.previewTitle}>캐릭터 미리보기</Text>
             <TouchableOpacity
               style={styles.backBtn}
-              onPress={() =>
-                navigation.canGoBack() ? navigation.goBack() : navigation.navigate("MyPage")
-              }
+              onPress={() => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("MyPage"))}
             >
               <Ionicons name="chevron-back" size={20} color="#333" />
               <Text style={styles.backText}>뒤로</Text>
@@ -327,7 +314,7 @@ const ShopComponent = () => {
             })}
           </View>
 
-          {/* 아이템 그리드(리스트 자체 스크롤 비활성, 바깥 ScrollView로 스크롤) */}
+          {/* 아이템 그리드 */}
           <FlatList
             data={items}
             key={numColumns}
@@ -337,9 +324,7 @@ const ShopComponent = () => {
             nestedScrollEnabled
             contentContainerStyle={{ paddingVertical: 8, paddingHorizontal: 6 }}
             ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-            renderItem={({ item }) => (
-              <ShopItemCard item={item} onPreview={handlePreview} onBuy={handleBuy} />
-            )}
+            renderItem={({ item }) => <ShopItemCard item={item} onPreview={handlePreview} onBuy={handleBuy} />}
             ListEmptyComponent={
               !loading ? (
                 <View style={{ padding: 24, alignItems: "center" }}>
@@ -373,8 +358,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
-    marginBottom: 8, // 간격 축소
-    marginTop : 30,
+    marginBottom: 8,
+    marginTop: 30,
   },
   leftPanelWide: { flex: 1, minHeight: 360, marginRight: 8 },
   leftPanelNarrow: { width: "100%" },
@@ -450,7 +435,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
   },
   rightPanelWide: { flex: 1.2, marginLeft: 8 },
-  rightPanelNarrow: { width: "100%", marginTop: 4 }, // 간격 확 줄임
+  rightPanelNarrow: { width: "100%", marginTop: 4 },
 
   shopHeader: {
     flexDirection: "row",

@@ -1,99 +1,127 @@
 // components/QuestCard.js
 import React from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
-export default function QuestCard({
-  title,
-  current,
-  goal,
-  reward,
-  claimedAt,       // null | string
-  onAddPress,      // () => void
-  onClaimPress,    // () => void
-}) {
-  const progress = Math.min(current / goal, 1);
-  const done = current >= goal;
-  const claimed = !!claimedAt;
+const QuestCard = ({ quest, onClaimPress }) => {
+  if (!quest) return null;
+
+  // quests 테이블 join 구조 반영
+  const name = quest.quests?.name || "이름 없음";
+  const goal_count = quest.quests?.goal_count || 0;
+  const reward_coin = quest.quests?.reward_coin || 0;
+  const current_count = quest.current_count || 0;
+  const is_cleared = quest.is_cleared || false;
+  const claimed_at = quest.claimed_at || null;
+  
+
+  const progress = Math.min(current_count, goal_count) / (goal_count || 1);
+  const progressText = `${Math.min(current_count, goal_count)}/${goal_count}`;
+  const isReceived = Boolean(claimed_at);
+  const isCompleted = is_cleared && !isReceived;
+
+  const buttonText = isReceived ? "수령 완료" : isCompleted ? "보상 받기" : "진행 중";
+  const buttonDisabled = isReceived || !isCompleted;
+
+  const buttonColor = isReceived
+    ? "#bbb"
+    : isCompleted
+    ? "#ffd700"
+    : "#ddd";
 
   return (
-    <View style={s.card}>
-      <View style={s.row}>
-        <Text style={s.title}>{title}</Text>
-        <View style={s.rewardChip}>
-          <Text style={s.rewardTxt}>💰 {reward}</Text>
+    <View style={styles.card}>
+      <View style={styles.info}>
+        <Text style={styles.title}>{name}</Text>
+
+        {/* 진행도 텍스트 */}
+        <Text style={styles.progressText}>진행도: {progressText}</Text>
+
+        {/* 초록색 진행도 바 */}
+        <View style={styles.progressBarWrapper}>
+          <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} />
+        </View>
+
+        {/* 보상 코인 표시 */}
+        <View style={styles.rewardRow}>
+          <MaterialCommunityIcons name="currency-usd" size={18} color="gold" />
+          <Text style={styles.rewardText}>{reward_coin} 코인</Text>
         </View>
       </View>
 
-      <View style={s.progressOuter}>
-        <View style={[s.progressInner, { width: `${progress * 100}%` }]} />
-      </View>
-      <Text style={s.countTxt}>
-        {current} / {goal}
-      </Text>
-
-      <View style={s.btnRow}>
-        <Pressable style={[s.btn, s.ghost]} onPress={onAddPress}>
-          <Text style={[s.btnTxt, { color: "#2563eb" }]}>+1</Text>
-        </Pressable>
-
-        <Pressable
-          style={[
-            s.btn,
-            done && !claimed ? s.primary : s.disabled,
-            claimed && s.claimed,
-          ]}
-          onPress={onClaimPress}
-          disabled={!done || claimed}
-        >
-          <Text style={s.btnTxt}>
-            {claimed ? "수령 완료" : done ? "보상 받기" : "진행 중"}
-          </Text>
-        </Pressable>
-      </View>
+      {/* 보상 버튼 */}
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: buttonColor }]}
+        disabled={buttonDisabled}
+        onPress={() => onClaimPress(quest)}
+      >
+        <Text style={styles.buttonText}>{buttonText}</Text>
+      </TouchableOpacity>
     </View>
   );
-}
+};
 
-const s = StyleSheet.create({
+export default QuestCard;
+
+const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#FAFAFD",
-    borderRadius: 14,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#ECEEF2",
-  },
-  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  title: { fontSize: 16, fontWeight: "700", color: "#1f2937" },
-  rewardChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    backgroundColor: "#fff7ed",
-    borderWidth: 1,
-    borderColor: "#fed7aa",
-    borderRadius: 999,
-  },
-  rewardTxt: { fontWeight: "700", color: "#b45309" },
-  progressOuter: {
-    height: 10,
-    backgroundColor: "#e5e7eb",
-    borderRadius: 999,
-    overflow: "hidden",
-    marginTop: 8,
-  },
-  progressInner: { height: "100%", backgroundColor: "#22c55e" },
-  countTxt: { fontSize: 12, color: "#6b7280", marginTop: 6 },
-  btnRow: { flexDirection: "row", gap: 8, justifyContent: "flex-end", marginTop: 10 },
-  btn: {
+    backgroundColor: "#fff",
     borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    justifyContent: "center",
-    minWidth: 100,
   },
-  ghost: { backgroundColor: "#eff6ff", borderWidth: 1, borderColor: "#bfdbfe" },
-  primary: { backgroundColor: "#2563eb" },
-  disabled: { backgroundColor: "#9ca3af" },
-  claimed: { backgroundColor: "#10b981" },
-  btnTxt: { color: "#fff", fontWeight: "700" },
+  info: {
+    flex: 1,
+    marginRight: 10,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#222",
+  },
+  progressText: {
+    marginTop: 6,
+    fontSize: 13,
+    color: "#555",
+  },
+  progressBarWrapper: {
+    width: "100%",
+    height: 8,
+    backgroundColor: "#eee",
+    borderRadius: 6,
+    marginTop: 6,
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: "#4ade80", // 초록색
+  },
+  rewardRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 6,
+  },
+  rewardText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "goldenrod",
+    marginLeft: 4,
+  },
+  button: {
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+  },
+  buttonText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#333",
+  },
 });
