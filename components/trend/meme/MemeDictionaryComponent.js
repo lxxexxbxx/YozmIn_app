@@ -1,0 +1,242 @@
+import React, { useEffect, useState } from "react";
+import {
+    View,
+    Text,
+    StyleSheet,
+    FlatList,
+    Image,
+    TouchableOpacity,
+    ScrollView,
+    Dimensions,
+    ActivityIndicator,
+} from "react-native";
+import { CommonUtils } from "../../common/CommonUtils";
+import supabase from "../../../supabase";
+import { Image as ExpoImage } from "expo-image";
+import { SvgXml } from "react-native-svg";
+
+const { width } = Dimensions.get("window");
+
+// 대한민국 연도별 카테고리
+const krYears = [
+    "2025년",
+    "2024년",
+    "2023년",
+    "2022년",
+    "2021년",
+    "2020년",
+    "2019년",
+    "2018년",
+    "2017년",
+    "2016년",
+    "2015년",
+    "2014년",
+    "2013년",
+    "2012년",
+    "2011년",
+    "2010년",
+];
+
+const RemoteSvg = ({ uri, height = 220 }) => {
+    const [xml, setXml] = useState(null);
+    const [err, setErr] = useState(null);
+
+    useEffect(() => {
+        let alive = true;
+        (async () => {
+            try {
+                const r = await fetch(uri, { method: "GET" });
+                const ct = r.headers.get("content-type") || "";
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                // content-type이 octet-stream이어도 text로 읽어서 처리
+                const txt = await r.text();
+                if (alive) setXml(txt);
+            } catch (e) {
+                if (alive) setErr(e);
+            }
+        })();
+        return () => { alive = false; };
+    }, [uri]);
+
+    if (err) return <View style={{ height }} />; // 조용히 폴백
+    if (!xml) return <ActivityIndicator style={{ height, justifyContent: "center" }} />;
+    return <SvgXml xml={xml} width="100%" height={height} />;
+};
+
+// svg/webp 처리용 헬퍼
+export const MemeImage = ({ uri, style }) => {
+    if (!uri) return null;
+    const isSvg = uri.toLowerCase().includes(".svg");
+    const h = style?.height ?? 220;
+
+    return isSvg ? (
+        <RemoteSvg uri={uri} height={h} />
+    ) : (
+        <ExpoImage source={{ uri }} style={style} contentFit="cover" transition={150} />
+    );
+};
+
+const MemeDictionaryComponent = () => {
+    const [selectedYear, setSelectedYear] = useState("2025년");
+    const [memes, setMemes] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        CommonUtils.noGoBack();
+        fetchMemes();
+    }, []);
+
+    const fetchMemes = async () => {
+        try {
+            setLoading(true);
+            // ✅ Supabase에서 trend_memes 테이블 전체 조회
+            const { data, error } = await supabase
+                .from("trend_memes")
+                .select("id, year, month, title, desc, image")
+                .order("year", { ascending: false })
+                .order("month", { ascending: false });
+
+            if (error) throw error;
+
+            // ✅ desc나 image가 null인 경우 안전 처리
+            const sanitized = data.map((item) => ({
+                id: item.id.toString(),
+                year: `${item.year}년`,
+                title: item.title || "(제목 없음)",
+                summary: (String(item.desc).length > 60 ? String(item.desc).slice(0, 60) + "..." : item.desc) || "설명이 없습니다.",
+                image:
+                    item.image && item.image.startsWith("http")
+                        ? item.image
+                        : "https://via.placeholder.com/400x250.png?text=이미지+없음",
+            }));
+
+            setMemes(sanitized);
+        } catch (err) {
+            console.error("❌ Supabase fetch error:", err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const filteredMemes = memes.filter((m) => m.year === selectedYear);
+
+    const renderCard = ({ item }) => (
+        <View style={styles.card}>
+            <MemeImage uri={item.image} style={styles.image} />
+            <View style={styles.cardContent}>
+                <View style={styles.cardHeader}>
+                    <Text style={styles.title}>{item.title}</Text>
+                </View>
+                <Text style={styles.summary}>{item.summary}</Text>
+                <TouchableOpacity style={styles.button}>
+                    <Text style={styles.buttonText}>자세히 보기</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
+
+    return (
+        <View style={styles.container}>
+            {/* 상단 연도 탭바 */}
+            <View style={{ height: 60 }}>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.yearTabs}
+                >
+                    {krYears.map((year) => (
+                        <TouchableOpacity
+                            key={year}
+                            style={[
+                                styles.yearTab,
+                                selectedYear === year && styles.yearTabActive,
+                            ]}
+                            onPress={() => setSelectedYear(year)}
+                        >
+                            <Text
+                                style={[
+                                    styles.yearTabText,
+                                    selectedYear === year && styles.yearTabTextActive,
+                                ]}
+                            >
+                                {year}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            </View>
+
+            {/* 로딩 표시 */}
+            {loading ? (
+                <ActivityIndicator
+                    size="large"
+                    color="#000"
+                    style={{ marginTop: 40 }}
+                />
+            ) : (
+                <FlatList
+                    data={filteredMemes}
+                    keyExtractor={(item) => item.id}
+                    renderItem={renderCard}
+                    contentContainerStyle={{ padding: 16 }}
+                    ListEmptyComponent={
+                        <Text style={styles.emptyText}>아직 등록된 밈이 없어요 😅</Text>
+                    }
+                    showsVerticalScrollIndicator={false}
+                    style={{ flex: 1 }}
+                />
+            )}
+        </View>
+    );
+};
+
+const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: "#fff" },
+
+    // 연도 탭바
+    yearTabs: { alignItems: "center", paddingHorizontal: 12 },
+    yearTab: {
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 20,
+        backgroundColor: "#eee",
+        marginRight: 8,
+    },
+    yearTabActive: { backgroundColor: "#111" },
+    yearTabText: { color: "#555", fontWeight: "600" },
+    yearTabTextActive: { color: "#fff" },
+
+    // 카드
+    card: {
+        backgroundColor: "#fafafa",
+        borderRadius: 12,
+        marginBottom: 20,
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 3 },
+        elevation: 3,
+        overflow: "hidden",
+    },
+    image: { width: "100%", height: width * 0.5 },
+    cardContent: { padding: 12 },
+    cardHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
+    title: { fontSize: 16, fontWeight: "700", marginBottom: 6 },
+    summary: { color: "#666", marginBottom: 10, lineHeight: 18 },
+    button: {
+        backgroundColor: "#111",
+        paddingVertical: 8,
+        borderRadius: 8,
+        alignItems: "center",
+    },
+    buttonText: { color: "#fff", fontWeight: "600" },
+
+    // 빈 리스트 안내
+    emptyText: { textAlign: "center", marginTop: 40, color: "#888" },
+});
+
+export default MemeDictionaryComponent;
