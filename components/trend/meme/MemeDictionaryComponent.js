@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {
     View,
     Text,
@@ -14,28 +14,15 @@ import { CommonUtils } from "../../common/CommonUtils";
 import supabase from "../../../supabase";
 import { Image as ExpoImage } from "expo-image";
 import { SvgXml } from "react-native-svg";
+import {useNavigation} from "@react-navigation/native";
+import BottomSheet from "@gorhom/bottom-sheet";
+import MemeDetailsComponent from "./MemeDetailsComponent";
 
 const { width } = Dimensions.get("window");
 
 // 대한민국 연도별 카테고리
-const krYears = [
-    "2025년",
-    "2024년",
-    "2023년",
-    "2022년",
-    "2021년",
-    "2020년",
-    "2019년",
-    "2018년",
-    "2017년",
-    "2016년",
-    "2015년",
-    "2014년",
-    "2013년",
-    "2012년",
-    "2011년",
-    "2010년",
-];
+const years = ["2025년", "2024년", "2023년", "2022년", "2021년", "2020년", "2019년", "2018년", "2017년", "2016년", "2015년", "2014년", "2013년", "2012년", "2011년", "2010년"];
+const months = ["2025년", "2024년", "2023년", "2022년", "2021년", "2020년", "2019년", "2018년", "2017년", "2016년", "2015년", "2014년", "2013년", "2012년", "2011년", "2010년"];
 
 const RemoteSvg = ({ uri, height = 220 }) => {
     const [xml, setXml] = useState(null);
@@ -81,6 +68,11 @@ const MemeDictionaryComponent = () => {
     const [memes, setMemes] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const [selectedItem, setSelectedItem] = useState(null);
+    const bottomSheetRef = useRef(null);
+
+    const navigation = useNavigation();
+
     useEffect(() => {
         CommonUtils.noGoBack();
         fetchMemes();
@@ -120,6 +112,11 @@ const MemeDictionaryComponent = () => {
 
     const filteredMemes = memes.filter((m) => m.year === selectedYear);
 
+    const openDetail = (item) => {
+        setSelectedItem(item);
+        bottomSheetRef.current?.expand();
+    };
+
     const renderCard = ({ item }) => (
         <View style={styles.card}>
             <MemeImage uri={item.image} style={styles.image} />
@@ -128,7 +125,7 @@ const MemeDictionaryComponent = () => {
                     <Text style={styles.title}>{item.title}</Text>
                 </View>
                 <Text style={styles.summary}>{item.summary}</Text>
-                <TouchableOpacity style={styles.button}>
+                <TouchableOpacity style={styles.button} onPress={() => openDetail(item)}>
                     <Text style={styles.buttonText}>자세히 보기</Text>
                 </TouchableOpacity>
             </View>
@@ -144,7 +141,7 @@ const MemeDictionaryComponent = () => {
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.yearTabs}
                 >
-                    {krYears.map((year) => (
+                    {years.map((year) => (
                         <TouchableOpacity
                             key={year}
                             style={[
@@ -186,6 +183,16 @@ const MemeDictionaryComponent = () => {
                     style={{ flex: 1 }}
                 />
             )}
+
+            <BottomSheet
+                ref={bottomSheetRef}
+                index={-1}
+                snapPoints={["85%"]}
+                enablePanDownToClose
+                backgroundStyle={{ backgroundColor: "#fff" }}
+            >
+                {selectedItem && <MemeDetailsComponent meme={selectedItem} />}
+            </BottomSheet>
         </View>
     );
 };

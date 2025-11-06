@@ -24,9 +24,9 @@ const ShortsList = ({videoList, max}) => {
                 horizontal={false} // 가로 스크롤 비활성
                 initialNumToRender={2} // 초기 렌더링 개수
                 windowSize={max} // 최대 렌더링 개수
-                ListHeaderComponent={
-                    <KeywordTrendComponent w={width} h={adjustedHeight}/>
-                }
+                // ListHeaderComponent={
+                //     <KeywordTrendComponent w={width} h={adjustedHeight}/>
+                // }
       />
   );
 };
