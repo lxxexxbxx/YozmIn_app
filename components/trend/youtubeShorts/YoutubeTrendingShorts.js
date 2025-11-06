@@ -4,9 +4,9 @@ import axios from "axios";
 import ShortsList from "./ShortsList";
 import {useKeyStore} from "../../../stores/KeyStore";
 
-const YoutubeTrendingShorts = () => {
+const YoutubeTrendingShorts = ({keyword}) => {
   const keyStore = useKeyStore();
-  const GOOGLE_API_KEY = keyStore.GOOGLE_API_KEY; // Gemini 2.0 API 키
+  const GOOGLE_API_KEY = keyStore.GOOGLE_API_KEY;
 
   const [trendingShorts, setTrendingShorts] = useState();
   const maxResults = 5; // 검색 쇼츠 개수
@@ -25,7 +25,7 @@ const YoutubeTrendingShorts = () => {
 
   // 검색 키워드 기준 지정 기간동안 지정 개수만큼의 쇼츠 정보 리스트를 조회해오는 함수
   const fetchYouTubeTrendingShorts = async () => {
-    const searchWord = "챌린지"; // 검색어
+    const searchWord = keyword; // 검색어
 
     const today = new Date(); // 오늘
     const ago = new Date(); // n일 전
@@ -37,11 +37,13 @@ const YoutubeTrendingShorts = () => {
     const embedQuery = "autoplay=1&loop=1&disableScroll=1"
     const searchQuery = `part=snippet&q=${searchWord}&maxResults=${maxResults}&order=viewCount&type=video&videoDuration=short`
     // const searchQuery = `chart=mostPopular&part=snippet&maxResults=${maxResults}&type=video&videoDuration=short`
+    console.log(searchQuery);
 
     // YouTube API 조회
     const response = await axios.get(
         `${mainQuery}?${dateQuery}&${regionQuery}&${searchQuery}`
     );
+    console.log(response);
 
     // 조회해온 쇼츠의 제목, 업로드 시간, 영상ID, URL(쇼츠) 정보 리스트 저장
     let shorts = response.data.items.map(video => ({

@@ -27,6 +27,7 @@ import GameDetailComponent from "../components/trend/game/GameDetailComponent";
 import ShopComponent from "../components/shop/ShopComponent";
 import ClosetScreen from "../components/closet/ClosetScreen";
 import TodayQuestsScreen from '../components/quest/TodayQuestsScreen';
+import MemeDetailsComponent from "../components/trend/meme/MemeDetailsComponent";
 
 const Stack = createStackNavigator();
 
@@ -79,6 +80,8 @@ const Navigator = () => {
                 <Stack.Screen name={"TrendMovieDetail"} component={MovieDetailComponent} options={{headerShown: false}}/>
                 {/*게임 정보 상세*/}
                 <Stack.Screen name={"GameDetail"} component={GameDetailComponent} options={{headerShown: false}}/>
+                {/*밈 정보 상세*/}
+                <Stack.Screen name={"MemeDetail"} component={MemeDetailsComponent} options={{headerShown: false}}/>
 
 
                 <Stack.Screen name="Shop" component={ShopComponent} options={{ headerShown: false }} />
