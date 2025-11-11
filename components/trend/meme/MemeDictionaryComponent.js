@@ -4,11 +4,12 @@ import {
     Text,
     StyleSheet,
     FlatList,
-    Image,
     TouchableOpacity,
     ScrollView,
     Dimensions,
     ActivityIndicator,
+    Animated,
+    Keyboard, PanResponder, TextInput, Platform
 } from "react-native";
 import { CommonUtils } from "../../common/CommonUtils";
 import supabase from "../../../supabase";
@@ -17,8 +18,12 @@ import { SvgXml } from "react-native-svg";
 import {useNavigation} from "@react-navigation/native";
 import BottomSheet from "@gorhom/bottom-sheet";
 import MemeDetailsComponent from "./MemeDetailsComponent";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import TypingText from "../../chatbot/TypingText";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
+const CARD_HEIGHT = height * 0.9;
+const SNAP_POINT = height - CARD_HEIGHT;
 
 // 대한민국 연도별 카테고리
 const years = ["2025년", "2024년", "2023년", "2022년", "2021년", "2020년", "2019년", "2018년", "2017년", "2016년", "2015년", "2014년", "2013년", "2012년", "2011년", "2010년"];
@@ -70,6 +75,8 @@ const MemeDictionaryComponent = () => {
 
     const [selectedItem, setSelectedItem] = useState(null);
     const bottomSheetRef = useRef(null);
+    const [visible, setVisible] = useState(false);
+    const translateY = useRef(new Animated.Value(height)).current;
 
     const navigation = useNavigation();
 
@@ -81,20 +88,23 @@ const MemeDictionaryComponent = () => {
     const fetchMemes = async () => {
         try {
             setLoading(true);
-            // ✅ Supabase에서 trend_memes 테이블 전체 조회
+            // Supabase에서 trend_memes 테이블 전체 조회
             const { data, error } = await supabase
                 .from("trend_memes")
                 .select("id, year, month, title, desc, image")
                 .order("year", { ascending: false })
-                .order("month", { ascending: false });
+                .order("month", { ascending: false })
+                .order("id", { ascending: false });
 
             if (error) throw error;
 
-            // ✅ desc나 image가 null인 경우 안전 처리
+            // desc나 image가 null인 경우 안전 처리
             const sanitized = data.map((item) => ({
                 id: item.id.toString(),
                 year: `${item.year}년`,
+                month: `${item.month}월`,
                 title: item.title || "(제목 없음)",
+                desc: item.desc,
                 summary: (String(item.desc).length > 60 ? String(item.desc).slice(0, 60) + "..." : item.desc) || "설명이 없습니다.",
                 image:
                     item.image && item.image.startsWith("http")
@@ -114,8 +124,46 @@ const MemeDictionaryComponent = () => {
 
     const openDetail = (item) => {
         setSelectedItem(item);
-        bottomSheetRef.current?.expand();
+        setVisible(true);
+        Animated.timing(translateY, {
+            toValue: SNAP_POINT,
+            duration: 300,
+            useNativeDriver: true,
+        }).start();
     };
+
+    const closeDetail = () => {
+        Keyboard.dismiss();
+        Animated.timing(translateY, {
+            toValue: height,
+            duration: 300,
+            useNativeDriver: true,
+        }).start(() => {
+            setVisible(false);
+        });
+    };
+
+    const panResponder = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onPanResponderMove: (_, gestureState) => {
+                if (gestureState.dy > 0) {
+                    translateY.setValue(SNAP_POINT + gestureState.dy);
+                }
+            },
+            onPanResponderRelease: (_, gestureState) => {
+                if (gestureState.dy > 100) {
+                    closeDetail();
+                } else {
+                    Animated.timing(translateY, {
+                        toValue: SNAP_POINT,
+                        duration: 200,
+                        useNativeDriver: true,
+                    }).start();
+                }
+            },
+        })
+    ).current;
 
     const renderCard = ({ item }) => (
         <View style={styles.card}>
@@ -184,15 +232,20 @@ const MemeDictionaryComponent = () => {
                 />
             )}
 
-            <BottomSheet
-                ref={bottomSheetRef}
-                index={-1}
-                snapPoints={["85%"]}
-                enablePanDownToClose
-                backgroundStyle={{ backgroundColor: "#fff" }}
-            >
-                {selectedItem && <MemeDetailsComponent meme={selectedItem} />}
-            </BottomSheet>
+            {visible && (
+                <Animated.View
+                    style={[
+                        styles.cardContainer,
+                        { transform: [{ translateY }] },
+                    ]}
+                >
+                    <View style={styles.dragHandle} {...panResponder.panHandlers}>
+                        <View style={styles.dragBar} />
+                    </View>
+
+                    {selectedItem && <MemeDetailsComponent meme={selectedItem}/>}
+                </Animated.View>
+            )}
         </View>
     );
 };
@@ -244,6 +297,57 @@ const styles = StyleSheet.create({
 
     // 빈 리스트 안내
     emptyText: { textAlign: "center", marginTop: 40, color: "#888" },
+    floatingButton: {
+        position: 'absolute',
+        bottom: 40,
+        right: 20,
+        backgroundColor: 'white',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 100,
+    },
+    cardContainer: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        height: CARD_HEIGHT,
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        elevation: 10,
+        paddingBottom: Platform.OS === 'ios' ? 40 : 0,
+    },
+    dragHandle: {
+        alignItems: 'center',
+        paddingVertical: 8,
+    },
+    dragBar: {
+        width: 50,
+        height: 5,
+        borderRadius: 3,
+        backgroundColor: '#ccc',
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 12,
+        padding: 12,
+        margin: 12,
+        backgroundColor: '#f7f7f7',
+    },
+    answerScroll: {
+        flex: 1,
+        paddingHorizontal: 12,
+    },
+    answerCard: {
+        padding: 16,
+        borderRadius: 12,
+        backgroundColor: '#e6f0ff',
+        marginTop: 8,
+    },
 });
 
 export default MemeDictionaryComponent;

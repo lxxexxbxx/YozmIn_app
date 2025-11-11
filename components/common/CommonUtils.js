@@ -1,9 +1,6 @@
 import axios from "axios";
 import {BackHandler} from "react-native";
 import {useKeyStore} from "../../stores/KeyStore";
-import CryptoJS from "react-native-crypto-js";
-
-const SECRET_KEY = "***REMOVED***";
 
 export const CommonUtils = {
     googleSearch: async function (searchWord, dateRestrict) {
@@ -183,37 +180,5 @@ export const CommonUtils = {
         });
 
         return () => backHandler.remove(); // cleanup
-    },
-    decryptKey: function (encryptedBase64) {
-        try {
-            // Python에서 넘어온 Base64 디코드
-            const rawData = CryptoJS.enc.Base64.parse(encryptedBase64);
-
-            // IV와 암호문 분리
-            const iv = CryptoJS.lib.WordArray.create(
-                rawData.words.slice(0, 16 / 4), // 16바이트 → wordArray 4개
-                16
-            );
-            const ciphertext = CryptoJS.lib.WordArray.create(
-                rawData.words.slice(16 / 4),
-                rawData.sigBytes - 16
-            );
-
-            // AES 복호화
-            const decrypted = CryptoJS.AES.decrypt(
-                {ciphertext: ciphertext},
-                CryptoJS.enc.Utf8.parse(SECRET_KEY),
-                {
-                    iv: iv,
-                    mode: CryptoJS.mode.CBC,
-                    padding: CryptoJS.pad.Pkcs7,
-                }
-            );
-
-            return decrypted.toString(CryptoJS.enc.Utf8);
-        } catch (e) {
-            console.error("❌ 복호화 에러:", e);
-            return null;
-        }
     },
 }
