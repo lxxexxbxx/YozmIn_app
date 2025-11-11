@@ -46,16 +46,19 @@ export const MemeImage = ({ uri, style }) => {
     );
 };
 
-const InfoTab = ({ meme }) => (
-    <ScrollView style={{ padding: 16 }}>
-        <Text style={styles.title}>{meme.title}</Text>
-        <Text style={styles.meta}>
-            {meme.year} {meme.month ? `${meme.month}월` : ""}
-        </Text>
-        <MemeImage uri={meme.image} style={styles.image} />
-        <Text style={styles.desc}>{meme.desc || meme.summary}</Text>
-    </ScrollView>
-);
+const InfoTab = ({ meme }) => {
+    console.log(meme);
+    return (
+        <ScrollView style={{ padding: 16 }}>
+            <Text style={styles.title}>{meme.title}</Text>
+            <Text style={styles.meta}>
+                {meme.year} {meme.month ? `${meme.month}월` : ""}
+            </Text>
+            <MemeImage uri={meme.image} style={styles.image} />
+            <Text style={styles.desc}>{meme.desc || meme.summary}</Text>
+        </ScrollView>
+    );
+}
 
 const ShortsTab = ({ meme }) => (
     <View style={{ flex: 1 }}>
