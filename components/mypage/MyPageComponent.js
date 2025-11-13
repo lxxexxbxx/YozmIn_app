@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { Text, View, TouchableOpacity, Image, StyleSheet, Alert } from "react-native";
+import { View, TouchableOpacity, Image, StyleSheet, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Entypo from "react-native-vector-icons/Entypo";
 import supabase from "../../supabase";
 import { useUserStore } from "../../stores/UserStore";
+import { ThemeView, ThemeText } from "../common/ThemeComponents";
+import { useTheme } from "../settings/theme/ThemeContext";
 
 const CELL_SIZE = 70;
 const STAGE_W = 260;
@@ -50,7 +52,9 @@ const updateQuest_Login = async (uid) => {
 
 const MyPageComponent = () => {
   const navigation = useNavigation();
+  const { colors } = useTheme(); // ✅ 테마 색상
   const store = useUserStore();
+
   const userId = store.user_id;
   const name = store.name;
   const coin = store.coin;
@@ -60,10 +64,9 @@ const MyPageComponent = () => {
   const [level, setLevel] = useState(0);
   const [wearing, setWearing] = useState({ HAT: null, ACCESSORY: null, BACKGROUND: null });
   const [refreshing, setRefreshing] = useState(false);
-
   const channelRef = useRef(null);
 
-  // 마이페이지 데이터 불러오기
+  // 캐릭터 정보 불러오기
   const fetchCharacterData = useCallback(
     async (uid) => {
       const { data, error } = await supabase
@@ -81,11 +84,7 @@ const MyPageComponent = () => {
       setCharacterName(data?.mp_Name ?? "");
       setLevel(data?.mp_Level ?? 0);
       const newCoin = Number(data?.mp_Coin ?? 0);
-
-      // DB 코인을 전역 상태와 동기화
-      if (newCoin !== store.coin) {
-        setCoin(newCoin);
-      }
+      if (newCoin !== store.coin) setCoin(newCoin);
     },
     [store.coin, setCoin]
   );
@@ -93,27 +92,24 @@ const MyPageComponent = () => {
   // 착용 아이템 불러오기
   const fetchEquippedItems = useCallback(async (uid) => {
     try {
-      const { data: uiRows, error: uiErr } = await supabase
+      const { data: uiRows } = await supabase
         .from("user_items")
         .select("item_no, category, equipped")
         .eq("user_id", uid)
         .eq("equipped", true);
 
-      if (uiErr || !uiRows?.length) {
+      if (!uiRows?.length) {
         setWearing({ HAT: null, ACCESSORY: null, BACKGROUND: null });
         return;
       }
 
       const ids = [...new Set(uiRows.map((r) => Number(r.item_no)).filter(Boolean))];
-      const { data: siRows, error: siErr } = await supabase
+      const { data: siRows } = await supabase
         .from("shop_items")
         .select("no, name, category, x, y")
         .in("no", ids);
 
-      if (siErr || !siRows) {
-        setWearing({ HAT: null, ACCESSORY: null, BACKGROUND: null });
-        return;
-      }
+      if (!siRows) return;
 
       const map = new Map(siRows.map((s) => [Number(s.no), s]));
       const nextWear = { HAT: null, ACCESSORY: null, BACKGROUND: null };
@@ -138,7 +134,7 @@ const MyPageComponent = () => {
     }
   }, []);
 
-  // 전체 새로고침
+  // 새로고침
   const refreshAll = useCallback(async () => {
     if (!userId) return;
     try {
@@ -149,87 +145,70 @@ const MyPageComponent = () => {
     }
   }, [userId, fetchCharacterData, fetchEquippedItems]);
 
-  // 초기 실행
   useEffect(() => {
-    if (!userId) {
-      Alert.alert("오류", "로그인 정보가 없습니다.");
-      return;
-    }
+    if (!userId) return;
     refreshAll();
     updateQuest_Login(userId);
   }, [userId, refreshAll]);
 
-  // 실시간 DB 변화 감지
   useEffect(() => {
     if (!userId) return;
-    if (channelRef.current) {
-      try {
-        supabase.removeChannel(channelRef.current);
-      } catch {}
-      channelRef.current = null;
-    }
+    if (channelRef.current) supabase.removeChannel(channelRef.current);
 
     const ch = supabase
       .channel(`mypage-live-${userId}`)
-      .on(
-        "postgres_changes",
+      .on("postgres_changes",
         { event: "*", schema: "public", table: "mypage", filter: `user_id=eq.${userId}` },
         (payload) => {
           const newCoin = payload?.new?.mp_Coin;
-          if (typeof newCoin === "number") {
-            setCoin(newCoin);
-          }
+          if (typeof newCoin === "number") setCoin(newCoin);
           fetchCharacterData(userId);
         }
       )
-      .on(
-        "postgres_changes",
+      .on("postgres_changes",
         { event: "*", schema: "public", table: "user_items", filter: `user_id=eq.${userId}` },
         () => fetchEquippedItems(userId)
       )
       .subscribe();
 
     channelRef.current = ch;
-    return () => {
-      try {
-        supabase.removeChannel(ch);
-      } catch {}
-    };
+    return () => supabase.removeChannel(ch);
   }, [userId, fetchCharacterData, fetchEquippedItems, setCoin]);
 
   return (
-    <View style={styles.container}>
-      {/* 헤더 */}
+    // ✅ 화면 전체 배경 (회색/어두운 회색)
+    <ThemeView style={[styles.container, { backgroundColor: colors.subBackground }]}>
+      {/* ✅ 헤더 (투명하게 자연스러운 상단) */}
       <View style={styles.header}>
         <View style={styles.profileInfo}>
           <Image style={styles.profileImage} source={require("../../assets/User.jpg")} />
           <View>
-            <Text style={styles.username}>{name}</Text>
-            <Text style={styles.level}>Lv. {level}</Text>
+            <ThemeText style={styles.username}>{name}</ThemeText>
+            <ThemeText style={[styles.level, { color: colors.subText }]}>Lv. {level}</ThemeText>
           </View>
         </View>
 
         <View style={styles.headerRight}>
           <TouchableOpacity onPress={() => navigation.navigate("SettingsScreen")}>
-            <Ionicons name="settings" size={24} color="black" style={styles.iconSpacing} />
+            <Ionicons name="settings" size={24} color={colors.text} style={styles.iconSpacing} />
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => navigation.navigate("Bookmark")}>
-            <Ionicons name="bookmark" size={24} color="black" style={styles.iconSpacing} />
+            <Ionicons name="bookmark" size={24} color={colors.text} style={styles.iconSpacing} />
           </TouchableOpacity>
 
           <TouchableOpacity onPress={refreshAll}>
-            <Ionicons name={refreshing ? "reload" : "refresh"} size={24} color="black" />
+            <Ionicons name={refreshing ? "reload" : "refresh"} size={24} color={colors.text} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* 캐릭터 카드 */}
-      <View style={styles.characterBox}>
+      {/* ✅ 캐릭터 카드 (흰색 / 진회색) */}
+      <View style={[styles.characterBox, { backgroundColor: colors.boxBackground }]}>
         <View style={styles.characterHeader}>
-          <Text style={styles.characterTitle}>{characterName}</Text>
+          <ThemeText style={styles.characterTitle}>{characterName}</ThemeText>
           <MaterialCommunityIcons name="currency-usd" size={24} color="gold" />
-          <Text style={styles.money}>{coin} 원</Text>
+          <ThemeText style={[styles.money, { color: colors.text }]}>{coin} 원</ThemeText>
         </View>
 
         <View style={styles.tinoStage}>
@@ -252,49 +231,46 @@ const MyPageComponent = () => {
           })}
         </View>
 
-        {/* 하단 메뉴 */}
+        {/* ✅ 하단 메뉴 */}
         <View style={styles.bottomNav}>
           <View style={styles.iconRow}>
             <TouchableOpacity onPress={() => navigation.navigate("Shop")}>
-              <Entypo name="shop" size={24} color="black" style={styles.iconSpacing} />
+              <Entypo name="shop" size={24} color={colors.text} style={styles.iconSpacing} />
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => navigation.navigate("closet")}>
-              <MaterialCommunityIcons name="wardrobe" size={24} color="black" />
+              <MaterialCommunityIcons name="wardrobe" size={24} color={colors.text} />
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => navigation.navigate("TodayQuests")}>
-              <MaterialCommunityIcons name="script-text-outline" size={26} color="black" style={{ marginLeft: 10 }} />
+              <MaterialCommunityIcons name="script-text-outline" size={26} color={colors.text} style={{ marginLeft: 10 }} />
             </TouchableOpacity>
           </View>
         </View>
       </View>
-    </View>
+    </ThemeView>
   );
 };
 
 export default MyPageComponent;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: "#f5f5f5", marginTop: 50 },
+  container: { flex: 1, padding: 16, paddingTop: 50, },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 30 },
   profileInfo: { flexDirection: "row", alignItems: "center" },
   profileImage: { width: 50, height: 50, borderRadius: 25, marginRight: 10 },
   username: { fontSize: 18, fontWeight: "bold" },
-  level: { fontSize: 14, color: "gray" },
+  level: { fontSize: 14 },
   headerRight: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end" },
   iconSpacing: { marginRight: 10 },
-
-  characterBox: { backgroundColor: "white", padding: 20, borderRadius: 20, alignItems: "center", marginTop: 40 },
+  characterBox: { padding: 20, borderRadius: 20, alignItems: "center", marginTop: 40 },
   characterHeader: { flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 10 },
-  money: { fontSize: 18, fontWeight: "bold", textDecorationLine: "underline", color: "black", marginLeft: 5 },
+  money: { fontSize: 18, fontWeight: "bold", textDecorationLine: "underline", marginLeft: 5 },
   characterTitle: { fontSize: 18, fontWeight: "bold", marginRight: 8 },
-
   tinoStage: { width: STAGE_W, height: STAGE_H, position: "relative", alignSelf: "center" },
   characterImage: { position: "absolute", left: 0, top: 0, width: STAGE_W, height: STAGE_H, resizeMode: "contain" },
   overlayWrap: { position: "absolute", width: CELL_SIZE, height: CELL_SIZE, alignItems: "center", justifyContent: "center" },
   overlayImage: { width: CELL_SIZE, height: CELL_SIZE, resizeMode: "contain" },
-
   bottomNav: { flexDirection: "row", justifyContent: "flex-end", width: "100%", marginTop: 10 },
   iconRow: { flexDirection: "row", alignItems: "center" },
 });
