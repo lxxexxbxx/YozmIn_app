@@ -1,36 +1,48 @@
 import React, { useEffect, useState } from "react";
 import {
-  View, Text, Image, TouchableOpacity, StyleSheet, TextInput,
-  Share, ActivityIndicator, Alert, Modal, TouchableWithoutFeedback, ScrollView
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  TextInput,
+  Share,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  TouchableWithoutFeedback,
+  ScrollView,
+  View,
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import supabase from "../../supabase";
 import { useUserStore } from "../../stores/UserStore";
 import { pushQuest } from "../quest/Quests";
+import { ThemeView, ThemeText } from "../common/ThemeComponents";
+import { useTheme } from "../settings/theme/ThemeContext";
 
 const PostDetailComponent = ({ route, navigation }) => {
   const { postId } = route.params;
+  const { colors, isDark } = useTheme();
   const { user_id: currentUserId } = useUserStore();
 
   const [post, setPost] = useState(null);
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [isBookmarked, setIsBookmarked] = useState(false);
+
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
+
   const [selectedComment, setSelectedComment] = useState(null);
   const [isCommentMenuVisible, setIsCommentMenuVisible] = useState(false);
 
-  // ✅ 게시글 로드
   const fetchPost = async () => {
     try {
-      const { data: postData, error: postErr } = await supabase
+      const { data: postData } = await supabase
         .from("post")
         .select("*")
         .eq("post_id", postId)
         .single();
-      if (postErr || !postData) throw postErr;
 
       const { data: profileData } = await supabase
         .from("profiles")
@@ -42,83 +54,72 @@ const PostDetailComponent = ({ route, navigation }) => {
         ...postData,
         profiles: profileData || { username: "익명", avatar_url: null },
       });
+
       setLikeCount(postData.like_cnt || 0);
     } catch (e) {
-      console.error("❌ 포스트 로딩 실패:", e);
-      setPost(null);
+      console.error("❌ 게시글 로드 실패", e);
     }
   };
 
-  const fetchLikeCount = async () => {
-    const { data } = await supabase
-      .from("post")
-      .select("like_cnt")
-      .eq("post_id", postId)
-      .single();
-    setLikeCount(data?.like_cnt || 0);
-  };
-
   const fetchIsLiked = async () => {
-    if (!currentUserId) return setIsLiked(false);
     const { data } = await supabase
       .from("post_like")
       .select("*")
       .eq("post_id", postId)
       .eq("user_id", currentUserId)
       .maybeSingle();
+
     setIsLiked(!!data);
   };
 
-  const checkBookmarkStatus = async () => {
-    if (!currentUserId) return setIsBookmarked(false);
-    const { data, error } = await supabase
+  const fetchBookmarkStatus = async () => {
+    const { data } = await supabase
       .from("bookmark")
       .select("*")
-      .eq("user_id", currentUserId)
       .eq("post_id", postId)
+      .eq("user_id", currentUserId)
       .maybeSingle();
-    setIsBookmarked(!!data && !error);
+    setIsBookmarked(!!data);
   };
 
-  // ✅ 댓글 로드 (프로필 직접 매핑)
   const fetchComments = async () => {
     try {
-      const { data: rows, error } = await supabase
+      const { data: rows } = await supabase
         .from("comment")
         .select("*")
         .eq("post_id", postId)
         .eq("is_deleted", false)
         .order("created_at", { ascending: true });
-      if (error) throw error;
 
-      const userIds = [...new Set((rows || []).map((c) => c.user_id))];
-      let profileMap = {};
-      if (userIds.length) {
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("user_id, username, avatar_url")
-          .in("user_id", userIds);
-        profileMap = Object.fromEntries((profs || []).map((p) => [p.user_id, p]));
-      }
+      const userIds = [...new Set(rows.map((c) => c.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, username, avatar_url")
+        .in("user_id", userIds);
 
-      const merged = (rows || []).map((c) => ({
+      const profileMap = Object.fromEntries(
+        profiles.map((p) => [p.user_id, p])
+      );
+
+      const merged = rows.map((c) => ({
         ...c,
-        profiles: profileMap[c.user_id] || { username: "익명", avatar_url: null },
+        profiles: profileMap[c.user_id] ?? { username: "익명", avatar_url: null },
         isLiked: false,
         likeCount: c.like_cnt || 0,
       }));
+
       setComments(merged);
     } catch (e) {
-      console.error("❌ 댓글 로딩 실패:", e);
-      setComments([]);
+      console.error("❌ 댓글 로드 실패", e);
     }
   };
 
-  // ✅ 게시글 좋아요
   const toggleLike = async () => {
-    if (!currentUserId) return Alert.alert("알림", "로그인 후 이용해주세요.");
+    if (!currentUserId) return Alert.alert("로그인이 필요합니다.");
+
     const next = !isLiked;
     setIsLiked(next);
+
     try {
       if (next) {
         await supabase.rpc("like_post", { p_post_id: postId, p_user_id: currentUserId });
@@ -126,16 +127,52 @@ const PostDetailComponent = ({ route, navigation }) => {
       } else {
         await supabase.rpc("unlike_post", { p_post_id: postId, p_user_id: currentUserId });
       }
-      await fetchLikeCount();
+
+      const { data } = await supabase
+        .from("post")
+        .select("like_cnt")
+        .eq("post_id", postId)
+        .single();
+      setLikeCount(data.like_cnt);
     } catch (e) {
-      console.error("❌ 좋아요 토글 실패:", e);
-      setIsLiked(!next);
+      console.error("❌ 좋아요 실패", e);
     }
   };
 
-  // ✅ 게시글 신고
+  const toggleBookmark = async () => {
+    if (!currentUserId) return Alert.alert("로그인이 필요합니다.");
+
+    const next = !isBookmarked;
+    setIsBookmarked(next);
+
+    try {
+      if (next) {
+        await supabase.from("bookmark").insert([{ post_id: postId, user_id: currentUserId }]);
+      } else {
+        await supabase
+          .from("bookmark")
+          .delete()
+          .eq("post_id", postId)
+          .eq("user_id", currentUserId);
+      }
+    } catch (e) {
+      console.error("❌ 북마크 실패", e);
+    }
+  };
+
+  const sharePost = async () => {
+    try {
+      await Share.share({
+        message: `${post?.content || ""}\n\n${post?.image_url || ""}`,
+      });
+    } catch (e) {
+      Alert.alert("오류", "공유 실패");
+    }
+  };
+
   const reportPost = async () => {
-    if (!currentUserId) return Alert.alert("알림", "로그인이 필요합니다.");
+    if (!currentUserId) return;
+
     try {
       await supabase.from("report").insert([
         {
@@ -143,133 +180,49 @@ const PostDetailComponent = ({ route, navigation }) => {
           post_id: postId,
           type: "post",
           reason: "사용자가 게시글을 신고함",
-          created_at: new Date().toISOString(),
         },
       ]);
-      Alert.alert("신고 완료", "게시글이 신고되었습니다. 검토 후 조치됩니다.");
+
+      Alert.alert("신고 완료", "검토 후 조치됩니다.");
     } catch (e) {
-      console.error("❌ 신고 실패:", e);
-      Alert.alert("오류", "게시글 신고 중 문제가 발생했습니다.");
+      console.error("❌ 신고 실패", e);
     }
   };
 
-  // ✅ 댓글 신고
-  const reportComment = async (commentId) => {
-    if (!currentUserId) return Alert.alert("알림", "로그인이 필요합니다.");
-    try {
-      await supabase.from("report").insert([
-        {
-          user_id: currentUserId,
-          comment_id: commentId,
-          type: "comment",
-          reason: "사용자가 댓글을 신고함",
-          created_at: new Date().toISOString(),
-        },
-      ]);
-      Alert.alert("신고 완료", "댓글이 신고되었습니다. 검토 후 조치됩니다.");
-    } catch (e) {
-      console.error("❌ 신고 실패:", e);
-      Alert.alert("오류", "댓글 신고 중 문제가 발생했습니다.");
-    }
-  };
-
-  // ✅ 북마크
-  const toggleBookmark = async () => {
-    if (!currentUserId) return Alert.alert("알림", "로그인 후 이용해주세요.");
-    const next = !isBookmarked;
-    setIsBookmarked(next);
-    try {
-      if (next) {
-        const { error } = await supabase
-          .from("bookmark")
-          .insert([{ user_id: currentUserId, post_id: postId }]);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("bookmark")
-          .delete()
-          .eq("user_id", currentUserId)
-          .eq("post_id", postId);
-        if (error) throw error;
-      }
-    } catch (e) {
-      console.error("❌ 북마크 토글 실패:", e);
-      setIsBookmarked(!next);
-    }
-  };
-
-  // ✅ 공유
-  const sharePost = async () => {
-    try {
-      await Share.share({
-        message: `${post?.content ?? ""}\n\n${post?.image_url ?? ""}`,
-      });
-    } catch (error) {
-      Alert.alert("오류", "게시글 공유에 실패했습니다.");
-    }
-  };
-
-  // ✅ 조회수 증가
-  const incrementViewCount = async () => {
-    try {
-      await supabase.rpc("increment_post_view_count", { p_post_id: postId });
-      await pushQuest(2, currentUserId);
-    } catch (e) {
-      console.error("❌ 조회수 증가 실패:", e);
-    }
-  };
-
-  // ✅ 댓글 추가
-  const addComment = async () => {
-    if (!currentUserId) return Alert.alert("알림", "로그인이 필요합니다.");
-    if (!newComment.trim()) return;
-    try {
-      const { error } = await supabase
-        .from("comment")
-        .insert([{ post_id: postId, user_id: currentUserId, comment: newComment }]);
-      if (error) throw error;
-      await supabase.rpc("increment_comment_count", { p_post_id: postId });
-      await pushQuest(4, currentUserId);
-      setNewComment("");
-      fetchComments();
-    } catch (e) {
-      console.error("❌ 댓글 작성 실패:", e);
-    }
-  };
-
-  // ✅ 댓글 좋아요
   const toggleCommentLike = async (index) => {
-    if (!currentUserId) return Alert.alert("알림", "로그인 후 이용해주세요.");
-    const updated = [...comments];
-    const target = updated[index];
+    const target = comments[index];
     const currentlyLiked = target.isLiked;
+    const updated = [...comments];
+
     try {
       if (currentlyLiked) {
-        await supabase.from("comment_like").delete().match({ user_id: currentUserId, comment_id: target.id });
-        await supabase.rpc("decrement_comment_like_count", { p_comment_id: target.id });
+        await supabase
+          .from("comment_like")
+          .delete()
+          .match({ user_id: currentUserId, comment_id: target.id });
+
+        await supabase.rpc("decrement_comment_like_count", {
+          p_comment_id: target.id,
+        });
       } else {
-        await supabase.from("comment_like").insert([{ user_id: currentUserId, comment_id: target.id }]);
-        await supabase.rpc("increment_comment_like_count", { p_comment_id: target.id });
+        await supabase.from("comment_like").insert([
+          { user_id: currentUserId, comment_id: target.id },
+        ]);
+
+        await supabase.rpc("increment_comment_like_count", {
+          p_comment_id: target.id,
+        });
         await pushQuest(8, currentUserId);
       }
-      target.isLiked = !currentlyLiked;
-      target.likeCount = currentlyLiked ? Math.max(0, target.likeCount - 1) : target.likeCount + 1;
+
+      updated[index].isLiked = !currentlyLiked;
+      updated[index].likeCount = currentlyLiked
+        ? Math.max(0, target.likeCount - 1)
+        : target.likeCount + 1;
+
       setComments(updated);
     } catch (e) {
-      console.error("❌ 댓글 좋아요 실패:", e);
-    }
-  };
-
-  const deleteCommentRpc = async (commentId) => {
-    try {
-      const { error } = await supabase.rpc("delete_comment", {
-        p_comment_id: Number(commentId),
-        p_post_id: postId,
-      });
-      if (error) throw error;
-      fetchComments();
-    } catch (e) {
-      Alert.alert("오류", "댓글 삭제 중 문제가 발생했습니다.");
+      console.error("❌ 댓글 좋아요 실패", e);
     }
   };
 
@@ -278,184 +231,298 @@ const PostDetailComponent = ({ route, navigation }) => {
     setIsCommentMenuVisible(true);
   };
 
-  const onConfirmDelete = () => {
-    if (!selectedComment) return;
-    deleteCommentRpc(selectedComment.id);
-    setIsCommentMenuVisible(false);
+  const confirmDeleteComment = async () => {
+    try {
+      await supabase.rpc("delete_comment", {
+        p_comment_id: selectedComment.id,
+        p_post_id: postId,
+      });
+
+      setIsCommentMenuVisible(false);
+      fetchComments();
+    } catch (e) {
+      Alert.alert("오류", "댓글 삭제 실패");
+    }
   };
 
-  // ✅ 초기 로드
   useEffect(() => {
     (async () => {
       setLoading(true);
       await fetchPost();
       await fetchIsLiked();
-      await checkBookmarkStatus();
+      await fetchBookmarkStatus();
       await fetchComments();
-      await incrementViewCount();
       setLoading(false);
     })();
-  }, [postId, currentUserId]);
+  }, [postId]);
 
   if (loading || !post) {
     return (
-      <View style={styles.loadingContainer}>
+      <ThemeView style={styles.loading}>
         <ActivityIndicator size="large" color="#007bff" />
-      </View>
+      </ThemeView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* 댓글 옵션 Modal */}
+    <ThemeView style={[styles.container, { backgroundColor: colors.background }]}>
+
       <Modal visible={isCommentMenuVisible} transparent animationType="fade">
         <TouchableWithoutFeedback onPress={() => setIsCommentMenuVisible(false)}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>댓글 옵션</Text>
-              <TouchableOpacity style={styles.modalButton} onPress={onConfirmDelete}>
-                <Text style={[styles.modalButtonText, { color: "red" }]}>삭제</Text>
+          <View
+            style={styles.modalOverlay}
+          >
+            <ThemeView style={[styles.modalContent, { backgroundColor: colors.boxBackground }]}>
+              <ThemeText style={[styles.modalTitle, { color: colors.text }]}>
+                댓글 옵션
+              </ThemeText>
+
+              <TouchableOpacity style={styles.modalButton} onPress={confirmDeleteComment}>
+                <ThemeText style={[styles.modalButtonText, { color: "red" }]}>
+                  삭제
+                </ThemeText>
               </TouchableOpacity>
-              <View style={styles.modalSeparator} />
-              <TouchableOpacity style={styles.modalButton} onPress={() => reportComment(selectedComment?.id)}>
-                <Text style={[styles.modalButtonText, { color: "#ff9900" }]}>신고</Text>
+
+              <ThemeView style={[styles.modalSeparator, { backgroundColor: colors.border }]} />
+
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => {
+                  setIsCommentMenuVisible(false);
+                }}
+              >
+                <ThemeText style={[styles.modalButtonText, { color: colors.text }]}>
+                  취소
+                </ThemeText>
               </TouchableOpacity>
-              <View style={styles.modalSeparator} />
-              <TouchableOpacity style={styles.modalButton} onPress={() => setIsCommentMenuVisible(false)}>
-                <Text style={styles.modalButtonText}>취소</Text>
-              </TouchableOpacity>
-            </View>
+            </ThemeView>
           </View>
         </TouchableWithoutFeedback>
       </Modal>
 
-      {/* 상단 */}
-      <View style={styles.topBar}>
+      <ThemeView style={styles.topBar}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <FontAwesome name="arrow-left" size={24} color="black" />
+          <FontAwesome name="arrow-left" size={24} color={isDark ? "#DADADA" : "black"} />
         </TouchableOpacity>
-      </View>
+      </ThemeView>
 
-      <ScrollView style={styles.contentScroll}>
-        <View style={styles.contentContainer}>
-          {post.image_url && <Image source={{ uri: post.image_url }} style={styles.image} />}
-          <Text style={styles.text}>{post.content || "내용 없음"}</Text>
+      <ScrollView style={styles.scroll}>
+        <ThemeView style={{ paddingBottom: 30 }}>
 
-          {/* 좋아요 / 북마크 / 조회수 / 공유 */}
-          <View style={styles.actionsContainer}>
+          {post.image_url && (
+            <Image source={{ uri: post.image_url }} style={styles.image} />
+          )}
+
+          <ThemeText style={[styles.postText, { color: colors.text }]}>
+            {post.content}
+          </ThemeText>
+
+          <ThemeView style={styles.actionRow}>
+
             <TouchableOpacity onPress={toggleLike} style={styles.actionButton}>
-              <FontAwesome name={isLiked ? "heart" : "heart-o"} size={24} color="red" />
-              <Text style={styles.actionText}>{likeCount}</Text>
+              <FontAwesome
+                name={isLiked ? "heart" : "heart-o"}
+                size={24}
+                color={isLiked ? "red" : isDark ? "#CCC" : "gray"}
+              />
+              <ThemeText style={[styles.actionText, { color: colors.text }]}>
+                {likeCount}
+              </ThemeText>
             </TouchableOpacity>
 
-            <View style={styles.actionGroup}>
-                <View style={styles.actionButton}>
-                    <FontAwesome name="eye" size={24} color="gray" />
-                    <Text style={styles.actionText}>{post.view_count || 0}</Text>
-                </View>
+            <ThemeView style={styles.actionRight}>
 
-                <TouchableOpacity onPress={toggleBookmark} style={styles.actionButton}>
-                    <FontAwesome name={isBookmarked ? "bookmark" : "bookmark-o"} size={24} color="gray" />
-                </TouchableOpacity>
+              <ThemeView style={styles.actionButton}>
+                <FontAwesome
+                  name="eye"
+                  size={24}
+                  color={isDark ? "#AAA" : "gray"}
+                />
+                <ThemeText style={[styles.actionText, { color: colors.text }]}>
+                  {post.view_count || 0}
+                </ThemeText>
+              </ThemeView>
 
-                <TouchableOpacity onPress={sharePost} style={styles.actionButton}>
-                    <FontAwesome name="share-alt" size={24} color="gray" />
-                </TouchableOpacity>
+              <TouchableOpacity onPress={toggleBookmark} style={styles.actionButton}>
+                <FontAwesome
+                  name={isBookmarked ? "bookmark" : "bookmark-o"}
+                  size={24}
+                  color={isDark ? "#DDD" : "gray"}
+                />
+              </TouchableOpacity>
 
-                {/* 🚨 신고 버튼 — 공유 오른쪽 끝으로 이동 */}
-                <TouchableOpacity onPress={reportPost} style={[styles.actionButton, { marginLeft: 6 }]}>
-                    <MaterialIcons name="report" size={26} color="#ff4d4f" />
-                </TouchableOpacity>
-            </View>
-          </View>
+              <TouchableOpacity onPress={sharePost} style={styles.actionButton}>
+                <FontAwesome name="share-alt" size={24} color={isDark ? "#DDD" : "gray"} />
+              </TouchableOpacity>
 
-          {/* 댓글 */}
-          <View style={styles.commentSection}>
-            <Text style={styles.commentTitle}>댓글 {comments.length}</Text>
+              <TouchableOpacity onPress={reportPost} style={[styles.actionButton]}>
+                <MaterialIcons name="report" size={26} color={colors.subText} />
+              </TouchableOpacity>
+
+            </ThemeView>
+          </ThemeView>
+
+          <ThemeView style={{ paddingHorizontal: 10 }}>
+            <ThemeText style={[styles.commentTitle, { color: colors.text }]}>
+              댓글 {comments.length}
+            </ThemeText>
+
             {comments.map((c, idx) => (
-              <View key={c.id} style={styles.comment}>
+              <ThemeView
+                key={c.id}
+                style={[styles.commentRow, { borderBottomWidth: 0 }]}
+              >
                 <Image
                   source={{ uri: c.profiles?.avatar_url || "https://via.placeholder.com/40" }}
-                  style={styles.commentProfileImage}
+                  style={styles.commentProfile}
                 />
-                <View style={styles.commentContent}>
-                  <View style={styles.commentHeaderRow}>
-                    <Text style={styles.commentUserName}>{c.profiles?.username || "익명"}</Text>
+
+                <ThemeView style={{ flex: 1 }}>
+
+                  <ThemeView style={styles.commentHeader}>
+                    <ThemeText style={[styles.commentUser, { color: colors.text }]}>
+                      {c.profiles?.username}
+                    </ThemeText>
+
                     {c.user_id === currentUserId && (
-                      <TouchableOpacity onPress={() => deleteComment(c)} style={styles.commentMenuButtonSmall}>
-                        <FontAwesome name="ellipsis-h" size={18} color="gray" />
+                      <TouchableOpacity
+                        onPress={() => deleteComment(c)}
+                        style={styles.commentMenuBtn}
+                      >
+                        <FontAwesome name="ellipsis-h" size={18} color={isDark ? "#AAA" : "gray"} />
                       </TouchableOpacity>
                     )}
-                  </View>
-                  <Text>{c.comment}</Text>
-                  <View style={styles.commentFooter}>
-                    <TouchableOpacity onPress={() => toggleCommentLike(idx)} style={styles.commentLikeButton}>
-                      <FontAwesome name={c.isLiked ? "heart" : "heart-o"} size={16} color="gray" />
-                      <Text style={styles.commentLikeCount}>{c.likeCount || 0}</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
+                  </ThemeView>
+
+                  <ThemeText style={{ color: colors.text }}>
+                    {c.comment}
+                  </ThemeText>
+
+                  <TouchableOpacity
+                    onPress={() => toggleCommentLike(idx)}
+                    style={styles.commentLikeButton}
+                  >
+                    <FontAwesome
+                      name={c.isLiked ? "heart" : "heart-o"}
+                      size={16}
+                      color={c.isLiked ? "#FF5252" : isDark ? "#AAA" : "gray"}
+                    />
+                    <ThemeText
+                      style={[styles.commentLikeText, { color: colors.subText }]}
+                    >
+                      {c.likeCount}
+                    </ThemeText>
+                  </TouchableOpacity>
+
+                </ThemeView>
+
+              </ThemeView>
             ))}
-          </View>
-        </View>
+          </ThemeView>
+        </ThemeView>
       </ScrollView>
 
-      {/* 댓글 입력 */}
-      <View style={styles.commentInputWrapper}>
-        <View style={styles.commentInputContainer}>
+      <ThemeView style={[styles.commentInputWrapper, { backgroundColor: colors.boxBackground }]}>
+        <ThemeView 
+          style={[
+            styles.commentInputBox, 
+            { 
+              borderColor: colors.border,
+              backgroundColor: isDark ? "#2A2A2A" : colors.boxBackground,
+            }
+          ]}
+        >
           <TextInput
-            style={styles.commentInput}
+            style={[styles.commentInput, { color: colors.text }]}
             value={newComment}
             onChangeText={setNewComment}
             placeholder="댓글을 입력하세요..."
-            placeholderTextColor="gray"
+            placeholderTextColor={colors.subText}
           />
-          <TouchableOpacity onPress={addComment} style={styles.sendButton} disabled={!newComment.trim()}>
-            <FontAwesome name="arrow-right" size={20} color={!newComment.trim() ? "#AAA" : "white"} />
+          <TouchableOpacity
+            onPress={async () => {
+              if (!newComment.trim()) return;
+
+              try {
+                await supabase.from("comment").insert([
+                  {
+                    post_id: postId,
+                    user_id: currentUserId,
+                    comment: newComment,
+                  },
+                ]);
+
+                await supabase.rpc("increment_comment_count", { p_post_id: postId });
+                await pushQuest(4, currentUserId);
+
+                setNewComment("");
+                fetchComments();
+              } catch (e) {
+                console.error("❌ 댓글 작성 실패", e);
+                Alert.alert("오류", "댓글 작성 실패");
+              }
+            }}
+            disabled={!newComment.trim()}
+            style={[styles.sendButton, { opacity: newComment.trim() ? 1 : 0.4 }]}
+          >
+            <FontAwesome name="arrow-right" size={20} color="white" />
           </TouchableOpacity>
-        </View>
-      </View>
-    </View>
+        </ThemeView>
+      </ThemeView>
+    </ThemeView>
   );
 };
 
-/* ------------------- 스타일 ------------------- */
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "white" },
-  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-  topBar: { flexDirection: "row", alignItems: "center", padding: 10, marginTop: 30 },
-  profileImage: { width: 40, height: 40, borderRadius: 20 },
-  profileName: { marginLeft: 10, fontSize: 16 },
-  contentScroll: { flex: 1 },
-  contentContainer: { paddingBottom: 20 },
-  image: { width: "100%", aspectRatio: 1.6, resizeMode: "cover" },
-  text: { fontSize: 16, marginBottom: 10 },
-  actionsContainer: { flexDirection: "row", alignItems: "center", marginVertical: 10 },
-  actionButton: { flexDirection: "row", alignItems: "center", marginRight: 15 },
-  actionText: { marginLeft: 5, fontSize: 14 },
-  actionGroup: { flexDirection: "row", alignItems: "center", marginLeft: "auto" },
-  commentSection: { marginTop: 10, paddingHorizontal: 10 },
-  commentTitle: { fontSize: 16, fontWeight: "bold", marginLeft: 5 },
-  commentInputWrapper: { padding: 10, borderTopWidth: 1, borderColor: "#eee", backgroundColor: "white" },
-  commentInputContainer: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#ccc", borderRadius: 20, paddingHorizontal: 10 },
-  commentInput: { flex: 1, paddingVertical: 8, fontSize: 14, color: "#000" },
-  sendButton: { marginLeft: 10, backgroundColor: "#007bff", borderRadius: 20, padding: 8 },
-  comment: { flexDirection: "row", alignItems: "flex-start", marginVertical: 8, paddingVertical: 6, borderBottomWidth: 1, borderColor: "#f0f0f0" },
-  commentProfileImage: { width: 32, height: 32, borderRadius: 16, marginRight: 10 },
-  commentContent: { flex: 1 },
-  commentHeaderRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  commentUserName: { fontWeight: "bold", fontSize: 14, marginBottom: 2 },
-  commentMenuButtonSmall: { paddingHorizontal: 6 },
-  commentFooter: { flexDirection: "row", alignItems: "center", marginTop: 5 },
-  commentLikeButton: { flexDirection: "row", alignItems: "center", marginRight: 10 },
-  commentLikeCount: { marginLeft: 5, fontSize: 12, color: "gray" },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" },
-  modalContent: { width: "80%", backgroundColor: "white", borderRadius: 12, paddingVertical: 10, alignItems: "center", overflow: "hidden" },
-  modalTitle: { fontSize: 16, fontWeight: "600", paddingVertical: 12, width: "100%", textAlign: "center" },
-  modalButton: { width: "100%", paddingVertical: 14, justifyContent: "center", alignItems: "center" },
-  modalButtonText: { fontSize: 16 },
-  modalSeparator: { width: "100%", height: 1, backgroundColor: "#eee" },
-});
-
 export default PostDetailComponent;
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  loading: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  topBar: { flexDirection: "row", alignItems: "center", padding: 10, marginTop: 30 },
+
+  scroll: { flex: 1 },
+
+  image: { width: "100%", aspectRatio: 1.6, resizeMode: "cover" },
+
+  postText: { fontSize: 16, paddingHorizontal: 10, marginTop: 8 },
+
+  actionRow: { flexDirection: "row", alignItems: "center", marginVertical: 10, paddingHorizontal: 10 },
+  actionButton: { flexDirection: "row", alignItems: "center", marginRight: 10 },
+  actionText: { marginLeft: 5, fontSize: 14 },
+  actionRight: { flexDirection: "row", alignItems: "center", marginLeft: "auto" },
+
+  commentTitle: { fontSize: 16, fontWeight: "bold", marginVertical: 8 },
+
+  commentRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingVertical: 8,
+  },
+  commentProfile: { width: 32, height: 32, borderRadius: 16, marginRight: 10 },
+
+  commentHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  commentUser: { fontWeight: "bold", fontSize: 14, marginBottom: 2 },
+
+  commentMenuBtn: { paddingHorizontal: 6 },
+
+  commentLikeButton: { flexDirection: "row", alignItems: "center", marginTop: 6 },
+  commentLikeText: { marginLeft: 6, fontSize: 13 },
+
+  commentInputWrapper: { padding: 10, marginBottom: 10 },
+  commentInputBox: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderRadius: 20, paddingHorizontal: 10, paddingVertical : 6 },
+  commentInput: { flex: 1, paddingVertical: 8, fontSize: 14 },
+  sendButton: { marginLeft: 10, backgroundColor: "#007bff", borderRadius: 20, padding: 8 },
+
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" },
+  modalContent: { width: "80%", borderRadius: 12, paddingVertical: 10, alignItems: "center", overflow: "hidden" },
+  modalTitle: { fontSize: 16, fontWeight: "600", paddingVertical: 12 },
+  modalButton: { width: "100%", paddingVertical: 14, alignItems: "center" },
+  modalButtonText: { fontSize: 16 },
+  modalSeparator: { width: "100%", height: 1 },
+});

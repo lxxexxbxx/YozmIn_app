@@ -1,11 +1,13 @@
-// TodayQuestsScreen.js (최종 안정 버전)
+// TodayQuestsScreen.js (수정된 안정 버전)
 import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { View, Text, Image, FlatList, TouchableOpacity, Alert, StyleSheet } from "react-native";
+import { Image, FlatList, TouchableOpacity, Alert, StyleSheet } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import supabase from "../../supabase";
 import { useUserStore } from "../../stores/UserStore";
 import QuestCard from "./QuestCard";
+import { ThemeView, ThemeText } from "../common/ThemeComponents";
+import { useTheme } from "../settings/theme/ThemeContext";
 
 // ✅ KST 날짜 변환 함수
 function kstDateStr(d = new Date()) {
@@ -25,8 +27,9 @@ function msToHMS(ms) {
 export default function TodayQuestsScreen() {
   const navigation = useNavigation();
   const { user_id: userId } = useUserStore();
+  const { colors } = useTheme();
 
-  const [items, setItems] = useState([]); // 오늘 화면에 표시할 퀘스트 4개
+  const [items, setItems] = useState([]);
   const [remain, setRemain] = useState("00:00:00");
   const [loading, setLoading] = useState(false);
 
@@ -88,14 +91,8 @@ export default function TodayQuestsScreen() {
     try {
       setLoading(true);
 
-      // 기존 퀘스트 삭제
-      await supabase
-        .from("quest_progress_daily")
-        .delete()
-        .eq("user_id", userId)
-        .eq("quest_date", today);
+      await supabase.from("quest_progress_daily").delete().eq("user_id", userId).eq("quest_date", today);
 
-      // 전체 퀘스트 불러오기
       const { data: masters, error: mErr } = await supabase
         .from("quests")
         .select("no, name, goal_count, reward_coin");
@@ -106,24 +103,23 @@ export default function TodayQuestsScreen() {
         return;
       }
 
-      // 로그인(1) 고정 + 나머지 3개 랜덤
-      const loginQuest = masters.find(q => q.no === 1);
-      const randoms = masters.filter(q => q.no !== 1).sort(() => 0.5 - Math.random()).slice(0, 3);
+      const loginQuest = masters.find((q) => q.no === 1);
+      const randoms = masters.filter((q) => q.no !== 1).sort(() => 0.5 - Math.random()).slice(0, 3);
       const picks = [loginQuest, ...randoms];
       const payload = picks.map((q) => ({
         quest_no: q.no,
         user_id: userId,
-        current_count: q.no === 1 ? 1 : 0,  // ✅ 로그인 퀘스트는 자동 완료
+        current_count: q.no === 1 ? 1 : 0,
         quest_date: today,
-        is_cleared: q.no === 1 ? true : false, // ✅ 로그인 퀘스트만 클리어 상태로
+        is_cleared: q.no === 1 ? true : false,
         is_received: false,
-      }));      
+      }));
 
       const { error: iErr } = await supabase.from("quest_progress_daily").insert(payload);
       if (iErr) throw iErr;
 
       console.log("✅ 오늘의 퀘스트 새로 생성 완료");
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise((r) => setTimeout(r, 300));
       await checkToday();
     } catch (e) {
       console.log("❌ initTodayQuests 오류:", e);
@@ -179,63 +175,115 @@ export default function TodayQuestsScreen() {
 
   const summary = useMemo(() => {
     const total = items.length;
-    const done = items.filter(it => it.is_cleared).length;
-    const claimed = items.filter(it => !!it.claimed_at).length;
+    const done = items.filter((it) => it.is_cleared).length;
+    const claimed = items.filter((it) => !!it.claimed_at).length;
     return { total, done, claimed };
   }, [items]);
 
   return (
-    <View style={s.screen}>
-      <View style={s.header}>
-        <Text style={s.title}>오늘의 퀘스트</Text>
+    <ThemeView style={[s.screen, { backgroundColor: colors.background }]}>
+      <ThemeView style={s.header}>
+        <ThemeText style={[s.title, { color: colors.text }]}>오늘의 퀘스트</ThemeText>
         <TouchableOpacity
-          onPress={() => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate("MyPage"))}
-          style={s.secondaryBtn}
+          onPress={() =>
+            navigation.canGoBack() ? navigation.goBack() : navigation.navigate("MyPage")
+          }
+          style={[s.secondaryBtn, { backgroundColor: colors.boxBackground }]}
         >
-          <Ionicons name="chevron-back" size={16} />
-          <Text style={s.secondaryBtnText}>뒤로</Text>
+          <Ionicons name="chevron-back" size={16} color={colors.text} />
+          <ThemeText style={[s.secondaryBtnText, { color: colors.text }]}>뒤로</ThemeText>
         </TouchableOpacity>
-      </View>
+      </ThemeView>
 
-      <View style={s.topCard}>
+      {/* ✅ 상단 경계 자연스럽게 복원 */}
+      <ThemeView
+        style={[
+          s.topCard,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+            shadowColor: colors.text,
+          },
+        ]}
+      >
         <Image source={require("../../assets/quest_tino.png")} style={s.tino} resizeMode="contain" />
-        <View style={{ flex: 1, marginLeft: 12 }}>
-          <Text style={s.h1}>오늘의 퀘스트</Text>
-          <Text style={s.sub}>완료 {summary.done}/{summary.total} · 수령 {summary.claimed}/{summary.total}</Text>
-          <View style={s.badgeRow}>
-            <Text style={s.badgeTxt}>⏳ 자정까지 {remain}</Text>
-          </View>
-        </View>
-      </View>
+        <ThemeView style={{ flex: 1, marginLeft: 12 }}>
+          <ThemeText style={[s.h1, { color: colors.text }]}>오늘의 퀘스트</ThemeText>
+          <ThemeText style={[s.sub, { color: colors.subText }]}>
+            완료 {summary.done}/{summary.total} · 수령 {summary.claimed}/{summary.total}
+          </ThemeText>
+          <ThemeView
+            style={[
+              s.badgeRow,
+              { backgroundColor: colors.boxBackground, borderColor: colors.border },
+            ]}
+          >
+            <ThemeText style={[s.badgeTxt, { color: colors.text }]}>
+              ⏳ 자정까지 {remain}
+            </ThemeText>
+          </ThemeView>
+        </ThemeView>
+      </ThemeView>
 
       <FlatList
         data={items}
         keyExtractor={(item, index) => String(item.no ?? item.quest_no ?? index)}
         contentContainerStyle={{ paddingVertical: 8, paddingHorizontal: 6 }}
-        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-        ListEmptyComponent={!loading ? (
-          <View style={{ padding: 24, alignItems: "center" }}>
-            <Text>오늘의 퀘스트가 없습니다.</Text>
-          </View>
-        ) : null}
-        renderItem={({ item }) => (
-          <QuestCard quest={item} onClaimPress={handleClaim} />
-        )}
+        ItemSeparatorComponent={() => <ThemeView style={{ height: 12 }} />}
+        ListEmptyComponent={
+          !loading ? (
+            <ThemeView style={{ padding: 24, alignItems: "center" }}>
+              <ThemeText>오늘의 퀘스트가 없습니다.</ThemeText>
+            </ThemeView>
+          ) : null
+        }
+        renderItem={({ item }) => <QuestCard quest={item} onClaimPress={handleClaim} />}
       />
-    </View>
+    </ThemeView>
   );
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#F5F6FA", padding: 16 },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 24, marginBottom: 10 },
+  screen: { flex: 1, padding: 16 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 24,
+    marginBottom: 10,
+  },
   title: { fontSize: 18, fontWeight: "700" },
-  secondaryBtn: { flexDirection: "row", alignItems: "center", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: "#F3F4F7" },
-  secondaryBtnText: { marginLeft: 6, fontSize: 12, fontWeight: "700", color: "#394150" },
-  topCard: { backgroundColor: "#fff", borderRadius: 16, padding: 16, flexDirection: "row", alignItems: "center", marginBottom: 12 },
+  secondaryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  secondaryBtnText: { marginLeft: 6, fontSize: 12, fontWeight: "700" },
+  // ✅ 경계선 & 그림자 추가
+  topCard: {
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
   tino: { width: 76, height: 76, borderRadius: 16 },
-  h1: { fontSize: 20, fontWeight: "800", color: "#0f172a" },
-  sub: { color: "#64748b", marginTop: 4 },
-  badgeRow: { marginTop: 8, paddingHorizontal: 10, paddingVertical: 6, alignSelf: "flex-start", backgroundColor: "#eef2ff", borderRadius: 999 },
-  badgeTxt: { color: "#3730a3", fontWeight: "700" },
+  h1: { fontSize: 20, fontWeight: "800" },
+  sub: { marginTop: 4, fontSize: 14 },
+  badgeRow: {
+    marginTop: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  badgeTxt: { fontWeight: "700" },
 });

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Text, View, TouchableOpacity, Image, StyleSheet, FlatList, Modal, TextInput } from 'react-native';
+import { TouchableOpacity, Image, StyleSheet, FlatList, Modal, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Entypo from "react-native-vector-icons/Entypo";
 import { launchImageLibrary } from 'react-native-image-picker';
 import PageTitleComponent from '../common/PageTitleComponent';
+import { ThemeView, ThemeText } from '../common/ThemeComponents';
+import { useTheme } from '../settings/theme/ThemeContext';
 
 // 북마크된 아이템 목록 (예시 데이터)
 const bookmarks = [
@@ -25,7 +27,7 @@ const BookmarkComponent = () => {
             onPress={() => navigation.navigate('BookmarkDetail', { title: item.title })}
         >
             <Image source={item.image} style={styles.image} />
-            <Text style={styles.title}>{item.title}</Text>
+            <ThemeText style={styles.title}>{item.title}</ThemeText>
         </TouchableOpacity>
     );
     
@@ -40,7 +42,7 @@ const BookmarkComponent = () => {
     };
 
     return (
-        <View style={styles.container}>
+        <ThemeView style={styles.container}>
             {/* 상단에 "북마크" 텍스트 추가 */}
             <PageTitleComponent title={"북마크"} backToTab={"MyPage"}/>
 
@@ -63,41 +65,41 @@ const BookmarkComponent = () => {
                 visible={modalVisible}
                 onRequestClose={() => setModalVisible(false)}
             >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
+                <ThemeView style={styles.modalContainer}>
+                    <ThemeView style={styles.modalContent}>
                         {/* 닫기 버튼 */}
                         <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
                             <Entypo name="cross" size={24} color="black" />
                         </TouchableOpacity>
     
-                        <Text style={styles.modalTitle}>새 카테고리 만들기</Text>
+                        <ThemeText style={styles.modalTitle}>새 카테고리 만들기</ThemeText>
     
                         {/* 이미지 업로드 영역 */}
                         <TouchableOpacity style={styles.imageUpload} onPress={pickImage}>
                             {selectedImage ? (
                                 <Image source={{ uri: selectedImage }} style={styles.uploadedImage} />
                             ) : (
-                                <Text style={styles.uploadText}>Import Image</Text>
+                                <ThemeText style={styles.uploadText}>Import Image</ThemeText>
                             )}
                         </TouchableOpacity>
     
                         {/* 카테고리명 입력 */}
-                        <Text style={styles.label}>카테고리명</Text>
+                        <ThemeText style={styles.label}>카테고리명</ThemeText>
                         <TextInput
                             style={styles.input}
                             placeholder="카테고리명 입력"
                             value={categoryName}
                             onChangeText={setCategoryName}
                         />
-                    </View>
+                    </ThemeView>
 
                     {/* 모달 내부에서도 + 버튼을 추가 */}
                     <TouchableOpacity style={styles.addButtonModal} onPress={() => console.log("추가 버튼 클릭")}>
                         <Entypo name="plus" size={30} color="white" />
                     </TouchableOpacity>
-                </View>
+                </ThemeView>
             </Modal>
-        </View>
+        </ThemeView>
     );
 };
 
