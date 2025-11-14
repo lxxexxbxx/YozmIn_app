@@ -14,7 +14,7 @@ const PageTitleComponent = ({title, darkMode, backToTab, backToStack}) => {
     return (
         <View style={styles.header}>
             <TouchableOpacity style={styles.arrow} onPress={() => back()}>
-                {darkMode === true ? <Ionicons name="arrow-back" size={24} color="white"/> : <Ionicons name="arrow-back" size={24} color="black" />}
+                {darkMode === true ? <Ionicons name="chevron-back" size={24} color="white"/> : <Ionicons name="chevron-back" size={24} color="black" />}
             </TouchableOpacity>
             <Text style={darkMode === true ? styles.darkTitle : styles.title}>{title}</Text>
             <View style={styles.arrow}/>
@@ -36,10 +36,11 @@ const styles = StyleSheet.create({
     },
     title: {
         flexGrow: 1,
-        textAlign: "center",
+        textAlign: "left",
         fontSize: 25,
         fontWeight: "bold",
         marginBottom: 20,
+        marginLeft: 20,
     },
     darkTitle: {
         flexGrow: 1,

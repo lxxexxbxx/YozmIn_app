@@ -27,7 +27,7 @@ const SignUpCompleteForm = () => {
       return;
     }
 
-    const response = await supabase
+    const userTableResponse = await supabase
     .from("user")
     .insert([{
       name: store.name,
@@ -37,7 +37,17 @@ const SignUpCompleteForm = () => {
       birth_date: store.birth_date
     }]);
 
-    if(response.status === 201) {
+    const mypageTableResponse = await supabase
+        .from("mypage")
+        .insert([{
+          mp_Name: "티노",
+          user_id: store.user_id,
+          mp_Level: 0,
+          mp_Coin: 0,
+          mp_coin: 0,
+        }]);
+
+    if(userTableResponse.status === 201 && mypageTableResponse.status === 201) {
       console.log("등록 성공");
       // 성공 메시지
       Toast.show({
@@ -46,7 +56,12 @@ const SignUpCompleteForm = () => {
         text2: `${store.name}님, 환영합니다 👋`,
       });
     }
-    else console.log("등록 실패:", response.error);
+    else if(userTableResponse.status !== 201){
+      console.log("등록 실패[user]:", userTableResponse.error);
+    }
+    else if(mypageTableResponse.status !== 201){
+      console.log("등록 실패[mypage]:", mypageTableResponse.error);
+    }
   }
 
   useEffect(() => {
