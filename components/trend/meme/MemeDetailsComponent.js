@@ -4,6 +4,7 @@ import { TabView, SceneMap, TabBar } from "react-native-tab-view";
 import { Image as ExpoImage } from "expo-image";
 import { SvgXml } from "react-native-svg";
 import YoutubeTrendingShorts from "../youtubeShorts/YoutubeTrendingShorts";
+import TypingText from "../../chatbot/TypingText";
 
 const { width } = Dimensions.get("window");
 
@@ -55,7 +56,9 @@ const InfoTab = ({ meme }) => {
                 {meme.year} {meme.month ? `${meme.month}월` : ""}
             </Text>
             <MemeImage uri={meme.image} style={styles.image} />
-            <Text style={styles.desc}>{meme.desc || meme.summary}</Text>
+            <View style={styles.bubbleContainer}>
+                <TypingText style={styles.desc} fullText={meme.desc || meme.summary} speed={15} />
+            </View>
         </ScrollView>
     );
 }
@@ -88,8 +91,8 @@ const MemeDetailsComponent = ({ meme }) => {
                 renderTabBar={(props) => (
                     <TabBar
                         {...props}
-                        indicatorStyle={{ backgroundColor: "#111" }}
-                        style={{ backgroundColor: "#fff" }}
+                        indicatorStyle={{ backgroundColor: "#dc143c" }}
+                        style={{ backgroundColor: "#111" }}
                         labelStyle={{ color: "#111", fontWeight: "700" }}
                     />
                 )}
@@ -102,7 +105,7 @@ const styles = StyleSheet.create({
     title: { fontSize: 20, fontWeight: "800", marginBottom: 4 },
     meta: { color: "#888", marginBottom: 10 },
     image: { width: "100%", height: width * 0.5, borderRadius: 8, marginBottom: 12 },
-    desc: { fontSize: 15, color: "#444", lineHeight: 22 },
+    desc: { fontSize: 15, color: "#444", lineHeight: 22, paddingHorizontal: 15, paddingVertical: 10, },
     container: { flex: 1, backgroundColor: "#fff" },
 
     // 연도 탭바
@@ -117,6 +120,14 @@ const styles = StyleSheet.create({
     yearTabActive: { backgroundColor: "#111" },
     yearTabText: { color: "#555", fontWeight: "600" },
     yearTabTextActive: { color: "#fff" },
+    bubbleContainer: {
+        // maxWidth: "95%",
+        marginVertical: 4,
+        padding: 5,
+        borderRadius: 12,
+        backgroundColor: "#fff",
+        alignSelf: "center",
+    },
 });
 
 export default MemeDetailsComponent;

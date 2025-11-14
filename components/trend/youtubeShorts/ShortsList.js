@@ -6,12 +6,17 @@ import KeywordTrendComponent from "./KeywordTrendComponent";
 const {width, height} = Dimensions.get("window"); // 현재 화면 너비, 높이
 
 const ShortsList = ({videoList, max}) => {
-    const tabBarHeight = useBottomTabBarHeight(); // 하단바 크기
+    // const tabBarHeight = useBottomTabBarHeight(); // 하단바 크기
+    const tabBarHeight = height * 0.1; // 하단바 크기
     const statusBarHeight = Platform.OS === "android" ? StatusBar.currentHeight : 0; // 휴대폰 상단 상태바 크기
     const adjustedHeight = height - tabBarHeight; // 하단바 제외한 WebView 높이
 
   return (
-      <FlatList style={{marginTop: Platform.OS === "ios" ? height * -0.0555 : statusBarHeight, backgroundColor: "black"}}
+      <FlatList
+          style={{
+              // marginTop: Platform.OS === "ios" ? height * -0.0555 : statusBarHeight,
+              backgroundColor: "black"
+            }}
                 data={videoList}
                 keyExtractor={(item, index) => index.toString()}
                 renderItem={({item}) => (

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Text, StyleSheet } from "react-native";
 
-const TypingText = ({ fullText = '', speed = 30 }) => {
+const TypingText = ({ fullText = '', speed = 30, style }) => {
     const [displayedText, setDisplayedText] = useState('');
     const intervalRef = useRef(null);
 
