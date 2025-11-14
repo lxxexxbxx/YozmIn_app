@@ -9,21 +9,23 @@ import {
     Dimensions,
     ActivityIndicator,
     Animated,
-    Keyboard, PanResponder, TextInput, Platform
+    Keyboard, PanResponder, TextInput, Platform, StatusBar
 } from "react-native";
 import { CommonUtils } from "../../common/CommonUtils";
 import supabase from "../../../supabase";
 import { Image as ExpoImage } from "expo-image";
 import { SvgXml } from "react-native-svg";
 import {useNavigation} from "@react-navigation/native";
-import BottomSheet from "@gorhom/bottom-sheet";
 import MemeDetailsComponent from "./MemeDetailsComponent";
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import TypingText from "../../chatbot/TypingText";
+import {Portal} from "react-native-paper";
 
 const { width, height } = Dimensions.get("window");
-const CARD_HEIGHT = height * 0.9;
-const SNAP_POINT = height - CARD_HEIGHT;
+const statusBarHeight = Platform.OS === "android" ? StatusBar.currentHeight : 0; // 휴대폰 상단 상태바 크기
+const SNAP_POINTS = {
+    FULL: 0 + statusBarHeight,             // 완전 확장
+    MID: height * 0.25,   // 기본 위치
+    CLOSED: height       // 완전 닫힘
+};
 
 // 대한민국 연도별 카테고리
 const years = ["2025년", "2024년", "2023년", "2022년", "2021년", "2020년", "2019년", "2018년", "2017년", "2016년", "2015년", "2014년", "2013년", "2012년", "2011년", "2010년"];
@@ -126,7 +128,7 @@ const MemeDictionaryComponent = () => {
         setSelectedItem(item);
         setVisible(true);
         Animated.timing(translateY, {
-            toValue: SNAP_POINT,
+            toValue: SNAP_POINTS.MID,
             duration: 300,
             useNativeDriver: true,
         }).start();
@@ -135,29 +137,43 @@ const MemeDictionaryComponent = () => {
     const closeDetail = () => {
         Keyboard.dismiss();
         Animated.timing(translateY, {
-            toValue: height,
+            toValue: SNAP_POINTS.CLOSED,
             duration: 300,
             useNativeDriver: true,
-        }).start(() => {
-            setVisible(false);
-        });
+        }).start(() => setVisible(false));
     };
 
     const panResponder = useRef(
         PanResponder.create({
             onStartShouldSetPanResponder: () => true,
-            onPanResponderMove: (_, gestureState) => {
-                if (gestureState.dy > 0) {
-                    translateY.setValue(SNAP_POINT + gestureState.dy);
+            onPanResponderMove: (_, gesture) => {
+                const newY = SNAP_POINTS.MID + gesture.dy;
+
+                // 0보다 작아도 (즉, 위로 쓸어올릴 때) 0까지는 허용
+                if (newY < 0) {
+                    translateY.setValue(0);
+                } else if (newY > SNAP_POINTS.CLOSED) {
+                    translateY.setValue(SNAP_POINTS.CLOSED);
+                } else {
+                    translateY.setValue(newY);
                 }
             },
-            onPanResponderRelease: (_, gestureState) => {
-                if (gestureState.dy > 100) {
+            onPanResponderRelease: (_, gesture) => {
+                const { dy, vy } = gesture;
+
+                if (dy > 120 || vy > 0.5) {
+                    // 아래로 충분히 내리면 닫기
                     closeDetail();
+                } else if (dy < -120 || vy < -0.5) {
+                    // 위로 충분히 올리면 완전 확장
+                    Animated.spring(translateY, {
+                        toValue: SNAP_POINTS.FULL,
+                        useNativeDriver: true,
+                    }).start();
                 } else {
-                    Animated.timing(translateY, {
-                        toValue: SNAP_POINT,
-                        duration: 200,
+                    // 중간 위치로 돌아감
+                    Animated.spring(translateY, {
+                        toValue: SNAP_POINTS.MID,
                         useNativeDriver: true,
                     }).start();
                 }
@@ -233,18 +249,27 @@ const MemeDictionaryComponent = () => {
             )}
 
             {visible && (
-                <Animated.View
-                    style={[
-                        styles.cardContainer,
-                        { transform: [{ translateY }] },
-                    ]}
-                >
-                    <View style={styles.dragHandle} {...panResponder.panHandlers}>
-                        <View style={styles.dragBar} />
-                    </View>
+                <Portal>
+                    <View style={StyleSheet.absoluteFill}>
+                        <TouchableOpacity
+                            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.3)" }}
+                            onPress={closeDetail}
+                            activeOpacity={1}
+                        />
+                        <Animated.View
+                            style={[
+                                styles.cardContainer,
+                                { transform: [{ translateY }] },
+                            ]}
+                        >
+                            <View style={styles.dragHandle} {...panResponder.panHandlers}>
+                                <View style={styles.dragBar} />
+                            </View>
 
-                    {selectedItem && <MemeDetailsComponent meme={selectedItem}/>}
-                </Animated.View>
+                            {selectedItem && <MemeDetailsComponent meme={selectedItem}/>}
+                        </Animated.View>
+                    </View>
+                </Portal>
             )}
         </View>
     );
@@ -313,7 +338,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         left: 0,
         right: 0,
-        height: CARD_HEIGHT,
+        height: height,
         backgroundColor: '#fff',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
