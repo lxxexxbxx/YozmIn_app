@@ -1,36 +1,37 @@
-import React, { createContext, useContext, useMemo } from 'react';
-import { useColorScheme } from 'react-native';
+// ThemeContext.js
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useColorScheme } from "react-native";
 
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
+  const systemScheme = useColorScheme(); // 📱 시스템 다크모드 감지
+  const [isDark, setIsDark] = useState(systemScheme === "dark");
 
-  const colors = useMemo(
-    () =>
-      isDark
-        ? {
-            background: '#121212',
-            text: '#FFFFFF',
-            subText: '#BBBBBB',
-            border: '#333333',
-            boxBackground: '#1E1E1E',
-            accent: '#4A90E2',
-          }
-        : {
-            background: '#FFFFFF',
-            text: '#000000',
-            subText: '#666666',
-            border: '#DDDDDD',
-            boxBackground: '#F8F8F8',
-            accent: '#007AFF',
-          },
-    [isDark]
-  );
+  useEffect(() => {
+    setIsDark(systemScheme === "dark");
+  }, [systemScheme]);
+
+  const colors = isDark
+    ? {
+        background: "#121212",
+        text: "#FFFFFF",
+        boxBackground: "#1E1E1E",
+        border: "#333333",
+        subText: "#AAAAAA",
+      }
+    : {
+        background: "#FFFFFF",
+        text: "#000000",
+        boxBackground: "#F5F5F5",
+        border: "#E0E0E0",
+        subText: "#666666",
+      };
+
+  const toggleTheme = () => setIsDark((prev) => !prev);
 
   return (
-    <ThemeContext.Provider value={{ scheme, isDark, colors }}>
+    <ThemeContext.Provider value={{ isDark, colors, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
