@@ -4,9 +4,9 @@ import axios from "axios";
 import ShortsList from "./ShortsList";
 import {useKeyStore} from "../../../stores/KeyStore";
 
-const YoutubeTrendingShorts = ({keyword}) => {
+const YoutubeTrendingShorts = () => {
   const keyStore = useKeyStore();
-  const GOOGLE_API_KEY = keyStore.GOOGLE_API_KEY;
+  const GOOGLE_API_KEY = keyStore.GOOGLE_API_KEY; // Gemini 2.0 API 키
 
   const [trendingShorts, setTrendingShorts] = useState();
   const maxResults = 5; // 검색 쇼츠 개수
@@ -25,11 +25,11 @@ const YoutubeTrendingShorts = ({keyword}) => {
 
   // 검색 키워드 기준 지정 기간동안 지정 개수만큼의 쇼츠 정보 리스트를 조회해오는 함수
   const fetchYouTubeTrendingShorts = async () => {
-    const searchWord = keyword; // 검색어
+    const searchWord = "챌린지"; // 검색어
 
     const today = new Date(); // 오늘
     const ago = new Date(); // n일 전
-    ago.setDate(today.getDate() - 30);
+    ago.setDate(today.getDate() - 2);
 
     const mainQuery = "https://www.googleapis.com/youtube/v3/search"
     const dateQuery = `publishedAfter=${formatDate(ago)}T00:00:00Z&publishedBefore=${formatDate(today)}T23:59:59Z`
@@ -37,34 +37,14 @@ const YoutubeTrendingShorts = ({keyword}) => {
     const embedQuery = "autoplay=1&loop=1&disableScroll=1"
     const searchQuery = `part=snippet&q=${searchWord}&maxResults=${maxResults}&order=viewCount&type=video&videoDuration=short`
     // const searchQuery = `chart=mostPopular&part=snippet&maxResults=${maxResults}&type=video&videoDuration=short`
-    console.log(searchQuery);
 
     // YouTube API 조회
-    const response = await axios.get("https://www.googleapis.com/youtube/v3/search", {
-      params: {
-        key: GOOGLE_API_KEY,
-        part: "snippet",
-        q: searchWord,                    // ← axios가 자동 인코딩
-        maxResults: maxResults,
-        order: "viewCount",
-        type: "video",
-        videoDuration: "short",
-        autoplay: 1,
-        loop: 1,
-        disableScroll: 1,
-        videoEmbeddable: "true",          // ← 임베드 가능한 것만
-        regionCode: "KR",
-        relevanceLanguage: "ko",
-        publishedAfter: ago.toISOString(),
-        publishedBefore: today.toISOString(),
-        // safeSearch: "none",            // 필요시
-      },
-    });
-    // 결과(검색은 통계가 없으니, 통계가 필요하면 아래 videos.list로 후처리)
-    console.log(response.data);
+    const response = await axios.get(
+        `${mainQuery}?${dateQuery}&${regionQuery}&${searchQuery}`
+    );
 
     // 조회해온 쇼츠의 제목, 업로드 시간, 영상ID, URL(쇼츠) 정보 리스트 저장
-    const shorts = response.data.items.map(video => ({
+    let shorts = response.data.items.map(video => ({
       title: video.snippet.title,
       publishTime: video.snippet.publishTime,
       publishedAt: video.snippet.publishedAt,
