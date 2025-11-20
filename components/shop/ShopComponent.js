@@ -231,12 +231,12 @@ const ShopComponent = () => {
 
               const { data: upd } = await supabase
                 .from("mypage")
-                .update({ mp_Coin: newCoin })
+                .update({ mp_coin: newCoin })
                 .eq("user_id", userId)
-                .select("mp_Coin")
+                .select("mp_coin")
                 .single();
 
-              setGlobalCoin(upd?.mp_Coin ?? newCoin);
+              setGlobalCoin(upd?.mp_coin ?? newCoin);
               setOwnedNos((p) => new Set([...p, itemNo]));
 
               Alert.alert("구매 완료", "아이템 구매가 완료되었습니다.");

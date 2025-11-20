@@ -59,6 +59,9 @@ const BoardComponent = () => {
         comments: post.comment_cnt || 0,
         hasLiked: likedPostIds.includes(post.post_id),
         isMine: post.user_id === currentUserId,
+
+        // ✅ 작성자 user_id 저장 (마이페이지 이동에 사용)
+        authorId: post.user_id,
       }));
 
       setPosts(formatted);
@@ -142,16 +145,28 @@ const BoardComponent = () => {
     });
   };
 
+  /** 프로필 클릭 → 마이페이지(읽기 전용 모드) **/
+  const handlePressProfile = (post) => {
+    if (!post.authorId) return;
+    navigation.navigate('MyPage', {
+      userId: post.authorId,
+      readOnly: true,   // 📌 이걸로 마이페이지에서 버튼 숨김 모드
+    });
+  };
+
   /** 개별 게시글 UI **/
   const renderPost = ({ item }) => (
     <TouchableOpacity
       onPress={() => handlePress(item)}
       style={[styles.postContainer, item.isMine ? styles.myPost : styles.otherPost]}
     >
-      <Image
-        source={item.profileImage || require('../../assets/User.jpg')}
-        style={styles.profileImage}
-      />
+      {/* 프로필 영역 - 클릭 시 마이페이지로 이동 */}
+      <TouchableOpacity onPress={() => handlePressProfile(item)}>
+        <Image
+          source={item.profileImage || require('../../assets/User.jpg')}
+          style={styles.profileImage}
+        />
+      </TouchableOpacity>
 
       {/* 게시글 박스 (테마 적용됨) */}
       <ThemeView
@@ -199,7 +214,6 @@ const BoardComponent = () => {
 
   return (
     <ThemeView style={[styles.container, { backgroundColor: colors.background }]}>
-
       {/* 공지문구 */}
       <ThemeText style={[styles.notice, { color: colors.text }]}>
         최신 트렌드를 사람들과 공유 해보세요!
@@ -217,12 +231,17 @@ const BoardComponent = () => {
       <ThemeView
         style={[
           styles.inputWrapper,
-          { backgroundColor: colors.background, borderTopWidth: 0 }, // 경계 제거
+          { backgroundColor: colors.background, borderTopWidth: 0 },
         ]}
       >
         {/* 이미지 미리보기 */}
         {uploadedImageUrl && (
-          <ThemeView style={[styles.largeImagePreviewContainer, { backgroundColor: colors.boxBackground }]}>
+          <ThemeView
+            style={[
+              styles.largeImagePreviewContainer,
+              { backgroundColor: colors.boxBackground },
+            ]}
+          >
             <Image source={{ uri: uploadedImageUrl }} style={styles.largeImagePreview} />
 
             {!isImageUploading && (

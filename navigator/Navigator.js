@@ -28,6 +28,7 @@ import ShopComponent from "../components/shop/ShopComponent";
 import ClosetScreen from "../components/closet/ClosetScreen";
 import TodayQuestsScreen from '../components/quest/TodayQuestsScreen';
 import MemeDetailsComponent from "../components/trend/meme/MemeDetailsComponent";
+import BookmarkDetailComponent from "../components/bookmark/BookmarkDetailComponent";
 
 const Stack = createStackNavigator();
 
@@ -89,6 +90,7 @@ const Navigator = () => {
                 <Stack.Screen name="closet" component={ClosetScreen} options={{ headerShown: false }} />
 
                 <Stack.Screen name="TodayQuests" component={TodayQuestsScreen} options={{ headerShown: false }} />
+                <Stack.Screen name="BookmarkDetail" component={BookmarkDetailComponent} options={{headerShown: false}}/>
             </Stack.Navigator>
         </NavigationContainer>
     );
