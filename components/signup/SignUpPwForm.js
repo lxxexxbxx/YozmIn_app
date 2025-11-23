@@ -90,8 +90,8 @@ const SignUpPwForm = () => {
                             style={{flex: 1, marginBottom: 15, justifyContent: "center", alignItems: "center"}}
                             onPress={() => setPwHide(!pwHide)}>
                             {!pwHide ? <Image
-                                source={require("../../assets/eye_opened.jpeg")}/> : <Image
-                                source={require("../../assets/eye_closed.jpeg")}/>}
+                                source={require("../../assets/eye_opened.png")}/> : <Image
+                                source={require("../../assets/eye_closed.png")}/>}
                         </TouchableOpacity>
                     </View>
                     {pwError ? <Text style={{color: 'red'}}>{pwError}</Text> : null}
@@ -111,8 +111,8 @@ const SignUpPwForm = () => {
                             style={{flex: 1, marginBottom: 15, justifyContent: "center", alignItems: "center"}}
                             onPress={() => setPwCheckHide(!pwCheckHide)}>
                             {!pwCheckHide ? <Image
-                                source={require("../../assets/eye_opened.jpeg")}/> : <Image
-                                source={require("../../assets/eye_closed.jpeg")}/>}
+                                source={require("../../assets/eye_opened.png")}/> : <Image
+                                source={require("../../assets/eye_closed.png")}/>}
                         </TouchableOpacity>
                     </View>
                     {pwCheckError ? <Text style={{color: 'red'}}>{pwCheckError}</Text> : null}

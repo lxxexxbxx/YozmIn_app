@@ -9,11 +9,14 @@ import {
 } from 'react-native';
 import {useNavigation} from "@react-navigation/native";
 import {CommonUtils} from "../components/common/CommonUtils";
+import { useTheme } from "../components/settings/theme/ThemeContext";
+import { ThemeView, ThemeText } from "../components/common/ThemeComponents";
 
 const {width, height} = Dimensions.get("window");
 
 const BeforeLoginForm = () => {
   const navigation = useNavigation();
+  const { colors, isDark } = useTheme();
 
   useEffect(() => {
     CommonUtils.noGoBack();
@@ -23,25 +26,25 @@ const BeforeLoginForm = () => {
   }, []);
 
   return (
-      <View style={styles.loading_FormContainer}>
-        <View style={styles.loadingTitle}>
-          <View style={styles.yozmin_Logo}>
+      <ThemeView style={styles.loading_FormContainer}>
+        <ThemeView style={styles.loadingTitle}>
+          <ThemeView style={styles.yozmin_Logo}>
             <ImageBackground style={styles.yozmin_Logo_v1}
                              source={require("../assets/Yozmin_Logo_v0.1.png")}/>
-          </View>
-          <View style={styles.lbMainTitle}>
-            <Text style={styles.mainTitle}>요즘사람</Text>
-          </View>
-          <View style={styles.lbSubTitle}>
-            <Text style={styles.subTitle}>일상을 더욱 스마트하고 트렌디하게</Text>
-          </View>
-        </View>
+          </ThemeView>
+          <ThemeView style={styles.lbMainTitle}>
+            <ThemeText style={styles.mainTitle}>요즘사람</ThemeText>
+          </ThemeView>
+          <ThemeView style={styles.lbSubTitle}>
+            <ThemeText style={styles.subTitle}>일상을 더욱 스마트하고 트렌디하게</ThemeText>
+          </ThemeView>
+        </ThemeView>
         {/*<TouchableOpacity onPress={() => navigation.navigate("LoginForm")}>*/}
         {/*  <View style={styles.btnFiststsrt}>*/}
         {/*    <Text style={styles.buttontext}>시작하기</Text>*/}
         {/*  </View>*/}
         {/*</TouchableOpacity>*/}
-      </View>
+      </ThemeView>
   );
 }
 
