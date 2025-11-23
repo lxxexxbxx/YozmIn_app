@@ -129,7 +129,7 @@ const ShopComponent = () => {
 
   const userId = store.user_id;
   const coin = store.coin;
-  const setGlobalCoin = store.setCoin;
+  const setGlobalCoin = store.setter.setCoin;
 
   const [tab, setTab] = useState("모자");
   const [dbItems, setDbItems] = useState([]);

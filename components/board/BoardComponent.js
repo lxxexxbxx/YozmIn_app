@@ -17,6 +17,16 @@ import { useUserStore } from "../../stores/UserStore";
 import { pushQuest } from "../quest/Quests";
 import { ThemeView, ThemeText } from '../common/ThemeComponents';
 import { useTheme } from '../settings/theme/ThemeContext';
+import dayjs from './day';
+
+function formatKST(dateString) {
+  if (!dateString) return "방금 전";   // created_at이 비어있을 경우
+
+  const d = dayjs.utc(dateString);
+  if (!d.isValid()) return "방금 전";  // Invalid date 처리
+
+  return d.tz("Asia/Seoul").fromNow();
+}
 
 const { width } = Dimensions.get('window');
 
@@ -59,6 +69,7 @@ const BoardComponent = () => {
         comments: post.comment_cnt || 0,
         hasLiked: likedPostIds.includes(post.post_id),
         isMine: post.user_id === currentUserId,
+        created_at: post.created_at,
 
         // ✅ 작성자 user_id 저장 (마이페이지 이동에 사용)
         authorId: post.user_id,
@@ -207,6 +218,8 @@ const BoardComponent = () => {
           <ThemeText style={[styles.footerText, { color: colors.subText }]}>
             {item.comments}
           </ThemeText>
+          {/* 작성 시간 */}
+          <ThemeText style={styles.postDate}> {item.created_at ? dayjs(item.created_at).fromNow(): '시간 없음'}</ThemeText>
         </ThemeView>
       </ThemeView>
     </TouchableOpacity>
@@ -410,5 +423,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.7)',
     borderRadius: 14,
     padding: 2,
+  },
+  postDate: {
+    marginLeft: 10,
+    fontSize: 12,
   },
 });
