@@ -14,7 +14,6 @@ import BeforeLoginForm from "../form/BeforeLoginForm";
 import MovieDetailComponent from "../components/trend/movie/MovieDetailComponent";
 import TrendNavigator from "../components/trend/TrendNavigator";
 import StartForm from "../form/StartForm";
-import LoginForm from "../form/LoginForm";
 import SignUpNameForm from "../components/signup/SignUpNameForm";
 import SignUpIdForm from "../components/signup/SignUpIdForm";
 import SignUpPwForm from "../components/signup/SignUpPwForm";
@@ -38,7 +37,6 @@ const Navigator = () => {
             <Stack.Navigator initialRouteName={"BeforeLogin"}>
                 {/*디자인 폼*/}
                 <Stack.Screen name={"BeforeLogin"} component={BeforeLoginForm} options={{headerShown: false}}/>
-                <Stack.Screen name={"LoginForm"} component={LoginForm} options={{headerShown: false}}/>
                 <Stack.Screen name={"StartForm"} component={StartForm} options={{headerShown: false}}/>
 
                 {/*회원가입 컴포넌트*/}
