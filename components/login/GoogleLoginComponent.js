@@ -8,16 +8,16 @@ import React from "react";
 
 const {width, height} = Dimensions.get("window");
 
-const KakaoLoginComponent = () => {
-    const handleKakaoLogin = () => {
+const GoogleLoginComponent = () => {
+    const handleGoogleLogin = () => {
         // axios.get("https://naver.com");
-        alert("카카오 로그인 구현 필요");
+        alert("구글 로그인 구현 필요");
     }
 
     return (
-        <TouchableOpacity onPress={handleKakaoLogin}>
+        <TouchableOpacity onPress={handleGoogleLogin}>
             <Image
-                style={styles.image} source={require("../../assets/kakao_login.png")}
+                style={styles.image} source={require("../../assets/google_login.png")}
                 resizeMode={"contain"}
             />
         </TouchableOpacity>
@@ -33,4 +33,4 @@ const styles = StyleSheet.create({
 })
 
 
-export default KakaoLoginComponent;
+export default GoogleLoginComponent;

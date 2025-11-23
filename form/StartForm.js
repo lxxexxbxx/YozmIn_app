@@ -9,34 +9,37 @@ import {
 } from 'react-native';
 import {useNavigation} from "@react-navigation/native";
 import {CommonUtils} from "../components/common/CommonUtils";
+import { useTheme } from "../components/settings/theme/ThemeContext";
+import { ThemeView, ThemeText } from "../components/common/ThemeComponents";
 
 const { width, height } = Dimensions.get('window');
 
 export default function StartForm() {
   const navigation = useNavigation();
+  const { colors, isDark } = useTheme();
 
   useEffect(() => {
     // CommonUtils.noGoBack();
   }, []);
 
   return (
-      <View style={styles.start_FormContainer}>
-        <View style={styles.startTitle}>
-          <Text style={styles.lbStartTitle}>
+      <ThemeView style={styles.start_FormContainer}>
+        <ThemeView style={styles.startTitle}>
+          <ThemeText style={styles.lbStartTitle}>
             {`요즘사람과 함께\n요즘사람이 되어봐요😎`}
-          </Text>
-        </View>
-        <View style={styles.start_Logo}>
+          </ThemeText>
+        </ThemeView>
+        <ThemeView style={styles.start_Logo}>
           <ImageBackground style={styles.yozmin_charater_v1_0011} source={require('../assets/char_logo.jpeg')}/>
-        </View>
+        </ThemeView>
         <TouchableOpacity onPress={() => navigation.replace("TabNavigator")}>
-          <View style={styles.btnStart}>
-            <Text style={styles.lbStart}>
+          <ThemeView style={styles.btnStart}>
+            <ThemeText style={styles.lbStart}>
               {`시작하기`}
-            </Text>
-          </View>
+            </ThemeText>
+          </ThemeView>
         </TouchableOpacity>
-      </View>
+      </ThemeView>
   )
 }
 
