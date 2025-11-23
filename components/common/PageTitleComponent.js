@@ -20,7 +20,7 @@ const PageTitleComponent = ({ title, backToTab, backToStack }) => {
       {/* ✅ 화살표 색상 자동 전환 */}
       <TouchableOpacity style={styles.arrow} onPress={back}>
         <Ionicons
-          name="arrow-back"
+          name="chevron-back"
           size={24}
           color={colors.text} // ✅ 자동으로 흰색/검정 변경
         />
@@ -51,10 +51,11 @@ const styles = StyleSheet.create({
   },
   title: {
     flexGrow: 1,
-    textAlign: "center",
+    textAlign: "left",
     fontSize: 25,
     fontWeight: "bold",
     marginBottom: 20,
+    marginLeft: 20,
   },
 });
 
