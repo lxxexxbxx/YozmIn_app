@@ -29,6 +29,14 @@ const IMAGE_BY_DB_NAME = {
   "black cap": require("../../assets/black cap.png"),
   "black sunglasses": require("../../assets/black sunglasses.png"),
   "black hair": require("../../assets/black hair.png"),
+  BlackBowTie: require("../../assets/BlackBowTie.png"),
+  DollarChain: require("../../assets/DollarChain.png"),
+  WavyPattern: require("../../assets/WavyPattern.png"),
+  YellowBalloon: require("../../assets/YellowBalloon.png"),
+  YellowSchoolHat: require("../../assets/YellowSchoolHat.png"),
+  CityNightSky: require("../../assets/CityNightSky.png"),
+  PastelSunsetBackground: require("../../assets/PastelSunsetBackground.png"),
+  PastelSunsetBackground: require("../../assets/PastelSunsetBackground.png"),
 };
 
 function kstDateStr(d = new Date()) {
@@ -418,8 +426,22 @@ const MyPageComponent = () => {
         </View>
 
         <View style={styles.tinoStage}>
-          <Image style={styles.characterImage} source={require("../../assets/tino.png")} />
-          {CATS.map((cat) => {
+          {/* ✅ 배경: 캐릭터 뒤, 전체 스테이지 */}
+          {wearing.BACKGROUND && wearing.BACKGROUND.imageSrc && (
+            <Image
+              source={wearing.BACKGROUND.imageSrc}
+              style={styles.backgroundImage}
+            />
+          )}
+
+          {/* 캐릭터 */}
+          <Image
+            style={styles.characterImage}
+            source={require("../../assets/tino.png")}
+          />
+
+          {/* 모자/악세서리만 캐릭터 위에 오버레이 */}
+          {["HAT", "ACCESSORY"].map((cat) => {
             const it = wearing[cat];
             if (!it) return null;
             return (
@@ -434,7 +456,9 @@ const MyPageComponent = () => {
                 ]}
                 pointerEvents="none"
               >
-                {it.imageSrc ? <Image source={it.imageSrc} style={styles.overlayImage} /> : null}
+                {it.imageSrc ? (
+                  <Image source={it.imageSrc} style={styles.overlayImage} />
+                ) : null}
               </View>
             );
           })}
@@ -558,6 +582,15 @@ const styles = StyleSheet.create({
     height: STAGE_H,
     position: "relative",
     alignSelf: "center",
+  },
+  // 🔹 배경은 스테이지 전체
+  backgroundImage: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    width: STAGE_W,
+    height: STAGE_H,
+    resizeMode: "cover",
   },
   characterImage: {
     position: "absolute",
