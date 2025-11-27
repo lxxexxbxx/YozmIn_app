@@ -13,7 +13,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import supabase from "../../supabase";
 import { useUserStore } from "../../stores/UserStore";
-import { pushQuest } from "../quest/Quests";
+import { pushQuest } from "../quest/Quests"; // 그대로 둠
 import { ThemeView, ThemeText } from "../common/ThemeComponents";
 import { useTheme } from "../settings/theme/ThemeContext";
 
@@ -28,10 +28,18 @@ const KO_TO_CATEGORY = { 모자: "HAT", 악세서리: "ACCESSORY", 배경: "BACK
 const CATEGORY_TO_ICON = { HAT: "hat-fedora", ACCESSORY: "glasses", BACKGROUND: "image-area" };
 const CATS = ["HAT", "ACCESSORY", "BACKGROUND"];
 
+// ✅ 상점과 동일하게 이미지 매핑
 const IMAGE_BY_DB_NAME = {
   "black cap": require("../../assets/black cap.png"),
   "black sunglasses": require("../../assets/black sunglasses.png"),
   "black hair": require("../../assets/black hair.png"),
+  BlackBowTie: require("../../assets/BlackBowTie.png"),
+  DollarChain: require("../../assets/DollarChain.png"),
+  WavyPattern: require("../../assets/WavyPattern.png"),
+  YellowBalloon: require("../../assets/YellowBalloon.png"),
+  YellowSchoolHat: require("../../assets/YellowSchoolHat.png"),
+  CityNightSky: require("../../assets/CityNightSky.png"),
+  PastelSunsetBackground: require("../../assets/PastelSunsetBackground.png"),
 };
 
 const ClosetItemCard = ({ item, selected, onPreview, onEquipToggle, colors }) => {
@@ -265,7 +273,10 @@ export default function ClosetScreen() {
                 </ThemeText>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.secondaryBtn, { backgroundColor: colors.subBackground, marginLeft: 8 }]}
+                style={[
+                  styles.secondaryBtn,
+                  { backgroundColor: colors.subBackground, marginLeft: 8 },
+                ]}
                 onPress={() =>
                   navigation.canGoBack() ? navigation.goBack() : navigation.navigate("MyPage")
                 }
@@ -285,8 +296,22 @@ export default function ClosetScreen() {
             ]}
           >
             <View style={styles.tinoStage}>
-              <Image style={styles.characterImage} source={require("../../assets/tino.png")} />
-              {CATS.map((cat) => {
+              {/* ✅ 1) 배경: 캐릭터 뒤, 스테이지 전체 */}
+              {wearing.BACKGROUND && wearing.BACKGROUND.imageSrc && (
+                <Image
+                  source={wearing.BACKGROUND.imageSrc}
+                  style={styles.backgroundImage}
+                />
+              )}
+
+              {/* ✅ 2) 캐릭터 */}
+              <Image
+                style={styles.characterImage}
+                source={require("../../assets/tino.png")}
+              />
+
+              {/* ✅ 3) 모자 & 악세서리: 캐릭터 위에 셀 단위로 */}
+              {["HAT", "ACCESSORY"].map((cat) => {
                 const it = wearing[cat];
                 if (!it) return null;
                 return (
@@ -308,7 +333,11 @@ export default function ClosetScreen() {
                         style={[styles.overlayImage, { backgroundColor: "transparent" }]}
                       />
                     ) : (
-                      <MaterialCommunityIcons name={it.icon} size={36} color={colors.text} />
+                      <MaterialCommunityIcons
+                        name={it.icon}
+                        size={36}
+                        color={colors.text}
+                      />
                     )}
                   </View>
                 );
@@ -424,6 +453,15 @@ const styles = StyleSheet.create({
     height: STAGE_H,
     position: "relative",
     alignSelf: "center",
+  },
+  // 🔹 배경은 스테이지 전체
+  backgroundImage: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    width: STAGE_W,
+    height: STAGE_H,
+    resizeMode: "cover",
   },
   characterImage: {
     position: "absolute",
