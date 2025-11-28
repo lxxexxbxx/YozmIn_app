@@ -20,11 +20,9 @@ import { useTheme } from '../settings/theme/ThemeContext';
 import dayjs from './day';
 
 function formatKST(dateString) {
-  if (!dateString) return "방금 전";   // created_at이 비어있을 경우
-
+  if (!dateString) return "방금 전";
   const d = dayjs.utc(dateString);
-  if (!d.isValid()) return "방금 전";  // Invalid date 처리
-
+  if (!d.isValid()) return "방금 전";
   return d.tz("Asia/Seoul").fromNow();
 }
 
@@ -51,6 +49,7 @@ const BoardComponent = () => {
 
       if (error) throw error;
 
+      // ✅ 내가 좋아요한 게시글
       let likedPostIds = [];
       if (currentUserId) {
         const { data: likeData } = await supabase
@@ -61,19 +60,56 @@ const BoardComponent = () => {
         likedPostIds = likeData?.map((l) => l.post_id) || [];
       }
 
-      const formatted = (postData || []).map(post => ({
-        id: String(post.post_id),
-        text: post.content,
-        image: post.image_url ? { uri: post.image_url } : null,
-        likes: post.like_cnt,
-        comments: post.comment_cnt || 0,
-        hasLiked: likedPostIds.includes(post.post_id),
-        isMine: post.user_id === currentUserId,
-        created_at: post.created_at,
+      // ✅ 작성자 user_id 모으기
+      const authorIds = Array.from(
+        new Set((postData || []).map((p) => p.user_id).filter(Boolean))
+      );
 
-        // ✅ 작성자 user_id 저장 (마이페이지 이동에 사용)
-        authorId: post.user_id,
-      }));
+      // ✅ 작성자들의 마이페이지 프로필 / 캐릭터 이름 / 유저 이름 가져오기
+      let profileMap = {};
+      if (authorIds.length > 0) {
+        const { data: mpRows, error: mpError } = await supabase
+          .from('mypage')
+          .select('user_id, mp_Name, profileimg, user(name)')
+          .in('user_id', authorIds);
+
+        if (mpError) {
+          console.error('❌ 마이페이지 프로필 조회 오류:', mpError);
+        } else if (mpRows) {
+          profileMap = mpRows.reduce((acc, row) => {
+            acc[row.user_id] = {
+              profileImgUrl:
+                row.profileimg && row.profileimg !== 'EMPTY' ? row.profileimg : null,
+              characterName: row.mp_Name || '',
+              userName: row.user?.name || '',
+            };
+            return acc;
+          }, {});
+        }
+      }
+
+      // ✅ 게시글 포맷팅 (기존 필드는 그대로 두고, 프로필 관련만 추가)
+      const formatted = (postData || []).map(post => {
+        const profile = profileMap[post.user_id] || {};
+        return {
+          id: String(post.post_id),
+          text: post.content,
+          image: post.image_url ? { uri: post.image_url } : null,
+          likes: post.like_cnt,
+          comments: post.comment_cnt || 0,
+          hasLiked: likedPostIds.includes(post.post_id),
+          isMine: post.user_id === currentUserId,
+          created_at: post.created_at,
+
+          // ✅ 기존: 작성자 user_id 저장 (마이페이지 이동에 사용)
+          authorId: post.user_id,
+
+          // ✅ 추가: 프로필 이미지 / 이름 / 캐릭터 이름
+          profileImage: profile.profileImgUrl ? { uri: profile.profileImgUrl } : null,
+          userName: profile.userName || null,
+          characterName: profile.characterName || null,
+        };
+      });
 
       setPosts(formatted);
     } catch (e) {
@@ -156,12 +192,24 @@ const BoardComponent = () => {
     });
   };
 
-  /** 프로필 클릭 → 마이페이지(읽기 전용 모드) **/
-  const handlePressProfile = (post) => {
+  /** 프로필 탭 → 새 간단 프로필 화면 */
+  const handlePressProfileSimple = (post) => {
+    if (!post.authorId) return;
+
+    navigation.navigate('BoardUserProfile', {
+      userId: post.authorId,
+      profileImgUrl: post.profileImage ? post.profileImage.uri : null,
+      userName: post.userName,
+      characterName: post.characterName,
+    });
+  };
+
+  /** 프로필 길게 누르기 → 기존처럼 마이페이지(읽기 전용 모드) */
+  const handlePressProfileMyPage = (post) => {
     if (!post.authorId) return;
     navigation.navigate('MyPage', {
       userId: post.authorId,
-      readOnly: true,   // 📌 이걸로 마이페이지에서 버튼 숨김 모드
+      readOnly: true,   // 📌 기존 기능 유지
     });
   };
 
@@ -171,8 +219,14 @@ const BoardComponent = () => {
       onPress={() => handlePress(item)}
       style={[styles.postContainer, item.isMine ? styles.myPost : styles.otherPost]}
     >
-      {/* 프로필 영역 - 클릭 시 마이페이지로 이동 */}
-      <TouchableOpacity onPress={() => handlePressProfile(item)}>
+      {/* 프로필 영역
+          - 탭: 새 간단 프로필 화면
+          - 길게 누르기: 예전처럼 MyPage readOnly */}
+      <TouchableOpacity
+        onPress={() => handlePressProfileSimple(item)}
+        onLongPress={() => handlePressProfileMyPage(item)}
+        delayLongPress={400}
+      >
         <Image
           source={item.profileImage || require('../../assets/User.jpg')}
           style={styles.profileImage}
@@ -189,6 +243,22 @@ const BoardComponent = () => {
           },
         ]}
       >
+        {/* (선택) 작성자 이름 / 캐릭터 이름 표시 */}
+        {(item.userName || item.characterName) && (
+          <ThemeView style={{ flexDirection: 'row', marginBottom: 4 }}>
+            {item.userName && (
+              <ThemeText style={{ fontWeight: 'bold', marginRight: 6, color: colors.text }}>
+                {item.userName}
+              </ThemeText>
+            )}
+            {item.characterName && (
+              <ThemeText style={{ color: colors.subText }}>
+                {item.characterName}
+              </ThemeText>
+            )}
+          </ThemeView>
+        )}
+
         {item.image && <Image source={item.image} style={styles.postImage} />}
         <ThemeText style={[styles.content, { color: colors.text }]}>
           {item.text}
@@ -218,8 +288,11 @@ const BoardComponent = () => {
           <ThemeText style={[styles.footerText, { color: colors.subText }]}>
             {item.comments}
           </ThemeText>
+
           {/* 작성 시간 */}
-          <ThemeText style={styles.postDate}> {item.created_at ? dayjs(item.created_at).fromNow(): '시간 없음'}</ThemeText>
+          <ThemeText style={styles.postDate}>
+            {item.created_at ? dayjs(item.created_at).fromNow() : '시간 없음'}
+          </ThemeText>
         </ThemeView>
       </ThemeView>
     </TouchableOpacity>

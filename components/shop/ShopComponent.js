@@ -8,6 +8,7 @@ import {
   Alert,
   useWindowDimensions,
   ScrollView,
+  View,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
@@ -19,7 +20,7 @@ import { useTheme } from "../settings/theme/ThemeContext";
 
 const CELL_SIZE = 70;
 const STAGE_W = 260;
-const STAGE_H = 250;
+const STAGE_H = 260;
 const OFFSET_X = 0;
 const OFFSET_Y = 0;
 
@@ -27,6 +28,13 @@ const IMAGE_BY_DB_NAME = {
   "black cap": require("../../assets/black cap.png"),
   "black sunglasses": require("../../assets/black sunglasses.png"),
   "black hair": require("../../assets/black hair.png"),
+  BlackBowTie: require("../../assets/BlackBowTie.png"),
+  DollarChain: require("../../assets/DollarChain.png"),
+  WavyPattern: require("../../assets/WavyPattern.png"),
+  YellowBalloon: require("../../assets/YellowBalloon.png"),
+  YellowSchoolHat: require("../../assets/YellowSchoolHat.png"),
+  CityNightSky: require("../../assets/CityNightSky.png"),
+  PastelSunsetBackground: require("../../assets/PastelSunsetBackground.png"),
 };
 
 const TABS = ["모자", "악세서리", "배경"];
@@ -35,7 +43,10 @@ const CATEGORY_TO_ICON = { HAT: "hat-fedora", ACCESSORY: "glasses", BACKGROUND: 
 
 const ShopItemCard = ({ item, onPreview, onBuy }) => {
   const { colors, isDark } = useTheme();
-  const disabled = item.owned || item.cannotAfford;
+
+  // 🔹 실제 비활성 조건은 "이미 보유중"일 때만
+  const disabled = item.owned;
+  const cannotAfford = item.cannotAfford;
 
   return (
     <ThemeView
@@ -59,12 +70,7 @@ const ShopItemCard = ({ item, onPreview, onBuy }) => {
         )}
       </TouchableOpacity>
 
-      <ThemeText
-        style={[
-          styles.itemTitle,
-          { color: colors.text },
-        ]}
-      >
+      <ThemeText style={[styles.itemTitle, { color: colors.text }]}>
         {item.title}
       </ThemeText>
 
@@ -84,12 +90,7 @@ const ShopItemCard = ({ item, onPreview, onBuy }) => {
           size={15}
           color={colors.text}
         />
-        <ThemeText
-          style={[
-            styles.itemPrice,
-            { color: colors.text },
-          ]}
-        >
+        <ThemeText style={[styles.itemPrice, { color: colors.text }]}>
           {item.price}
         </ThemeText>
       </ThemeView>
@@ -98,8 +99,15 @@ const ShopItemCard = ({ item, onPreview, onBuy }) => {
         style={[
           styles.buyBtn,
           {
+            // 코인 부족이면 색만 연하게, 클릭은 가능
             backgroundColor: disabled
-              ? (isDark ? "#555" : "#CCD0D6")
+              ? isDark
+                ? "#555"
+                : "#CCD0D6"
+              : cannotAfford
+              ? isDark
+                ? "#38527A"
+                : "#9EBEF5"
               : "#2F80ED",
           },
         ]}
@@ -108,7 +116,11 @@ const ShopItemCard = ({ item, onPreview, onBuy }) => {
       >
         {item.owned ? (
           <>
-            <MaterialCommunityIcons name="check-circle" size={16} color="#fff" />
+            <MaterialCommunityIcons
+              name="check-circle"
+              size={16}
+              color="#fff"
+            />
             <ThemeText style={styles.buyBtnText}>보유중</ThemeText>
           </>
         ) : (
@@ -141,6 +153,33 @@ const ShopComponent = () => {
   const isWide = width >= 720;
   const numColumns = isWide ? 3 : 2;
 
+  // ✅ 1. 상점 입장 시 DB에서 코인 값 동기화
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("mypage")
+          .select("mp_coin")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (!cancelled && !error && data) {
+          setGlobalCoin(data.mp_coin ?? 0);
+        }
+      } catch (e) {
+        console.error("coin sync error:", e);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, setGlobalCoin]);
+
+  // 내가 가진 아이템 번호들
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -154,9 +193,12 @@ const ShopComponent = () => {
         setOwnedNos(new Set(data.map((d) => Number(d.item_no))));
       }
     })();
-    return () => (cancelled = true);
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
+  // 상점 아이템 목록
   useEffect(() => {
     let cancel = false;
     (async () => {
@@ -181,14 +223,16 @@ const ShopComponent = () => {
       setLoading(false);
     })();
 
-    return () => (cancel = true);
+    return () => {
+      cancel = true;
+    };
   }, []);
 
   const items = useMemo(() => {
     const cat = KO_TO_CATEGORY[tab];
     return dbItems
       .filter((it) => it.category === cat)
-      .sort((a, b) => (a.y - b.y) || (a.x - b.x))
+      .sort((a, b) => a.y - b.y || a.x - b.x)
       .map((it) => ({
         ...it,
         owned: ownedNos.has(Number(it.id)),
@@ -208,14 +252,21 @@ const ShopComponent = () => {
           text: "구매",
           onPress: async () => {
             try {
-              if (!userId) return Alert.alert("로그인이 필요합니다.");
+              if (!userId) {
+                Alert.alert("로그인이 필요합니다.");
+                return;
+              }
               const itemNo = Number(item.id);
 
-              if (ownedNos.has(itemNo))
-                return Alert.alert("이미 보유 중입니다.");
+              if (ownedNos.has(itemNo)) {
+                Alert.alert("이미 보유 중입니다.");
+                return;
+              }
 
-              if (coin < item.price)
-                return Alert.alert("코인 부족", "코인이 부족합니다.");
+              if (coin < item.price) {
+                Alert.alert("코인 부족", "코인이 부족합니다.");
+                return;
+              }
 
               await supabase.from("user_items").insert([
                 {
@@ -226,7 +277,6 @@ const ShopComponent = () => {
                 },
               ]);
 
-              // 코인 차감
               const newCoin = coin - item.price;
 
               const { data: upd } = await supabase
@@ -250,14 +300,8 @@ const ShopComponent = () => {
     );
   };
 
-  
   return (
-    <ThemeView
-      style={[
-        styles.screen,
-        { backgroundColor: colors.background },
-      ]}
-    >
+    <ThemeView style={[styles.screen, { backgroundColor: colors.background }]}>
       <ScrollView
         style={styles.contentScroll}
         contentContainerStyle={[
@@ -265,7 +309,7 @@ const ShopComponent = () => {
           { flexDirection: isWide ? "row" : "column" },
         ]}
       >
-        {/* Left Panel */}
+        {/* LEFT : 캐릭터 미리보기 */}
         <ThemeView
           style={[
             styles.leftPanel,
@@ -295,11 +339,7 @@ const ShopComponent = () => {
                   : navigation.navigate("MyPage")
               }
             >
-              <Ionicons
-                name="chevron-back"
-                size={20}
-                color={colors.text}
-              />
+              <Ionicons name="chevron-back" size={20} color={colors.text} />
               <ThemeText style={[styles.backText, { color: colors.text }]}>
                 뒤로
               </ThemeText>
@@ -315,37 +355,54 @@ const ShopComponent = () => {
               },
             ]}
           >
-            <ThemeView style={styles.tinoStage}>
+            <View style={styles.tinoStage}>
+              {/* 배경 아이템: 캐릭터 뒤, 스테이지 전체 */}
+              {overlayItem &&
+                overlayItem.category === "BACKGROUND" &&
+                overlayItem.imageSrc && (
+                  <Image
+                    source={overlayItem.imageSrc}
+                    style={styles.backgroundImage}
+                  />
+                )}
+
+              {/* 캐릭터 */}
               <Image
                 style={styles.characterImage}
                 source={require("../../assets/tino.png")}
               />
 
-              {overlayItem && (
-                <ThemeView
-                  style={[
-                    styles.overlayWrap,
-                    {
-                      left: overlayItem.x * CELL_SIZE,
-                      top: overlayItem.y * CELL_SIZE,
-                    },
-                  ]}
-                >
-                  {overlayItem.imageSrc ? (
-                    <Image
-                      source={overlayItem.imageSrc}
-                      style={styles.overlayImage}
-                    />
-                  ) : (
-                    <MaterialCommunityIcons
-                      name={overlayItem.icon || "shape"}
-                      size={36}
-                      color={colors.text}
-                    />
-                  )}
-                </ThemeView>
-              )}
-            </ThemeView>
+              {/* 모자/악세서리 */}
+              {overlayItem &&
+                overlayItem.category !== "BACKGROUND" && (
+                  <View
+                    style={[
+                      styles.overlayWrap,
+                      {
+                        left:
+                          OFFSET_X + (overlayItem.x || 0) * CELL_SIZE,
+                        top:
+                          OFFSET_Y + (overlayItem.y || 0) * CELL_SIZE,
+                        backgroundColor: "transparent",
+                      },
+                    ]}
+                    pointerEvents="none"
+                  >
+                    {overlayItem.imageSrc ? (
+                      <Image
+                        source={overlayItem.imageSrc}
+                        style={styles.overlayImage}
+                      />
+                    ) : (
+                      <MaterialCommunityIcons
+                        name={overlayItem.icon || "shape"}
+                        size={36}
+                        color={colors.text}
+                      />
+                    )}
+                  </View>
+                )}
+            </View>
 
             {overlayItem && (
               <TouchableOpacity
@@ -365,7 +422,7 @@ const ShopComponent = () => {
           </ThemeView>
         </ThemeView>
 
-        {/* RIGHT PANEL */}
+        {/* RIGHT : 상점 리스트 */}
         <ThemeView
           style={[
             styles.rightPanel,
@@ -402,7 +459,7 @@ const ShopComponent = () => {
             </ThemeView>
           </ThemeView>
 
-          {/* Tabs */}
+          {/* 탭 */}
           <ThemeView style={styles.tabBar}>
             {TABS.map((label, i) => {
               const active = tab === label;
@@ -413,8 +470,12 @@ const ShopComponent = () => {
                     styles.tabBtn,
                     {
                       backgroundColor: active
-                        ? (isDark ? "#2F80ED33" : "#2F80ED22")
-                        : (isDark ? "#2A2A2A" : "#F1F2F6"),
+                        ? isDark
+                          ? "#2F80ED33"
+                          : "#2F80ED22"
+                        : isDark
+                        ? "#2A2A2A"
+                        : "#F1F2F6",
                       borderColor: active ? "#2F80ED" : "transparent",
                       borderWidth: active ? 1 : 0,
                     },
@@ -425,9 +486,7 @@ const ShopComponent = () => {
                   <ThemeText
                     style={[
                       styles.tabText,
-                      {
-                        color: active ? "#2F80ED" : colors.text,
-                      },
+                      { color: active ? "#2F80ED" : colors.text },
                     ]}
                   >
                     {label}
@@ -437,7 +496,7 @@ const ShopComponent = () => {
             })}
           </ThemeView>
 
-          {/* Items */}
+          {/* 아이템 리스트 */}
           <FlatList
             data={items}
             key={numColumns}
@@ -445,8 +504,13 @@ const ShopComponent = () => {
             numColumns={numColumns}
             scrollEnabled={false}
             nestedScrollEnabled
-            contentContainerStyle={{ paddingVertical: 8, paddingHorizontal: 6 }}
-            ItemSeparatorComponent={() => <ThemeView style={{ height: 12 }} />}
+            contentContainerStyle={{
+              paddingVertical: 8,
+              paddingHorizontal: 6,
+            }}
+            ItemSeparatorComponent={() => (
+              <ThemeView style={{ height: 12 }} />
+            )}
             renderItem={({ item }) => (
               <ShopItemCard
                 item={item}
@@ -465,7 +529,6 @@ export default ShopComponent;
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-
   contentScroll: { flex: 1 },
   scrollContent: { padding: 16 },
 
@@ -513,8 +576,20 @@ const styles = StyleSheet.create({
     width: STAGE_W,
     height: STAGE_H,
     position: "relative",
+    alignSelf: "center",
+  },
+  backgroundImage: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    width: STAGE_W,
+    height: STAGE_H,
+    resizeMode: "cover",
   },
   characterImage: {
+    position: "absolute",
+    left: 0,
+    top: 0,
     width: STAGE_W,
     height: STAGE_H,
     resizeMode: "contain",
@@ -530,7 +605,9 @@ const styles = StyleSheet.create({
     width: CELL_SIZE,
     height: CELL_SIZE,
     resizeMode: "contain",
+    backgroundColor: "transparent",
   },
+
   clearBtn: {
     marginTop: 10,
     paddingHorizontal: 12,
