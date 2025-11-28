@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, Dimensions} from 'react-native';
 import PageTitleComponent from "../common/PageTitleComponent";
 import supabase from "../../supabase";
-import Toast from "react-native-toast-message";
 import {useUserStore} from "../../stores/UserStore";
 import {useNavigation} from "@react-navigation/native";
 
@@ -74,10 +73,11 @@ const SelectCategoryForm = () => {
         await store.setter.setCategories(selectedItems);
 
         if(!store.categories) {
-            Toast.show({
-                type: 'error',
-                text1: '관심사를 선택해주세요.',
-            });
+            // Toast.show({
+            //     type: 'error',
+            //     text1: '관심사를 선택해주세요.',
+            // });
+            console.log("관심사를 선택해주세요.")
             return;
         }
 
@@ -90,10 +90,11 @@ const SelectCategoryForm = () => {
         console.log(response);
 
         if(response.status === 204) {
-            Toast.show({
-                type: 'success',
-                text1: '관심사 저장 완료',
-            });
+            // Toast.show({
+            //     type: 'success',
+            //     text1: '관심사 저장 완료',
+            // });
+            console.log("관심사 저장 완료")
             navigation.goBack();
         }
     }

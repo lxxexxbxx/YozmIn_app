@@ -15,8 +15,6 @@ import {useNavigation} from "@react-navigation/native";
 import {CommonUtils} from "../common/CommonUtils";
 import supabase from "../../supabase";
 import SHA256 from "crypto-js/sha256";
-import {Circle, Path, Svg} from "react-native-svg";
-import Toast from "react-native-toast-message";
 import {useUserStore} from "../../stores/UserStore";
 import {useKeyStore} from "../../stores/KeyStore";
 import {useTheme} from "../settings/theme/ThemeContext";
@@ -70,11 +68,12 @@ const LoginComponent = () => {
         if (response.data[0].password === hashedPw) {
           console.log("user_id:", response.data[0].user_id);
           // 성공 메시지
-          Toast.show({
-            type: 'success',
-            text1: '로그인 성공',
-            text2: `${response.data[0].name}님, 환영합니다 👋`,
-          });
+          // Toast.show({
+          //   type: 'success',
+          //   text1: '로그인 성공',
+          //   text2: `${response.data[0].name}님, 환영합니다 👋`,
+          // });
+          console.log(`login success: ${response.data[0].name}`)
           userStore.setter.setClear();
           userStore.setter.setUser(
               response.data[0].name,

@@ -3,8 +3,9 @@ import { View, Text, ImageBackground, StyleSheet, Dimensions } from 'react-nativ
 import {useUserStore} from "../../stores/UserStore";
 import supabase from "../../supabase";
 import {useNavigation} from "@react-navigation/native";
-import Toast from "react-native-toast-message";
 import {CommonUtils} from "../common/CommonUtils";
+import { ThemeView, ThemeText } from "../common/ThemeComponents";
+import { useTheme } from "../settings/theme/ThemeContext";
 
 const { width, height } = Dimensions.get('window');
 
@@ -17,11 +18,12 @@ const SignUpCompleteForm = () => {
         !store.email || !store.birth_date) {
 
       // 에러 메시지
-      Toast.show({
-        type: 'error',
-        text1: '회원가입 실패',
-        text2: '회원 정보가 잘못되었습니다.',
-      });
+      // Toast.show({
+      //   type: 'error',
+      //   text1: '회원가입 실패',
+      //   text2: '회원 정보가 잘못되었습니다.',
+      // });
+      console.log("회원가입 실패: 회원 정보가 잘못되었습니다.")
 
       navigation.navigate("Login");
       return;
@@ -40,11 +42,12 @@ const SignUpCompleteForm = () => {
     if(response.status === 201) {
       console.log("등록 성공");
       // 성공 메시지
-      Toast.show({
-        type: 'success',
-        text1: '회원가입 완료',
-        text2: `${store.name}님, 환영합니다 👋`,
-      });
+      // Toast.show({
+      //   type: 'success',
+      //   text1: '회원가입 완료',
+      //   text2: `${store.name}님, 환영합니다 👋`,
+      // });
+      console.log(`회원가입 완료: ${store.name}님, 환영합니다 👋`);
     }
     else console.log("등록 실패:", response.error);
   }

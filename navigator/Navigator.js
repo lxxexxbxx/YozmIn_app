@@ -28,13 +28,15 @@ import ClosetScreen from "../components/closet/ClosetScreen";
 import TodayQuestsScreen from '../components/quest/TodayQuestsScreen';
 import MemeDetailsComponent from "../components/trend/meme/MemeDetailsComponent";
 import BookmarkDetailComponent from "../components/bookmark/BookmarkDetailComponent";
-import BoardUserProfileScreen from "../components/board/BoardUserProfileScreen";
+import {useTheme} from "../components/settings/theme/ThemeContext";
 
 const Stack = createStackNavigator();
 
 const Navigator = () => {
+    const { colors } = useTheme();
+
     return (
-        <NavigationContainer>
+        <NavigationContainer style={{backgroundColor: colors.background}}>
             <Stack.Navigator initialRouteName={"BeforeLogin"}>
                 {/*디자인 폼*/}
                 <Stack.Screen name={"BeforeLogin"} component={BeforeLoginForm} options={{headerShown: false}}/>
@@ -90,9 +92,6 @@ const Navigator = () => {
 
                 <Stack.Screen name="TodayQuests" component={TodayQuestsScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="BookmarkDetail" component={BookmarkDetailComponent} options={{headerShown: false}}/>
-
-                <Stack.Screen name="BoardUserProfile" component={BoardUserProfileScreen}options={{ headerShown: false }}/>
-                
             </Stack.Navigator>
         </NavigationContainer>
     );

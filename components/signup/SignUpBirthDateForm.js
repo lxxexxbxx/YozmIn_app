@@ -13,12 +13,15 @@ import {useNavigation} from "@react-navigation/native";
 import PageTitleComponent from "../../components/common/PageTitleComponent";
 import {useUserStore} from "../../stores/UserStore";
 import {CommonUtils} from "../common/CommonUtils";
+import { ThemeView, ThemeText } from "../common/ThemeComponents";
+import { useTheme } from "../settings/theme/ThemeContext";
 
 const {width, height} = Dimensions.get('window');
 
 const SignUpBirthDateForm = () => {
     const navigation = useNavigation();
     const store = useUserStore();
+    const {colors, isDark} = useTheme();
 
     const [year, setYear] = useState("");
     const [month, setMonth] = useState("");
@@ -70,51 +73,51 @@ const SignUpBirthDateForm = () => {
         <KeyboardAvoidingView style={styles.Container}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            <View style={styles.FormContainer}>
+            <ThemeView style={styles.FormContainer}>
                 <PageTitleComponent title={"회원가입"} darkMode={false} backToStack={"SignUpEmail"}></PageTitleComponent>
-                <View style={styles.textContainer}>
-                    <Text style={styles.text}>
+                <ThemeView style={styles.textContainer}>
+                    <ThemeText style={styles.text}>
                         {"생년월일을 입력해주세요."}
-                    </Text>
-                </View>
-                <View style={styles.inputContainer}>
-                    <Text style={styles.label}>
+                    </ThemeText>
+                </ThemeView>
+                <ThemeView style={styles.inputContainer}>
+                    <ThemeText style={styles.label}>
                         {"생년월일"}
-                    </Text>
-                    <View style={{flexDirection: "row"}}>
+                    </ThemeText>
+                    <ThemeView style={{flexDirection: "row"}}>
                         <TextInput style={styles.inputBox} value={year} placeholder={"년"}
                                    inputMode={"numeric"} maxLength={4}
                                    onChangeText={(value) => {
                                        setYear(value);
                                        setError("");
                                    }}/>/>
-                        <Text style={styles.dash}> - </Text>
+                        <ThemeText style={styles.dash}> - </ThemeText>
                         <TextInput style={styles.inputBox} value={month} placeholder={"월"}
                                    inputMode={"numeric"} maxLength={2}
                                    onChangeText={(value) => {
                                        setMonth(value);
                                        setError("");
                                    }}/>/>
-                        <Text style={styles.dash}> - </Text>
+                        <ThemeText style={styles.dash}> - </ThemeText>
                         <TextInput style={styles.inputBox} value={day} placeholder={"일"}
                                    inputMode={"numeric"} maxLength={2}
                                    onChangeText={(value) => {
                                        setDay(value);
                                        setError("");
                                    }}/>/>
-                    </View>
+                    </ThemeView>
                     {error ? <Text style={{color: 'red'}}>{error}</Text> : null}
-                </View>
+                </ThemeView>
                 <TouchableOpacity onPress={() => {
                     handleNext()
                 }}>
-                    <View style={styles.btnContainer}>
-                        <Text style={styles.btn}>
+                    <ThemeView style={styles.btnContainer}>
+                        <ThemeText style={styles.btn}>
                             {"다음"}
-                        </Text>
-                    </View>
+                        </ThemeText>
+                    </ThemeView>
                 </TouchableOpacity>
-            </View>
+            </ThemeView>
         </KeyboardAvoidingView>
     )
 }
