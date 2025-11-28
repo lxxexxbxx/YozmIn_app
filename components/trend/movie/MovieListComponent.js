@@ -48,13 +48,17 @@ export default function MovieListComponent({ category }) {
     });
 
     // 🔞 금칙어 필터링
-    const bannedKeywords = ["19", "야한", "에로", "노출", "새엄마", "엄마", "가슴", "무삭제", "무삭제판", "동창회", "섹스"];
+    const bannedKeywords = ["19", "야한", "에로", "노출", "새엄마", "가슴", "무삭제", "무삭제판", "동창회", "섹스"];
 
     const filteredResults = response.data.results.filter((movie) => {
       const title = (movie.title || movie.name || "").toLowerCase();
       const hasBannedWord = bannedKeywords.some((keyword) => title.includes(keyword.toLowerCase()));
       return !hasBannedWord;
     });
+
+    // filteredResults.filter((detail) => {
+    //   if(detail.adult === true) return false;
+    // })
 
     setContents(filteredResults);
   };

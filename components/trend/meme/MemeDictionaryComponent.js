@@ -18,6 +18,9 @@ import { SvgXml } from "react-native-svg";
 import {useNavigation} from "@react-navigation/native";
 import MemeDetailsComponent from "./MemeDetailsComponent";
 import {Portal} from "react-native-paper";
+import DropDownPicker from 'react-native-dropdown-picker';
+import { ThemeView, ThemeText } from "../../common/ThemeComponents";
+import { useTheme } from "../../settings/theme/ThemeContext";
 
 const { width, height } = Dimensions.get("window");
 const statusBarHeight = Platform.OS === "android" ? StatusBar.currentHeight : 0; // 휴대폰 상단 상태바 크기
@@ -27,9 +30,24 @@ const SNAP_POINTS = {
     CLOSED: height       // 완전 닫힘
 };
 
-// 대한민국 연도별 카테고리
-const years = ["2025년", "2024년", "2023년", "2022년", "2021년", "2020년", "2019년", "2018년", "2017년", "2016년", "2015년", "2014년", "2013년", "2012년", "2011년", "2010년"];
-const months = ["2025년", "2024년", "2023년", "2022년", "2021년", "2020년", "2019년", "2018년", "2017년", "2016년", "2015년", "2014년", "2013년", "2012년", "2011년", "2010년"];
+// year 리스트
+const getYears = () => {
+    const todayYear = new Date().getFullYear();
+    const items = [];
+    for(let i=todayYear; i>=2010; i--) {
+        items.push({ label: `${i}년`, value: i });
+    }
+    return items
+}
+// month 리스트
+const getMonths = () => {
+    const todayMonth = new Date().getMonth();
+    const items = [];
+    for(let i=todayMonth; i>=0; i--) {
+        items.push({ label: `${i+1}월`, value: i+1 });
+    }
+    return items
+}
 
 const RemoteSvg = ({ uri, height = 220 }) => {
     const [xml, setXml] = useState(null);
@@ -71,9 +89,16 @@ export const MemeImage = ({ uri, style }) => {
 };
 
 const MemeDictionaryComponent = () => {
-    const [selectedYear, setSelectedYear] = useState("2025년");
     const [memes, setMemes] = useState([]);
+    const [filteredMemes, setFilteredMemes] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const [openY, setOpenY] = useState(false);
+    const [year , setYear] = useState(new Date().getFullYear());
+    const [years , setYears] = useState(getYears);
+    const [openM, setOpenM] = useState(false);
+    const [month , setMonth] = useState(new Date().getMonth() + 1);
+    const [months , setMonths] = useState(getMonths());
 
     const [selectedItem, setSelectedItem] = useState(null);
     const bottomSheetRef = useRef(null);
@@ -103,8 +128,8 @@ const MemeDictionaryComponent = () => {
             // desc나 image가 null인 경우 안전 처리
             const sanitized = data.map((item) => ({
                 id: item.id.toString(),
-                year: `${item.year}년`,
-                month: `${item.month}월`,
+                year: item.year,
+                month: item.month,
                 title: item.title || "(제목 없음)",
                 desc: item.desc,
                 summary: (String(item.desc).length > 60 ? String(item.desc).slice(0, 60) + "..." : item.desc) || "설명이 없습니다.",
@@ -122,7 +147,15 @@ const MemeDictionaryComponent = () => {
         }
     };
 
-    const filteredMemes = memes.filter((m) => m.year === selectedYear);
+    // 🔥 연/월/데이터가 바뀔 때마다 자동으로 필터링
+    useEffect(() => {
+        const next = memes.filter((m) => {
+            if (year !== null && m.year !== year) return false;
+            return !(month !== null && m.month !== month);
+
+        });
+        setFilteredMemes(next);
+    }, [year, month, memes]);
 
     const openDetail = (item) => {
         setSelectedItem(item);
@@ -182,50 +215,71 @@ const MemeDictionaryComponent = () => {
     ).current;
 
     const renderCard = ({ item }) => (
-        <View style={styles.card}>
+        <ThemeView style={styles.card}>
             <MemeImage uri={item.image} style={styles.image} />
-            <View style={styles.cardContent}>
-                <View style={styles.cardHeader}>
-                    <Text style={styles.title}>{item.title}</Text>
-                </View>
-                <Text style={styles.summary}>{item.summary}</Text>
+            <ThemeView style={styles.cardContent}>
+                <ThemeView style={styles.cardHeader}>
+                    <ThemeText style={styles.title}>{item.title}</ThemeText>
+                </ThemeView>
+                <ThemeText style={styles.summary}>{item.summary}</ThemeText>
                 <TouchableOpacity style={styles.button} onPress={() => openDetail(item)}>
-                    <Text style={styles.buttonText}>자세히 보기</Text>
+                    <ThemeText style={styles.buttonText}>자세히 보기</ThemeText>
                 </TouchableOpacity>
-            </View>
-        </View>
+            </ThemeView>
+        </ThemeView>
     );
 
+    // 드롭다운이 겹치지 않도록 onOpen 시 서로 닫기
+    const onYearOpen = () => {
+        setOpenM(false);
+    };
+    const onMonthOpen = () => {
+        setOpenY(false);
+    };
+
     return (
-        <View style={styles.container}>
+        <ThemeView style={styles.container}>
             {/* 상단 연도 탭바 */}
-            <View style={{ height: 60 }}>
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.yearTabs}
-                >
-                    {years.map((year) => (
-                        <TouchableOpacity
-                            key={year}
-                            style={[
-                                styles.yearTab,
-                                selectedYear === year && styles.yearTabActive,
-                            ]}
-                            onPress={() => setSelectedYear(year)}
-                        >
-                            <Text
-                                style={[
-                                    styles.yearTabText,
-                                    selectedYear === year && styles.yearTabTextActive,
-                                ]}
-                            >
-                                {year}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-            </View>
+            <ThemeView style={styles.filterBar}>
+                <ThemeView style={styles.filterRow}>
+                    <ThemeView style={[styles.dropdownOuter, { zIndex: 3000, elevation: 3000 }]}>
+                        <DropDownPicker
+                            open={openY}
+                            value={year}
+                            items={years}
+                            setOpen={setOpenY}
+                            setValue={setYear}
+                            setItems={setYears}
+                            onOpen={onYearOpen}
+                            placeholder="연도 선택"
+                            style={styles.dropdown}
+                            dropDownContainerStyle={styles.dropdownContainer}
+                            listMode={"SCROLLVIEW"}
+                            scrollViewProps={{ nestedScrollEnabled: true }}
+                            zIndex={3000}
+                            zIndexInverse={1000}
+                        />
+                    </ThemeView>
+                    <ThemeView style={[styles.dropdownOuter, { zIndex: 3000, elevation: 3000 }]}>
+                        <DropDownPicker
+                            open={openM}
+                            value={month}
+                            items={months}
+                            setOpen={setOpenM}
+                            setValue={setMonth}
+                            setItems={setMonths}
+                            onOpen={onMonthOpen}
+                            placeholder="월 선택"
+                            style={styles.dropdown}
+                            dropDownContainerStyle={styles.dropdownContainer}
+                            listMode={"SCROLLVIEW"}
+                            scrollViewProps={{ nestedScrollEnabled: true }}
+                            zIndex={3000}
+                            zIndexInverse={1000}
+                        />
+                    </ThemeView>
+                </ThemeView>
+            </ThemeView>
 
             {/* 로딩 표시 */}
             {loading ? (
@@ -250,7 +304,7 @@ const MemeDictionaryComponent = () => {
 
             {visible && (
                 <Portal>
-                    <View style={StyleSheet.absoluteFill}>
+                    <ThemeView style={StyleSheet.absoluteFill}>
                         <TouchableOpacity
                             style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.3)" }}
                             onPress={closeDetail}
@@ -262,36 +316,21 @@ const MemeDictionaryComponent = () => {
                                 { transform: [{ translateY }] },
                             ]}
                         >
-                            <View style={styles.dragHandle} {...panResponder.panHandlers}>
+                            <ThemeView style={styles.dragHandle} {...panResponder.panHandlers}>
                                 <View style={styles.dragBar} />
-                            </View>
+                            </ThemeView>
 
                             {selectedItem && <MemeDetailsComponent meme={selectedItem}/>}
                         </Animated.View>
-                    </View>
+                    </ThemeView>
                 </Portal>
             )}
-        </View>
+        </ThemeView>
     );
 };
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: "#fff" },
-
-    // 연도 탭바
-    yearTabs: { alignItems: "center", paddingHorizontal: 12 },
-    yearTab: {
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 20,
-        backgroundColor: "#eee",
-        marginRight: 8,
-    },
-    yearTabActive: { backgroundColor: "#111" },
-    yearTabText: { color: "#555", fontWeight: "600" },
-    yearTabTextActive: { color: "#fff" },
-
-    // 카드
     card: {
         backgroundColor: "#fafafa",
         borderRadius: 12,
@@ -372,6 +411,38 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         backgroundColor: '#e6f0ff',
         marginTop: 8,
+    },
+    // 상단 필터 바
+    filterBar: {
+        justifyContent: "center",
+        paddingHorizontal: 12,
+        backgroundColor: "transparent",
+        zIndex: 4000,
+        elevation: 4000,
+    },
+    filterRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginTop: 4,
+        gap: 8,
+    },
+    dropdownOuter: {
+        flex: 1,
+    },
+    dropdown: {
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: "#ddd",
+        minHeight: 40,
+        backgroundColor: "rgba(255,255,255,0.95)",
+    },
+    dropdownContainer: {
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: "#ddd",
+        backgroundColor: "#fff",
+        maxHeight: 250,
     },
 });
 

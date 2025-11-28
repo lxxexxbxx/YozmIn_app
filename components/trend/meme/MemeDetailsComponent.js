@@ -5,6 +5,8 @@ import { Image as ExpoImage } from "expo-image";
 import { SvgXml } from "react-native-svg";
 import YoutubeTrendingShorts from "../youtubeShorts/YoutubeTrendingShorts";
 import TypingText from "../../chatbot/TypingText";
+import { ThemeView, ThemeText } from "../../common/ThemeComponents";
+import { useTheme } from "../../settings/theme/ThemeContext";
 
 const { width } = Dimensions.get("window");
 
@@ -48,25 +50,26 @@ export const MemeImage = ({ uri, style }) => {
 };
 
 const InfoTab = ({ meme }) => {
-    console.log(meme);
+    const {colors} = useTheme();
+
     return (
         <ScrollView style={{ padding: 16 }}>
-            <Text style={styles.title}>{meme.title}</Text>
-            <Text style={styles.meta}>
+            <ThemeText style={styles.title}>{meme.title}</ThemeText>
+            <ThemeText style={styles.meta}>
                 {meme.year} {meme.month ? `${meme.month}월` : ""}
-            </Text>
+            </ThemeText>
             <MemeImage uri={meme.image} style={styles.image} />
-            <View style={styles.bubbleContainer}>
-                <TypingText style={styles.desc} fullText={meme.desc || meme.summary} speed={15} />
-            </View>
+            <ThemeView style={styles.bubbleContainer}>
+                <TypingText style={[styles.desc, {color: colors.text}]} fullText={meme.desc || meme.summary} speed={15} />
+            </ThemeView>
         </ScrollView>
     );
 }
 
 const ShortsTab = ({ meme }) => (
-    <View style={{ flex: 1 }}>
+    <ThemeView style={{ flex: 1 }}>
         <YoutubeTrendingShorts keyword={meme.title} />
-    </View>
+    </ThemeView>
 );
 
 const MemeDetailsComponent = ({ meme }) => {
@@ -75,6 +78,7 @@ const MemeDetailsComponent = ({ meme }) => {
         { key: "info", title: "정보" },
         { key: "shorts", title: "쇼츠" },
     ]);
+    const {colors} = useTheme();
 
     const renderScene = SceneMap({
         info: () => <InfoTab meme={meme} />,
@@ -82,7 +86,7 @@ const MemeDetailsComponent = ({ meme }) => {
     });
 
     return (
-        <View style={{ flex: 1 }}>
+        <ThemeView style={{ flex: 1 }}>
             <TabView
                 navigationState={{ index, routes }}
                 renderScene={renderScene}
@@ -91,13 +95,13 @@ const MemeDetailsComponent = ({ meme }) => {
                 renderTabBar={(props) => (
                     <TabBar
                         {...props}
-                        indicatorStyle={{ backgroundColor: "#dc143c" }}
-                        style={{ backgroundColor: "#111" }}
-                        labelStyle={{ color: "#111", fontWeight: "700" }}
+                        indicatorStyle={{ backgroundColor: "rgba(118, 166, 255, 1)" }}
+                        style={{ backgroundColor: colors.background }}
+                        labelStyle={{ color: colors.text, fontWeight: "700" }}
                     />
                 )}
             />
-        </View>
+        </ThemeView>
     );
 };
 
@@ -105,7 +109,7 @@ const styles = StyleSheet.create({
     title: { fontSize: 20, fontWeight: "800", marginBottom: 4 },
     meta: { color: "#888", marginBottom: 10 },
     image: { width: "100%", height: width * 0.5, borderRadius: 8, marginBottom: 12 },
-    desc: { fontSize: 15, color: "#444", lineHeight: 22, paddingHorizontal: 15, paddingVertical: 10, },
+    desc: { fontSize: 15, lineHeight: 22, paddingHorizontal: 15, paddingVertical: 10, },
     container: { flex: 1, backgroundColor: "#fff" },
 
     // 연도 탭바
