@@ -5,12 +5,36 @@ import {
   StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
+  View,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import supabase from "../../supabase";
 import { ThemeView, ThemeText } from "../common/ThemeComponents";
 import { useTheme } from "../settings/theme/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+
+// 🔹 캐릭터 스테이지 설정 (옷장/상점과 동일 기준)
+const CELL_SIZE = 70;
+const STAGE_W = 260;
+const STAGE_H = 260;
+const OFFSET_X = 0;
+const OFFSET_Y = 0;
+const CATS = ["HAT", "ACCESSORY", "BACKGROUND"];
+
+// 🔹 상점/옷장과 동일한 이미지 매핑
+const IMAGE_BY_DB_NAME = {
+  "black cap": require("../../assets/black cap.png"),
+  "black sunglasses": require("../../assets/black sunglasses.png"),
+  "black hair": require("../../assets/black hair.png"),
+  BlackBowTie: require("../../assets/BlackBowTie.png"),
+  DollarChain: require("../../assets/DollarChain.png"),
+  WavyPattern: require("../../assets/WavyPattern.png"),
+  YellowBalloon: require("../../assets/YellowBalloon.png"),
+  YellowSchoolHat: require("../../assets/YellowSchoolHat.png"),
+  CityNightSky: require("../../assets/CityNightSky.png"),
+  PastelSunsetBackground: require("../../assets/PastelSunsetBackground.png"),
+};
 
 const BoardUserProfileScreen = () => {
   const route = useRoute();
@@ -29,6 +53,16 @@ const BoardUserProfileScreen = () => {
   const [userName, setUserName] = useState(initName || "");
   const [characterName, setCharacterName] = useState(initChar || "");
 
+  // 🔹 해당 유저가 현재 입고 있는 아이템들
+  const [wearing, setWearing] = useState({
+    HAT: null,
+    ACCESSORY: null,
+    BACKGROUND: null,
+  });
+
+  // ─────────────────────────────────────────────
+  // 1) 기본 프로필(이름, 캐릭터 이름, 프로필 이미지) 로드
+  // ─────────────────────────────────────────────
   useEffect(() => {
     if (!userId) return;
 
@@ -64,6 +98,84 @@ const BoardUserProfileScreen = () => {
     };
 
     fetchProfile();
+  }, [userId, initProfile, initName, initChar]);
+
+  // ─────────────────────────────────────────────
+  // 2) 해당 유저가 입고 있는 코스튬(모자/악세/배경) 로드
+  // ─────────────────────────────────────────────
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchEquippedItems = async () => {
+      try {
+        const { data: uiRows, error: uiErr } = await supabase
+          .from("user_items")
+          .select("item_no, category, equipped")
+          .eq("user_id", userId);
+
+        if (uiErr) {
+          console.error("❌ user_items 조회 오류:", uiErr);
+          return;
+        }
+        if (!uiRows || uiRows.length === 0) {
+          setWearing({ HAT: null, ACCESSORY: null, BACKGROUND: null });
+          return;
+        }
+
+        const ids = [
+          ...new Set(
+            uiRows.map((r) => Number(r.item_no)).filter((v) => !!v)
+          ),
+        ];
+        if (ids.length === 0) {
+          setWearing({ HAT: null, ACCESSORY: null, BACKGROUND: null });
+          return;
+        }
+
+        const { data: siRows, error: siErr } = await supabase
+          .from("shop_items")
+          .select("no, name, category, x, y")
+          .in("no", ids);
+
+        if (siErr) {
+          console.error("❌ shop_items 조회 오류:", siErr);
+          return;
+        }
+
+        const map = new Map(
+          (siRows || []).map((s) => [Number(s.no), s])
+        );
+
+        // user_items + shop_items merge
+        const merged = uiRows
+          .map((u) => {
+            const s = map.get(Number(u.item_no));
+            if (!s) return null;
+            return {
+              id: String(s.no),
+              title: s.name,
+              category: s.category,
+              x: s.x ?? 0,
+              y: s.y ?? 0,
+              imageSrc: IMAGE_BY_DB_NAME[s.name] || null,
+              equipped: !!u.equipped,
+            };
+          })
+          .filter(Boolean);
+
+        const nextWear = { HAT: null, ACCESSORY: null, BACKGROUND: null };
+        for (const it of merged) {
+          if (it.equipped && CATS.includes(it.category)) {
+            nextWear[it.category] = it;
+          }
+        }
+        setWearing(nextWear);
+      } catch (e) {
+        console.error("❌ 코스튬 로드 오류:", e);
+      }
+    };
+
+    fetchEquippedItems();
   }, [userId]);
 
   const avatarSource = profileImgUrl
@@ -71,7 +183,9 @@ const BoardUserProfileScreen = () => {
     : require("../../assets/User.jpg");
 
   return (
-    <ThemeView style={[styles.container, { backgroundColor: colors.background }]}>
+    <ThemeView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       {/* 🔙 뒤로가기 버튼 */}
       <TouchableOpacity
         style={styles.backButton}
@@ -81,7 +195,11 @@ const BoardUserProfileScreen = () => {
       </TouchableOpacity>
 
       {loading && (
-        <ActivityIndicator size="large" style={styles.loading} color={colors.text} />
+        <ActivityIndicator
+          size="large"
+          style={styles.loading}
+          color={colors.text}
+        />
       )}
 
       {/* 프로필 사진 */}
@@ -95,12 +213,63 @@ const BoardUserProfileScreen = () => {
         캐릭터 이름: {characterName || "-"}
       </ThemeText>
 
-      {/* 🔥 캐릭터 이미지 사이즈 업 */}
-      <Image
-        source={require("../../assets/tino.png")}
-        style={styles.characterImage}
-        resizeMode="contain"
-      />
+      {/* 🔥 꾸민 캐릭터 표시 영역 */}
+      <ThemeView
+        style={[
+          styles.characterCard,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <View style={styles.tinoStage}>
+          {/* 1) 배경 (있으면) */}
+          {wearing.BACKGROUND && wearing.BACKGROUND.imageSrc && (
+            <Image
+              source={wearing.BACKGROUND.imageSrc}
+              style={styles.backgroundImage}
+            />
+          )}
+
+          {/* 2) 기본 티노 캐릭터 */}
+          <Image
+            source={require("../../assets/tino.png")}
+            style={styles.characterImage}
+            resizeMode="contain"
+          />
+
+          {/* 3) 모자 / 악세서리 오버레이 */}
+          {["HAT", "ACCESSORY"].map((cat) => {
+            const it = wearing[cat];
+            if (!it) return null;
+            return (
+              <View
+                key={cat}
+                style={[
+                  styles.overlayWrap,
+                  {
+                    left: OFFSET_X + (it.x || 0) * CELL_SIZE,
+                    top: OFFSET_Y + (it.y || 0) * CELL_SIZE,
+                  },
+                ]}
+                pointerEvents="none"
+              >
+                {it.imageSrc ? (
+                  <Image
+                    source={it.imageSrc}
+                    style={styles.overlayImage}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <MaterialCommunityIcons
+                    name="shape"
+                    size={36}
+                    color={colors.text}
+                  />
+                )}
+              </View>
+            );
+          })}
+        </View>
+      </ThemeView>
     </ThemeView>
   );
 };
@@ -116,7 +285,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: "absolute",
-    top: 50,   // 상태바 아래 적당히
+    top: 50, // 상태바 아래 적당히
     left: 20,
     zIndex: 10,
   },
@@ -137,11 +306,48 @@ const styles = StyleSheet.create({
   },
   charName: {
     fontSize: 16,
-    marginBottom: 28,
+    marginBottom: 20,
   },
-  // ⬇️ 캐릭터 이미지 크게!
+
+  // 🔹 캐릭터 카드 + 스테이지
+  characterCard: {
+    marginTop: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    paddingTop : 60,
+  },
+  tinoStage: {
+    width: STAGE_W,
+    height: STAGE_H,
+    position: "relative",
+    alignSelf: "center",
+  },
+  backgroundImage: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    width: STAGE_W,
+    height: STAGE_H,
+    resizeMode: "cover",
+  },
   characterImage: {
-    width: 280,      // 기존보다 크게
-    height: 280,
+    position: "absolute",
+    left: 0,
+    top: 0,
+    width: STAGE_W,
+    height: STAGE_H,
+  },
+  overlayWrap: {
+    position: "absolute",
+    width: CELL_SIZE,
+    height: CELL_SIZE,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  overlayImage: {
+    width: CELL_SIZE,
+    height: CELL_SIZE,
   },
 });
