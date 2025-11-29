@@ -1,6 +1,12 @@
-// TodayQuestsScreen.js (최종 안정 + 코인 연동 + 9번 버그 제거 완료)
+// TodayQuestsScreen.js (헤더 디자인 통일 버전)
 import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { Image, FlatList, TouchableOpacity, Alert, StyleSheet } from "react-native";
+import {
+  Image,
+  FlatList,
+  TouchableOpacity,
+  Alert,
+  StyleSheet,
+} from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import supabase from "../../supabase";
@@ -212,90 +218,145 @@ export default function TodayQuestsScreen() {
 
   return (
     <ThemeView style={[s.screen, { backgroundColor: colors.background }]}>
-      <ThemeView style={s.header}>
-        <ThemeText style={[s.title, { color: colors.text }]}>
-          오늘의 퀘스트
-        </ThemeText>
-
-        <TouchableOpacity
-          onPress={() =>
-            navigation.canGoBack()
-              ? navigation.goBack()
-              : navigation.navigate("MyPage")
-          }
-          style={[s.secondaryBtn, { backgroundColor: colors.boxBackground }]}
-        >
-          <Ionicons name="chevron-back" size={16} color={colors.text} />
-          <ThemeText style={[s.secondaryBtnText, { color: colors.text }]}>
-            뒤로
-          </ThemeText>
-        </TouchableOpacity>
-      </ThemeView>
-
+      {/* 🔹 상단 헤더: 뒤로가기 + 로고 + 오늘의 퀘스트 */}
       <ThemeView
         style={[
-          s.topCard,
-          { backgroundColor: colors.card, borderColor: colors.border },
+          s.topHeader,
+          { backgroundColor: colors.background, borderBottomColor: colors.border },
         ]}
       >
-        <Image
-          source={require("../../assets/quest_tino.png")}
-          style={s.tino}
-          resizeMode="contain"
-        />
+        <TouchableOpacity
+          style={s.headerBackBtn}
+          onPress={() => {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              navigation.navigate("TabNavigator");
+            }
+          }}
+        >
+          <Ionicons name="chevron-back" size={22} color={colors.text} />
+        </TouchableOpacity>
 
-        <ThemeView style={{ flex: 1, marginLeft: 12 }}>
-          <ThemeText style={[s.h1, { color: colors.text }]}>
-            오늘의 퀘스트
-          </ThemeText>
-
-          <ThemeText style={[s.sub, { color: colors.subText }]}>
-            완료 {summary.done}/{summary.total} · 수령 {summary.claimed}/
-            {summary.total}
-          </ThemeText>
-
-          <ThemeView
-            style={[
-              s.badgeRow,
-              { backgroundColor: colors.boxBackground, borderColor: colors.border },
-            ]}
+        <ThemeView style={s.headerCenter}>
+          <Image
+            source={require("../../assets/main_logo.jpeg")}
+            style={s.headerLogo}
+          />
+          <ThemeText
+            style={[s.headerTitleText, { color: colors.text }]}
           >
-            <ThemeText style={[s.badgeTxt, { color: colors.text }]}>
-              ⏳ 자정까지 {remain}
-            </ThemeText>
-          </ThemeView>
+            퀘스트
+          </ThemeText>
         </ThemeView>
+
+        <ThemeView style={s.headerRightSpacer} />
       </ThemeView>
 
-      <FlatList
-        data={items}
-        keyExtractor={(item, idx) => String(item.no || item.quest_no || idx)}
-        contentContainerStyle={{ paddingVertical: 8, paddingHorizontal: 6 }}
-        renderItem={({ item }) => (
-          <QuestCard quest={item} onClaimPress={handleClaim} />
-        )}
-        ItemSeparatorComponent={() => <ThemeView style={{ height: 12 }} />}
-      />
+      {/* 🔹 내용 영역 */}
+      <ThemeView style={s.content}>
+        <ThemeView
+          style={[
+            s.topCard,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
+          <Image
+            source={require("../../assets/quest_tino.png")}
+            style={s.tino}
+            resizeMode="contain"
+          />
+
+          <ThemeView style={{ flex: 1, marginLeft: 12 }}>
+            <ThemeText style={[s.h1, { color: colors.text }]}>
+              오늘의 퀘스트
+            </ThemeText>
+
+            <ThemeText style={[s.sub, { color: colors.subText }]}>
+              완료 {summary.done}/{summary.total} · 수령 {summary.claimed}/
+              {summary.total}
+            </ThemeText>
+
+            <ThemeView
+              style={[
+                s.badgeRow,
+                {
+                  backgroundColor: colors.boxBackground,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <ThemeText style={[s.badgeTxt, { color: colors.text }]}>
+                ⏳ 자정까지 {remain}
+              </ThemeText>
+            </ThemeView>
+          </ThemeView>
+        </ThemeView>
+
+        <FlatList
+          data={items}
+          keyExtractor={(item, idx) =>
+            String(item.no || item.quest_no || idx)
+          }
+          contentContainerStyle={{ paddingVertical: 8, paddingHorizontal: 6 }}
+          renderItem={({ item }) => (
+            <QuestCard quest={item} onClaimPress={handleClaim} />
+          )}
+          ItemSeparatorComponent={() => (
+            <ThemeView style={{ height: 12 }} />
+          )}
+        />
+      </ThemeView>
     </ThemeView>
   );
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, padding: 16 },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 24,
-    marginBottom: 10,
+  screen: {
+    flex: 1,
   },
-  title: { fontSize: 18, fontWeight: "700" },
-  secondaryBtn: {
+
+  // 🔹 상단 헤더 (다른 페이지와 통일)
+  topHeader: {
     flexDirection: "row",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    marginTop: 20,
   },
-  secondaryBtnText: { marginLeft: 6, fontSize: 12, fontWeight: "700" },
+  headerBackBtn: {
+    paddingRight: 8,
+    paddingVertical: 4,
+  },
+  headerCenter: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerLogo: {
+    width: 40,
+    height: 40,
+    resizeMode: "contain",
+    marginRight: 8,
+  },
+  headerTitleText: {
+    fontSize: 20,
+    fontWeight: "800",
+    marginTop: 4,
+  },
+  headerRightSpacer: {
+    width: 30,
+  },
+
+  // 🔹 내용 전체 패딩
+  content: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+
   topCard: {
     borderRadius: 16,
     padding: 16,

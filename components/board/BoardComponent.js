@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   Dimensions,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -39,7 +41,7 @@ const BoardComponent = () => {
   const { user_id: currentUserId } = useUserStore();
   const { colors, isDark } = useTheme();
 
-  /** 게시글 불러오기 **/
+  /** 게시글 불러오기 (프로필/이름 포함) **/
   const fetchPosts = useCallback(async () => {
     try {
       const { data: postData, error } = await supabase
@@ -88,7 +90,7 @@ const BoardComponent = () => {
         }
       }
 
-      // ✅ 게시글 포맷팅 (기존 필드는 그대로 두고, 프로필 관련만 추가)
+      // ✅ 게시글 포맷팅
       const formatted = (postData || []).map(post => {
         const profile = profileMap[post.user_id] || {};
         return {
@@ -101,13 +103,11 @@ const BoardComponent = () => {
           isMine: post.user_id === currentUserId,
           created_at: post.created_at,
 
-          // ✅ 기존: 작성자 user_id 저장 (마이페이지 이동에 사용)
-          authorId: post.user_id,
+          authorId: post.user_id, // 마이페이지 / 프로필 이동용
 
-          // ✅ 추가: 프로필 이미지 / 이름 / 캐릭터 이름
           profileImage: profile.profileImgUrl ? { uri: profile.profileImgUrl } : null,
           userName: profile.userName || null,
-          characterName: profile.characterName || null,
+          characterName: profile.characterName || null, // 프로필 화면에서 쓸 수 있게 유지
         };
       });
 
@@ -122,7 +122,11 @@ const BoardComponent = () => {
   useEffect(() => {
     const channel = supabase
       .channel('realtime-posts')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'post' }, () => fetchPosts())
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'post' },
+        () => fetchPosts()
+      )
       .subscribe();
 
     return () => supabase.removeChannel(channel);
@@ -172,9 +176,15 @@ const BoardComponent = () => {
   const toggleLike = async (postId, hasLiked) => {
     try {
       if (hasLiked) {
-        await supabase.rpc('unlike_post', { p_post_id: postId, p_user_id: currentUserId });
+        await supabase.rpc('unlike_post', {
+          p_post_id: postId,
+          p_user_id: currentUserId,
+        });
       } else {
-        await supabase.rpc('like_post', { p_post_id: postId, p_user_id: currentUserId });
+        await supabase.rpc('like_post', {
+          p_post_id: postId,
+          p_user_id: currentUserId,
+        });
         await pushQuest(3, currentUserId);
       }
       fetchPosts();
@@ -192,7 +202,7 @@ const BoardComponent = () => {
     });
   };
 
-  /** 프로필 탭 → 새 간단 프로필 화면 */
+  /** 프로필 탭 → 간단 프로필 화면 */
   const handlePressProfileSimple = (post) => {
     if (!post.authorId) return;
 
@@ -204,12 +214,12 @@ const BoardComponent = () => {
     });
   };
 
-  /** 프로필 길게 누르기 → 기존처럼 마이페이지(읽기 전용 모드) */
+  /** 프로필 길게 눌렀을 때 → MyPage (readOnly) */
   const handlePressProfileMyPage = (post) => {
     if (!post.authorId) return;
     navigation.navigate('MyPage', {
       userId: post.authorId,
-      readOnly: true,   // 📌 기존 기능 유지
+      readOnly: true,
     });
   };
 
@@ -217,11 +227,12 @@ const BoardComponent = () => {
   const renderPost = ({ item }) => (
     <TouchableOpacity
       onPress={() => handlePress(item)}
-      style={[styles.postContainer, item.isMine ? styles.myPost : styles.otherPost]}
+      style={[
+        styles.postContainer,
+        item.isMine ? styles.myPost : styles.otherPost,
+      ]}
     >
-      {/* 프로필 영역
-          - 탭: 새 간단 프로필 화면
-          - 길게 누르기: 예전처럼 MyPage readOnly */}
+      {/* 프로필 영역 */}
       <TouchableOpacity
         onPress={() => handlePressProfileSimple(item)}
         onLongPress={() => handlePressProfileMyPage(item)}
@@ -233,40 +244,42 @@ const BoardComponent = () => {
         />
       </TouchableOpacity>
 
-      {/* 게시글 박스 (테마 적용됨) */}
+      {/* 게시글 박스 */}
       <ThemeView
         style={[
           styles.bubble,
           {
-            backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
-            borderColor: isDark ? "#333" : "#DDD",
+            backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+            borderColor: isDark ? '#333' : '#DDD',
           },
         ]}
       >
-        {/* (선택) 작성자 이름 / 캐릭터 이름 표시 */}
-        {(item.userName || item.characterName) && (
+        {/* 🔹 회원 이름만 표시 (캐릭터 이름은 제거) */}
+        {item.userName && (
           <ThemeView style={{ flexDirection: 'row', marginBottom: 4 }}>
-            {item.userName && (
-              <ThemeText style={{ fontWeight: 'bold', marginRight: 6, color: colors.text }}>
-                {item.userName}
-              </ThemeText>
-            )}
-            {item.characterName && (
-              <ThemeText style={{ color: colors.subText }}>
-                {item.characterName}
-              </ThemeText>
-            )}
+            <ThemeText
+              style={{
+                fontWeight: 'bold',
+                marginRight: 6,
+                color: colors.text,
+              }}
+            >
+              {item.userName}
+            </ThemeText>
           </ThemeView>
         )}
 
         {item.image && <Image source={item.image} style={styles.postImage} />}
+
         <ThemeText style={[styles.content, { color: colors.text }]}>
           {item.text}
         </ThemeText>
 
-        {/* 하단 아이콘 */}
+        {/* 하단 아이콘/정보 */}
         <ThemeView style={styles.postFooter}>
-          <TouchableOpacity onPress={() => toggleLike(item.id, item.hasLiked)}>
+          <TouchableOpacity
+            onPress={() => toggleLike(item.id, item.hasLiked)}
+          >
             <Ionicons
               name={item.hasLiked ? 'heart' : 'heart-outline'}
               size={20}
@@ -274,7 +287,9 @@ const BoardComponent = () => {
             />
           </TouchableOpacity>
 
-          <ThemeText style={[styles.footerText, { color: colors.subText }]}>
+          <ThemeText
+            style={[styles.footerText, { color: colors.subText }]}
+          >
             {item.likes}
           </ThemeText>
 
@@ -285,13 +300,15 @@ const BoardComponent = () => {
             style={styles.iconSpacing}
           />
 
-          <ThemeText style={[styles.footerText, { color: colors.subText }]}>
+          <ThemeText
+            style={[styles.footerText, { color: colors.subText }]}
+          >
             {item.comments}
           </ThemeText>
 
-          {/* 작성 시간 */}
           <ThemeText style={styles.postDate}>
-            {item.created_at ? dayjs(item.created_at).fromNow() : '시간 없음'}
+            {item.created_at
+              ? formatKST(item.created_at) : '시간 없음'}
           </ThemeText>
         </ThemeView>
       </ThemeView>
@@ -299,8 +316,10 @@ const BoardComponent = () => {
   );
 
   return (
-    <ThemeView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* 공지문구 */}
+    <ThemeView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
+      {/* 상단 안내 문구 */}
       <ThemeText style={[styles.notice, { color: colors.text }]}>
         최신 트렌드를 사람들과 공유 해보세요!
       </ThemeText>
@@ -313,88 +332,106 @@ const BoardComponent = () => {
         inverted
       />
 
-      {/* 입력창 */}
-      <ThemeView
-        style={[
-          styles.inputWrapper,
-          { backgroundColor: colors.background, borderTopWidth: 0 },
-        ]}
+      {/* 👇 입력창: 키보드 올라올 때 같이 움직이게 */}
+      <KeyboardAvoidingView
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === 'ios' ? -10 : 0}
       >
-        {/* 이미지 미리보기 */}
-        {uploadedImageUrl && (
-          <ThemeView
-            style={[
-              styles.largeImagePreviewContainer,
-              { backgroundColor: colors.boxBackground },
-            ]}
-          >
-            <Image source={{ uri: uploadedImageUrl }} style={styles.largeImagePreview} />
-
-            {!isImageUploading && (
-              <TouchableOpacity
-                onPress={() => {
-                  setUploadedImageUrl(null);
-                  imageUploaderRef.current?.resetImage?.();
-                }}
-                style={styles.removeLargeImageButton}
-              >
-                <Ionicons name="close-circle" size={28} color="red" />
-              </TouchableOpacity>
-            )}
-            {isImageUploading && <ActivityIndicator size="large" color="#007AFF" />}
-          </ThemeView>
-        )}
-
-        {/* 입력 영역 */}
         <ThemeView
           style={[
-            styles.commentInputContainer,
-            {
-              backgroundColor: colors.boxBackground,
-              borderColor: colors.border,
-            },
+            styles.inputWrapper,
+            { backgroundColor: colors.background, borderTopWidth: 0 },
           ]}
         >
-          <ImageUploader
-            ref={imageUploaderRef}
-            onUploadSuccess={handleImageUploadSuccess}
-            onUploadStart={handleImageUploadStatusChange}
-            onUploadEnd={handleImageUploadStatusChange}
-          />
+          {/* 이미지 미리보기 */}
+          {uploadedImageUrl && (
+            <ThemeView
+              style={[
+                styles.largeImagePreviewContainer,
+                { backgroundColor: colors.boxBackground },
+              ]}
+            >
+              <Image
+                source={{ uri: uploadedImageUrl }}
+                style={styles.largeImagePreview}
+              />
 
-          <TextInput
+              {!isImageUploading && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setUploadedImageUrl(null);
+                    imageUploaderRef.current?.resetImage?.();
+                  }}
+                  style={styles.removeLargeImageButton}
+                >
+                  <Ionicons
+                    name="close-circle"
+                    size={28}
+                    color="red"
+                  />
+                </TouchableOpacity>
+              )}
+
+              {isImageUploading && (
+                <ActivityIndicator size="large" color="#007AFF" />
+              )}
+            </ThemeView>
+          )}
+
+          {/* 입력 영역 */}
+          <ThemeView
             style={[
-              styles.input,
+              styles.commentInputContainer,
               {
-                color: colors.text,
-                backgroundColor: isDark ? "#1E1E1E" : "#F0F0F0",
+                backgroundColor: colors.boxBackground,
+                borderColor: colors.border,
               },
             ]}
-            placeholder="메시지를 입력하세요..."
-            placeholderTextColor={colors.subText}
-            value={message}
-            onChangeText={setMessage}
-            multiline
-            maxHeight={100}
-          />
-
-          <TouchableOpacity
-            onPress={handleSend}
-            disabled={isImageUploading || (!message.trim() && !uploadedImageUrl)}
-            style={styles.sendButton}
           >
-            <Ionicons
-              name="send"
-              size={28}
-              color={
-                (isImageUploading || (!message.trim() && !uploadedImageUrl))
-                  ? '#666'
-                  : '#4A90E2'
-              }
+            <ImageUploader
+              ref={imageUploaderRef}
+              onUploadSuccess={handleImageUploadSuccess}
+              onUploadStart={handleImageUploadStatusChange}
+              onUploadEnd={handleImageUploadStatusChange}
             />
-          </TouchableOpacity>
+
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  color: colors.text,
+                  backgroundColor: isDark ? '#1E1E1E' : '#F0F0F0',
+                },
+              ]}
+              placeholder="메시지를 입력하세요..."
+              placeholderTextColor={colors.subText}
+              value={message}
+              onChangeText={setMessage}
+              multiline
+              maxHeight={100}
+            />
+
+            <TouchableOpacity
+              onPress={handleSend}
+              disabled={
+                isImageUploading ||
+                (!message.trim() && !uploadedImageUrl)
+              }
+              style={styles.sendButton}
+            >
+              <Ionicons
+                name="send"
+                size={28}
+                color={
+                  isImageUploading || (!message.trim() && !uploadedImageUrl)
+                    ? '#666'
+                    : '#4A90E2'
+                }
+              />
+            </TouchableOpacity>
+          </ThemeView>
         </ThemeView>
-      </ThemeView>
+      </KeyboardAvoidingView>
     </ThemeView>
   );
 };
@@ -403,6 +440,7 @@ export default BoardComponent;
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+
   notice: {
     textAlign: 'center',
     marginTop: 50,
@@ -421,7 +459,10 @@ const styles = StyleSheet.create({
   otherPost: { justifyContent: 'flex-start' },
 
   profileImage: {
-    width: 40, height: 40, borderRadius: 20, marginRight: 8,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 8,
   },
 
   bubble: {
@@ -489,6 +530,7 @@ const styles = StyleSheet.create({
   },
 
   largeImagePreview: { width: '100%', height: '100%' },
+
   removeLargeImageButton: {
     position: 'absolute',
     top: 8,
@@ -497,6 +539,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 2,
   },
+
   postDate: {
     marginLeft: 10,
     fontSize: 12,

@@ -44,7 +44,6 @@ const CATEGORY_TO_ICON = { HAT: "hat-fedora", ACCESSORY: "glasses", BACKGROUND: 
 const ShopItemCard = ({ item, onPreview, onBuy }) => {
   const { colors, isDark } = useTheme();
 
-  // 🔹 실제 비활성 조건은 "이미 보유중"일 때만
   const disabled = item.owned;
   const cannotAfford = item.cannotAfford;
 
@@ -99,7 +98,6 @@ const ShopItemCard = ({ item, onPreview, onBuy }) => {
         style={[
           styles.buyBtn,
           {
-            // 코인 부족이면 색만 연하게, 클릭은 가능
             backgroundColor: disabled
               ? isDark
                 ? "#555"
@@ -153,7 +151,7 @@ const ShopComponent = () => {
   const isWide = width >= 720;
   const numColumns = isWide ? 3 : 2;
 
-  // ✅ 1. 상점 입장 시 DB에서 코인 값 동기화
+  // 코인 동기화
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
@@ -302,6 +300,36 @@ const ShopComponent = () => {
 
   return (
     <ThemeView style={[styles.screen, { backgroundColor: colors.background }]}>
+      {/* 상단 공통 헤더: 뒤로가기 + 로고 + 상점 텍스트 */}
+      <ThemeView
+        style={[
+          styles.topHeader,
+          { backgroundColor: colors.background, borderBottomColor: colors.border },
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.headerBackBtn}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="chevron-back" size={22} color={colors.text} />
+        </TouchableOpacity>
+
+        <View style={styles.headerCenter}>
+          <Image
+            source={require("../../assets/main_logo.jpeg")}
+            style={styles.headerLogo}
+          />
+          <ThemeText
+            style={[styles.headerTitleText, { color: colors.text }]}
+          >
+            상점
+          </ThemeText>
+        </View>
+
+        {/* 오른쪽 공간 맞추기용 더미 뷰 */}
+        <View style={styles.headerRightSpacer} />
+      </ThemeView>
+
       <ScrollView
         style={styles.contentScroll}
         contentContainerStyle={[
@@ -324,26 +352,6 @@ const ShopComponent = () => {
             <ThemeText style={[styles.previewTitle, { color: colors.text }]}>
               캐릭터 미리보기
             </ThemeText>
-
-            <TouchableOpacity
-              style={[
-                styles.backBtn,
-                {
-                  backgroundColor: isDark ? "#2A2A2A" : "#F3F4F7",
-                  borderColor: colors.border,
-                },
-              ]}
-              onPress={() =>
-                navigation.canGoBack()
-                  ? navigation.goBack()
-                  : navigation.navigate("MyPage")
-              }
-            >
-              <Ionicons name="chevron-back" size={20} color={colors.text} />
-              <ThemeText style={[styles.backText, { color: colors.text }]}>
-                뒤로
-              </ThemeText>
-            </TouchableOpacity>
           </ThemeView>
 
           <ThemeView
@@ -356,7 +364,7 @@ const ShopComponent = () => {
             ]}
           >
             <View style={styles.tinoStage}>
-              {/* 배경 아이템: 캐릭터 뒤, 스테이지 전체 */}
+              {/* 배경 아이템 */}
               {overlayItem &&
                 overlayItem.category === "BACKGROUND" &&
                 overlayItem.imageSrc && (
@@ -529,6 +537,41 @@ export default ShopComponent;
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+
+  // ───── 상단 헤더 ─────
+  topHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    marginTop : 20,
+  },
+  headerBackBtn: {
+    paddingRight: 8,
+    paddingVertical: 4,
+  },
+  headerCenter: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "left",
+    justifyContent: "left",
+  },
+  headerLogo: {
+    width: 40,
+    height: 40,
+    resizeMode: "contain",
+    marginRight: 8,
+  },
+  headerTitleText: {
+    fontSize: 20,
+    fontWeight: "800",
+    marginTop : 6,
+  },
+  headerRightSpacer: {
+    width: 30,
+  },
+
   contentScroll: { flex: 1 },
   scrollContent: { padding: 16 },
 
@@ -536,7 +579,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 8,
-    marginTop: 30,
+    marginTop: 12,
     borderWidth: 1,
   },
   leftPanelWide: { flex: 1, marginRight: 8 },
@@ -545,24 +588,10 @@ const styles = StyleSheet.create({
   previewHeader: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     marginBottom: 10,
   },
   previewTitle: { fontSize: 16, fontWeight: "700" },
-
-  backBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  backText: {
-    marginLeft: 4,
-    fontSize: 13,
-    fontWeight: "600",
-  },
 
   characterCard: {
     borderRadius: 16,
@@ -577,6 +606,7 @@ const styles = StyleSheet.create({
     height: STAGE_H,
     position: "relative",
     alignSelf: "center",
+    marginTop : 40,
   },
   backgroundImage: {
     position: "absolute",
