@@ -9,27 +9,27 @@ import {
   Image,
   ImageBackground
 } from "react-native";
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import KakaoLoginComponent from "./KakaoLoginComponent";
-import {useNavigation} from "@react-navigation/native";
-import {CommonUtils} from "../common/CommonUtils";
+import { useNavigation } from "@react-navigation/native";
+import { CommonUtils } from "../common/CommonUtils";
 import supabase from "../../supabase";
 import SHA256 from "crypto-js/sha256";
-import {Circle, Path, Svg} from "react-native-svg";
+import { Circle, Path, Svg } from "react-native-svg";
 import Toast from "react-native-toast-message";
-import {useUserStore} from "../../stores/UserStore";
-import {useKeyStore} from "../../stores/KeyStore";
-import {useTheme} from "../settings/theme/ThemeContext";
-import {ThemeView, ThemeText} from "../common/ThemeComponents";
+import { useUserStore } from "../../stores/UserStore";
+import { useKeyStore } from "../../stores/KeyStore";
+import { useTheme } from "../settings/theme/ThemeContext";
+import { ThemeView, ThemeText } from "../common/ThemeComponents";
 import GoogleLoginComponent from "./GoogleLoginComponent";
 
-const {width, height} = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
 const LoginComponent = () => {
   const navigation = useNavigation();
   const userStore = useUserStore();
   const keyStore = useKeyStore();
-  const {colors, isDark} = useTheme();
+  const { colors, isDark } = useTheme();
 
   const [id, setId] = useState("");
   const [pw, setPw] = useState("");
@@ -61,9 +61,9 @@ const LoginComponent = () => {
     const hashedPw = SHA256(pw).toString();
 
     const response = await supabase
-    .from("user")
-    .select("*", {count: "exact"})
-    .eq("user_id", `${id}`);
+      .from("user")
+      .select("*", { count: "exact" })
+      .eq("user_id", `${id}`);
 
     if (response.status === 200) {
       if (response.data.length && response.count) {
@@ -77,12 +77,19 @@ const LoginComponent = () => {
           });
           userStore.setter.setClear();
           userStore.setter.setUser(
-              response.data[0].name,
-              response.data[0].user_id,
-              response.data[0].email,
-              response.data[0].birth_date,
-              response.data[0].categories,
+            response.data[0].name,
+            response.data[0].user_id,
+            response.data[0].email,
+            response.data[0].birth_date,
+            response.data[0].categories,
           );
+
+          const { data: mp } = await supabase
+            .from("mypage")
+            .select("mp_coin")
+            .eq("user_id", response.data[0].user_id)
+            .single();
+          userStore.setter.setCoin(mp?.mp_coin ?? 0);
           keyStore.setter.setClear();
           await keyStore.setter.setKey();
 
@@ -105,103 +112,103 @@ const LoginComponent = () => {
   }
 
   return (
-      <ThemeView style={styles.container}>
-        <ImageBackground style={styles.yozmin_Logo_v1}
-                         source={require("../../assets/Yozmin_Logo_v0.1.png")}/>
-        <ThemeView style={styles.inputContainer}>
-          <ThemeView style={{flexDirection: "row"}}>
+    <ThemeView style={styles.container}>
+      <ImageBackground style={styles.yozmin_Logo_v1}
+        source={require("../../assets/Yozmin_Logo_v0.1.png")} />
+      <ThemeView style={styles.inputContainer}>
+        <ThemeView style={{ flexDirection: "row" }}>
+          <ThemeView style={{
+            color: colors.text, borderBottomWidth: 1, borderWidth: 0,
+            borderColor: colors.text, height: height * 0.05, marginBottom: 15,
+          }}>
+            <TextInput style={{
+              width: width - 60,
+              marginBottom: 20,
+              height: height * 0.05,
+              color: colors.text,
+            }}
+              value={id}
+              placeholder={"아이디"}
+              placeholderTextColor={colors.text}
+              onChangeText={(value) => {
+                setId(value);
+                setIdError("");
+              }} />
+          </ThemeView>
+        </ThemeView>
+        {idError ? <Text style={{ color: 'red' }}>{idError}</Text> : null}
+        <ThemeView style={{ flexDirection: "row" }}>
+          <ThemeView style={{ alignSelf: 'center' }}>
             <ThemeView style={{
               color: colors.text, borderBottomWidth: 1, borderWidth: 0,
-              borderColor: colors.text, height: height * 0.05, marginBottom: 15,
+              borderColor: colors.text, height: height * 0.05
             }}>
               <TextInput style={{
-                width: width - 60,
+                width: width - 85,
                 marginBottom: 20,
                 height: height * 0.05,
-                color: colors.text,
+                color: colors.text
               }}
-                         value={id}
-                         placeholder={"아이디"}
-                         placeholderTextColor={colors.text}
-                         onChangeText={(value) => {
-                           setId(value);
-                           setIdError("");
-                         }}/>
+                value={pw}
+                placeholder={"비밀번호"} secureTextEntry={pwHide}
+                placeholderTextColor={colors.text}
+                onChangeText={(value) => {
+                  setPw(value);
+                  setPwError("");
+                }} />
             </ThemeView>
           </ThemeView>
-          {idError ? <Text style={{color: 'red'}}>{idError}</Text> : null}
-          <ThemeView style={{flexDirection: "row"}}>
-            <ThemeView style={{alignSelf: 'center'}}>
-              <ThemeView style={{
-                color: colors.text, borderBottomWidth: 1, borderWidth: 0,
-                borderColor: colors.text, height: height * 0.05
-              }}>
-                <TextInput style={{
-                  width: width - 85,
-                  marginBottom: 20,
-                  height: height * 0.05,
-                  color: colors.text
-                }}
-                           value={pw}
-                           placeholder={"비밀번호"} secureTextEntry={pwHide}
-                           placeholderTextColor={colors.text}
-                           onChangeText={(value) => {
-                             setPw(value);
-                             setPwError("");
-                           }}/>
-              </ThemeView>
-            </ThemeView>
-            <TouchableOpacity onPress={() => setPwHide(!pwHide)}
-                              activeOpacity={1}
-                              style={{
-                                color: colors.text,
-                                borderBottomWidth: 1,
-                                borderWidth: 0,
-                                borderColor: colors.text,
-                                height: height * 0.05,
-                                width: width * 0.07
-                              }}>
-              {!pwHide ? <ImageBackground style={styles.pwEye}
-                                resizeMode={"contain"}
-                                source={require("../../assets/eye_opened.png")}/> :
-                  <Image style={styles.pwEye}
-                         resizeMode={"contain"}
-                         source={require("../../assets/eye_closed.png")}/>}
-            </TouchableOpacity>
-          </ThemeView>
-          {pwError ? <Text style={{color: 'red'}}>{pwError}</Text> : null}
-        </ThemeView>
-        <TouchableOpacity style={{alignSelf: 'center', marginBottom: 15}}
-                          onPress={() => login()}>
-          <View style={styles.btnContainer}>
-            <Text style={styles.btn}>{"로그인"}</Text>
-          </View>
-        </TouchableOpacity>
-        <ThemeView style={{
-          flexDirection: 'row',
-          alignSelf: 'center',
-          marginBottom: 20
-        }}>
-          <TouchableOpacity onPress={() => navigation.navigate("SignUp")}>
-            <ThemeText>아이디찾기</ThemeText>
-          </TouchableOpacity>
-          <ThemeText>{" | "}</ThemeText>
-          <TouchableOpacity onPress={() => navigation.navigate("SignUp")}>
-            <ThemeText>비밀번호찾기</ThemeText>
-          </TouchableOpacity>
-          <ThemeText>{" | "}</ThemeText>
-          <TouchableOpacity onPress={() => navigation.navigate("SignUp")}>
-            <ThemeText>회원가입</ThemeText>
+          <TouchableOpacity onPress={() => setPwHide(!pwHide)}
+            activeOpacity={1}
+            style={{
+              color: colors.text,
+              borderBottomWidth: 1,
+              borderWidth: 0,
+              borderColor: colors.text,
+              height: height * 0.05,
+              width: width * 0.07
+            }}>
+            {!pwHide ? <ImageBackground style={styles.pwEye}
+              resizeMode={"contain"}
+              source={require("../../assets/eye_opened.png")} /> :
+              <Image style={styles.pwEye}
+                resizeMode={"contain"}
+                source={require("../../assets/eye_closed.png")} />}
           </TouchableOpacity>
         </ThemeView>
-        <ThemeView style={styles.dividerContainer}>
-          <View style={{flex: 1, height: 1, backgroundColor: colors.text}}/>
-          <ThemeText style={styles.exText}>간편로그인</ThemeText>
-          <View style={{flex: 1, height: 1, backgroundColor: colors.text}}/>
-        </ThemeView>
-        <GoogleLoginComponent/>
-        <KakaoLoginComponent/>
+        {pwError ? <Text style={{ color: 'red' }}>{pwError}</Text> : null}
       </ThemeView>
+      <TouchableOpacity style={{ alignSelf: 'center', marginBottom: 15 }}
+        onPress={() => login()}>
+        <View style={styles.btnContainer}>
+          <Text style={styles.btn}>{"로그인"}</Text>
+        </View>
+      </TouchableOpacity>
+      <ThemeView style={{
+        flexDirection: 'row',
+        alignSelf: 'center',
+        marginBottom: 20
+      }}>
+        <TouchableOpacity onPress={() => navigation.navigate("SignUp")}>
+          <ThemeText>아이디찾기</ThemeText>
+        </TouchableOpacity>
+        <ThemeText>{" | "}</ThemeText>
+        <TouchableOpacity onPress={() => navigation.navigate("SignUp")}>
+          <ThemeText>비밀번호찾기</ThemeText>
+        </TouchableOpacity>
+        <ThemeText>{" | "}</ThemeText>
+        <TouchableOpacity onPress={() => navigation.navigate("SignUp")}>
+          <ThemeText>회원가입</ThemeText>
+        </TouchableOpacity>
+      </ThemeView>
+      <ThemeView style={styles.dividerContainer}>
+        <View style={{ flex: 1, height: 1, backgroundColor: colors.text }} />
+        <ThemeText style={styles.exText}>간편로그인</ThemeText>
+        <View style={{ flex: 1, height: 1, backgroundColor: colors.text }} />
+      </ThemeView>
+      <GoogleLoginComponent />
+      <KakaoLoginComponent />
+    </ThemeView>
   )
 }
 

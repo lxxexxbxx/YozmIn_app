@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
-  View,
+  View, // 👈 ThemeView 대신 기본 View 사용
   FlatList,
   ActivityIndicator,
   StyleSheet,
@@ -67,9 +67,10 @@ const NewsComponent = ({ navigation }) => {
   }, []);
 
   return (
-    // ✅ 화면 전체 배경 (회색 or 어두운 회색)
     <ThemeView style={[styles.container, { backgroundColor: colors.subBackground }]}>
-      {/* ✅ 상단 헤더 (기본 View로 자연스럽게) */}
+
+      <View style={{ height: 80 }} />
+
       <View style={styles.header}>
         <ThemeText style={[styles.headerTitle, { color: colors.subText }]}>
           요즘 사람이 알아야 할
@@ -87,16 +88,10 @@ const NewsComponent = ({ navigation }) => {
           </ThemeText>{" "}
           📰
         </ThemeText>
-
-        <TouchableOpacity
-          style={[styles.refreshButton, { backgroundColor: colors.accent }]}
-          onPress={refreshNewsData}
-        >
-          <ThemeText style={styles.refreshText}>🔄 뉴스 새로고침</ThemeText>
-        </TouchableOpacity>
       </View>
 
-      {/* ✅ 카테고리 탭 */}
+      <View style={{ height: 20 }} />
+
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -113,8 +108,8 @@ const NewsComponent = ({ navigation }) => {
                   selectedCategory === category.key
                     ? colors.accent
                     : isDark
-                    ? "#333"
-                    : "#E5E5EA",
+                      ? "#333"
+                      : "#E5E5EA",
               },
             ]}
             onPress={() => handleCategoryChange(category.key)}
@@ -136,7 +131,8 @@ const NewsComponent = ({ navigation }) => {
         ))}
       </ScrollView>
 
-      {/* ✅ 뉴스 목록 (박스 부분만 색상 변경) */}
+      <View style={{ height: 20 }} />
+
       <View style={[styles.newsContainer, { backgroundColor: colors.boxBackground }]}>
         {loading ? (
           <ActivityIndicator size="large" color={colors.accent} />
@@ -148,20 +144,38 @@ const NewsComponent = ({ navigation }) => {
               <TouchableOpacity
                 style={[
                   styles.newsItemContainer,
+                  // ✅ 원래대로 복구: 다크모드일 때 회색(#2A2A2A) 유지
                   { backgroundColor: isDark ? "#2A2A2A" : "#F8F9FA" },
                 ]}
                 onPress={() =>
                   navigation.navigate("NewsDetail", { keyword: item })
                 }
               >
-                <ThemeText style={[styles.rankText, { color: colors.text }]}>
-                  TOP {index + 1} {getMedalEmoji(index + 1)}
-                </ThemeText>
-                <ThemeText
-                  style={[styles.newsText, { color: colors.subText }]}
-                >
-                  {item}
-                </ThemeText>
+                {/* 1. 왼쪽: 순위 영역 */}
+                {/* 🚨 중요: ThemeView -> View로 변경 (검은 배경 제거됨) */}
+                <View style={styles.rankColumn}>
+                  <ThemeText style={[styles.topText, { color: colors.text }]}>
+                    TOP.
+                  </ThemeText>
+                  <ThemeText style={[styles.rankNumber, { color: colors.text, marginRight: 5 }]}>
+                    {index + 1}
+                  </ThemeText>
+                  <ThemeText style={styles.medalEmoji}>
+                    {getMedalEmoji(index + 1)}
+                  </ThemeText>
+                </View>
+
+                {/* 2. 오른쪽: 뉴스 제목 영역 */}
+                {/* 🚨 중요: ThemeView -> View로 변경 (검은 배경 제거됨) */}
+                <View style={styles.titleColumn}>
+                  <ThemeText
+                    style={[styles.newsText, { color: colors.text }]}
+                    numberOfLines={2}
+                    ellipsizeMode="tail"
+                  >
+                    {item}
+                  </ThemeText>
+                </View>
               </TouchableOpacity>
             )}
             contentContainerStyle={styles.listContainer}
@@ -173,7 +187,6 @@ const NewsComponent = ({ navigation }) => {
   );
 };
 
-// 🏅 순위별 아이콘
 const getMedalEmoji = (rank) => {
   switch (rank) {
     case 1:
@@ -190,12 +203,12 @@ const getMedalEmoji = (rank) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 20,
   },
   header: {
-    paddingVertical: 20,
+    paddingVertical: 10,
     paddingHorizontal: 20,
     alignItems: "center",
+    marginBottom: 10,
   },
   headerTitle: {
     fontSize: 24,
@@ -206,23 +219,11 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 10,
-  },
-  refreshButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    marginTop: 10,
-  },
-  refreshText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+    marginTop: 5,
   },
   tabContainer: {
     maxHeight: 35,
     marginHorizontal: 10,
-    marginBottom: 10,
   },
   tabContentContainer: {
     paddingHorizontal: 10,
@@ -230,9 +231,10 @@ const styles = StyleSheet.create({
   },
   tabButton: {
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 8.5,
     borderRadius: 20,
     marginRight: 10,
+    height: 35,
   },
   tabText: {
     fontSize: 14,
@@ -241,7 +243,8 @@ const styles = StyleSheet.create({
   newsContainer: {
     flex: 1,
     marginHorizontal: 20,
-    marginTop: 15,
+    marginBottom: 20,
+    marginTop: 5,
     paddingVertical: 15,
     paddingHorizontal: 10,
     borderRadius: 15,
@@ -255,7 +258,10 @@ const styles = StyleSheet.create({
     paddingBottom: 50,
   },
   newsItemContainer: {
-    padding: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 10,
     marginVertical: 8,
     borderRadius: 10,
     shadowColor: "#000",
@@ -264,13 +270,38 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
-  rankText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 5,
+  rankColumn: {
+    width: width * 0.22,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    paddingLeft: 5,
+    flexDirection: 'row',
+    // backgroundColor: 'transparent', // View는 기본이 투명이므로 없어도 됨
+  },
+  topText: {
+    fontSize: 20,
+    fontWeight: '900',
+    fontStyle: 'italic',
+    marginRight: 2,
+  },
+  rankNumber: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  medalEmoji: {
+    fontSize: 20,
+  },
+  titleColumn: {
+    flex: 1,
+    paddingLeft: 15,
+    justifyContent: 'center',
+    minHeight: 50,
+    // backgroundColor: 'transparent', // View는 기본이 투명이므로 없어도 됨
   },
   newsText: {
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '500',
+    lineHeight: 22,
   },
 });
 
