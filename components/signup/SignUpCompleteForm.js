@@ -1,10 +1,11 @@
-import React, {useEffect} from 'react';
-import { View, Text, ImageBackground, StyleSheet, Dimensions } from 'react-native';
-import {useUserStore} from "../../stores/UserStore";
+import React, { useEffect } from 'react';
+import { ImageBackground, StyleSheet, Dimensions } from 'react-native';
+import { useUserStore } from "../../stores/UserStore";
 import supabase from "../../supabase";
-import {useNavigation} from "@react-navigation/native";
-import Toast from "react-native-toast-message";
-import {CommonUtils} from "../common/CommonUtils";
+import { useNavigation } from "@react-navigation/native";
+import { CommonUtils } from "../common/CommonUtils";
+import { ThemeView, ThemeText } from "../common/ThemeComponents";
+import { useTheme } from "../settings/theme/ThemeContext";
 
 const { width, height } = Dimensions.get('window');
 
@@ -13,38 +14,26 @@ const SignUpCompleteForm = () => {
   const navigation = useNavigation();
 
   const insertUser = async () => {
-    if(!store.name || !store.user_id || !store.password ||
-        !store.email || !store.birth_date) {
-
-      // 에러 메시지
-      Toast.show({
-        type: 'error',
-        text1: '회원가입 실패',
-        text2: '회원 정보가 잘못되었습니다.',
-      });
-
+    if (!store.name || !store.user_id || !store.password ||
+      !store.email || !store.birth_date) {
+      console.log("회원가입 실패: 회원 정보가 잘못되었습니다.")
       navigation.navigate("Login");
       return;
     }
 
     const response = await supabase
-    .from("user")
-    .insert([{
-      name: store.name,
-      user_id: store.user_id,
-      password: store.password,
-      email: store.email,
-      birth_date: store.birth_date
-    }]);
+      .from("user")
+      .insert([{
+        name: store.name,
+        user_id: store.user_id,
+        password: store.password,
+        email: store.email,
+        birth_date: store.birth_date
+      }]);
 
-    if(response.status === 201) {
+    if (response.status === 201) {
       console.log("등록 성공");
-      // 성공 메시지
-      Toast.show({
-        type: 'success',
-        text1: '회원가입 완료',
-        text2: `${store.name}님, 환영합니다 👋`,
-      });
+      console.log(`회원가입 완료: ${store.name}님, 환영합니다 👋`);
     }
     else console.log("등록 실패:", response.error);
   }
@@ -59,14 +48,14 @@ const SignUpCompleteForm = () => {
   }, []);
 
   return (
-      <View style={styles.Container}>
-        <ImageBackground style={styles.clap} source={require("../../assets/clap.jpeg")}/>
-        <View style={styles.label}>
-          <Text style={styles.text}>
-            {`축하해요! \n요즘사람이 되실 준비가 끝났어요.`}
-          </Text>
-        </View>
-      </View>
+    <ThemeView style={styles.Container}>
+      <ImageBackground style={styles.clap} source={require("../../assets/clap.jpeg")} />
+      <ThemeView style={styles.label}>
+        <ThemeText style={styles.text}>
+          {`축하해요! \n요즘사람이 되실 준비가 끝났어요.`}
+        </ThemeText>
+      </ThemeView>
+    </ThemeView>
   );
 }
 
@@ -89,7 +78,7 @@ const styles = StyleSheet.create({
     fontSize: width * 0.06, // 화면 너비에 비례
   },
   clap: {
-    flex:1,
+    flex: 1,
     position: "absolute",
     flexShrink: 0,
     top: height * 0.30, // 화면 높이에 비례
