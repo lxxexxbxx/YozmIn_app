@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  Dimensions, FlatList,
   Image,
   ScrollView,
   StyleSheet,
@@ -14,6 +15,8 @@ import YoutubePlayer from "react-native-youtube-iframe";
 import { useKeyStore } from "../../../stores/KeyStore";
 import { ThemeView, ThemeText } from "../../common/ThemeComponents";
 import { useTheme } from "../../settings/theme/ThemeContext";
+
+const { width, height } = Dimensions.get("window");
 
 export default function MovieDetailComponent({ route }) {
   const keyStore = useKeyStore();
@@ -53,20 +56,20 @@ export default function MovieDetailComponent({ route }) {
   };
 
   const fetchVideo = async () => {
-    const res = await axios.get(`${BASE_URL}/${type}/${id}/videos`, {
+    const response = await axios.get(`${BASE_URL}/${type}/${id}/videos`, {
       params: { api_key: TMDB_API_KEY, language: "ko-KR" },
     });
-    const trailers = res.data.results.filter(
+    const trailers = response.data.results.filter(
       (v) => v.type === "Trailer" && v.site === "YouTube"
     );
     if (trailers.length > 0) setVideoKey(trailers[0].key);
   };
 
   const fetchRecommendations = async () => {
-    const res = await axios.get(`${BASE_URL}/${type}/${id}/recommendations`, {
+    const response = await axios.get(`${BASE_URL}/${type}/${id}/recommendations`, {
       params: { api_key: TMDB_API_KEY, language: "ko-KR" },
     });
-    setRecommendations(res.data.results || []);
+    setRecommendations(response.data.results || []);
   };
 
   const renderStars = (voteAverage) => {
@@ -98,6 +101,9 @@ export default function MovieDetailComponent({ route }) {
       <PageTitleComponent darkMode={colors.background !== "#FFFFFF"} />
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <ThemeText style={[styles.title, { color: colors.text }]}>
+          {detail.title || detail.name}
+        </ThemeText>
         {/* ✅ 영상 또는 포스터 */}
         {videoKey ? (
           <View style={{ width: "100%", height: 230, marginBottom: 16 }}>
@@ -124,17 +130,25 @@ export default function MovieDetailComponent({ route }) {
           />
         )}
 
+        <ThemeText style={{flex: 1, height: 1, backgroundColor: colors.text, marginBottom: 30}}>-</ThemeText>
+
         {/* ✅ 영화 정보 */}
-        <ThemeText style={[styles.title, { color: colors.text }]}>
-          {detail.title || detail.name}
+        <ThemeText style={[styles.ratingText, { color: colors.text }]}>
+          평점: {renderStars(detail.vote_average)} {detail.vote_average}점
+        </ThemeText>
+        <ThemeText style={[styles.overview, { color: colors.text }]}>
+          {detail.genres[0] ? detail.genres[0].name : ""}
+          {detail.genres[1] ? "/" + detail.genres[1].name : ""}
+          {detail.genres[2] ? "/" + detail.genres[2].name : ""}
+          {detail.genres[3] ? "/" + detail.genres[3].name : ""}
+          {type === "movie" ? " | " + (detail.runtime / 60).toFixed(1) + "시간" : ""}
+        </ThemeText>
+        <ThemeText style={[styles.overview, { color: colors.text }]}>
+          {type === "tv" ? "방영시작일" : "개봉일"}: {type === "tv" ? detail.first_air_date : detail.release_date}
         </ThemeText>
         <ThemeText style={[styles.overview, { color: colors.text }]}>
           {detail.overview}
         </ThemeText>
-        <ThemeText style={[styles.ratingText, { color: colors.text }]}>
-          평점: {detail.vote_average}
-        </ThemeText>
-        {renderStars(detail.vote_average)}
 
         {/* ✅ 시청 가능 플랫폼 */}
         {providers.length > 0 && (
@@ -154,29 +168,43 @@ export default function MovieDetailComponent({ route }) {
           </ThemeView>
         )}
 
+        <ThemeText style={{flex: 1, height: 1, backgroundColor: colors.text, marginTop: 30}}></ThemeText>
+
         {/* ✅ 추천 콘텐츠 */}
         {recommendations.length > 0 && (
-          <View style={{ marginTop: 30, width: "100%" }}>
-            <ThemeText style={[styles.recommendTitle, { color: colors.text }]}>
-              관련 콘텐츠
-            </ThemeText>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {recommendations.map((item) => (
-                <TouchableOpacity
-                  key={item.id}
-                  onPress={() =>
-                    navigation.push("MovieDetail", { id: item.id, type: type })
-                  }
-                  style={{ marginRight: 12 }}
-                >
-                  <Image
-                    source={{ uri: `https://image.tmdb.org/t/p/w154${item.poster_path}` }}
-                    style={styles.recommendPoster}
-                  />
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
+            <ThemeView style={{ marginTop: 30, width: "100%" }}>
+              <ThemeText style={[styles.recommendTitle, { color: colors.text }]}>
+                관련 콘텐츠
+              </ThemeText>
+
+              {/* 2열 그리드: FlatList 대신 수동으로 묶기 */}
+              <View style={styles.recommendGrid}>
+                {recommendations.map((item, index) => (
+                    <TouchableOpacity
+                        key={item.id}
+                        style={[
+                          styles.recommendItem,
+                          // 오른쪽 아이템에는 약간 왼쪽 여백
+                          index % 2 === 1 && { marginLeft: 8 },
+                        ]}
+                        onPress={() =>
+                            navigation.push("TrendMovieDetail", { id: item.id, type: type })
+                        }
+                    >
+                      <Image
+                          source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
+                          style={styles.recommendPoster}
+                      />
+                      <ThemeText
+                          style={[styles.overview, { color: colors.text }]}
+                          numberOfLines={2}
+                      >
+                        {item.title}
+                      </ThemeText>
+                    </TouchableOpacity>
+                ))}
+              </View>
+            </ThemeView>
         )}
       </ScrollView>
     </ThemeView>
@@ -189,7 +217,6 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     padding: 20,
-    alignItems: "center",
   },
   loadingContainer: {
     flex: 1,
@@ -200,21 +227,22 @@ const styles = StyleSheet.create({
     width: 250,
     height: 350,
     borderRadius: 16,
+    alignSelf: 'center',
+    marginBottom: 10,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginVertical: 10,
-    textAlign: "center",
+    marginBottom: 10,
+    textAlign: "left",
   },
   overview: {
     fontSize: 16,
     marginTop: 10,
-    textAlign: "center",
+    textAlign: "left",
   },
   ratingText: {
     fontSize: 18,
-    marginTop: 10,
     fontWeight: "600",
   },
   providerContainer: {
@@ -236,13 +264,24 @@ const styles = StyleSheet.create({
     margin: 8,
   },
   recommendTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 18,
+    fontWeight: "700",
     marginBottom: 10,
   },
+
+  recommendGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",      // 줄 바꿈
+    justifyContent: "space-between",
+  },
+  recommendItem: {
+    width: "48%",          // 2열
+    marginBottom: 16,
+  },
   recommendPoster: {
-    width: 100,
-    height: 150,
-    borderRadius: 10,
+    width: "100%",
+    aspectRatio: 2 / 3,    // 포스터 비율
+    borderRadius: 8,
+    marginBottom: 6,
   },
 });

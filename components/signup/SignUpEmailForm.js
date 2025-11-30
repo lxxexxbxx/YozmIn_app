@@ -14,6 +14,8 @@ import {useNavigation} from "@react-navigation/native";
 import PageTitleComponent from "../../components/common/PageTitleComponent";
 import {useUserStore} from "../../stores/UserStore";
 import {CommonUtils} from "../common/CommonUtils";
+import {useTheme} from "../settings/theme/ThemeContext";
+import {ThemeView, ThemeText} from "../common/ThemeComponents";
 
 const {width, height} = Dimensions.get('window');
 
@@ -23,6 +25,7 @@ const SignUpEmailForm = () => {
 
     const [email, setEmail] = useState("");
     const [error, setError] = useState("");
+    const {colors, isDark} = useTheme();
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -51,38 +54,34 @@ const SignUpEmailForm = () => {
     }
 
     return (
-        <KeyboardAvoidingView style={styles.Container}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        <KeyboardAvoidingView style={[styles.Container, {backgroundColor: colors.background}]}
+                              behavior="padding"
+                              keyboardVerticalOffset={Platform.OS=== "ios" ? -10:0}
         >
-            <View style={styles.FormContainer}>
+            <ThemeView style={styles.FormContainer}>
                 <PageTitleComponent title={"회원가입"} darkMode={false} backToStack={"SignUpPw"}></PageTitleComponent>
-                <View style={styles.textContainer}>
-                    <Text style={styles.text}>
+                <ThemeView style={styles.textContainer}>
+                    <ThemeText style={styles.text}>
                         {"이메일을 입력해주세요."}
-                    </Text>
-                </View>
-                <View style={styles.inputContainer}>
-                    <Text style={styles.label}>
+                    </ThemeText>
+                </ThemeView>
+                <ThemeView style={styles.inputContainer}>
+                    <ThemeText style={styles.label}>
                         {"이메일"}
-                    </Text>
-                    <View style={{flexDirection: "row"}}>
-                        <TextInput style={styles.inputBox} value={email} placeholder={"이메일"}
+                    </ThemeText>
+                    <ThemeView style={{
+                        color: colors.text, borderBottomWidth: 1, borderWidth: 0,
+                        borderColor: colors.text, height: height * 0.05, marginBottom: 15,
+                    }}>
+                        <TextInput style={[styles.inputBox, {color: colors.text, marginTop: Platform.OS === "ios" ? 15 : 0}]} value={email} placeholder={"이메일"}
+                                   placeholderTextColor={"gray"}
                                    onChangeText={(value) => {
                                        setEmail(value);
                                        setError("");
                                    }}/>
-                        <TouchableOpacity
-                            style={{flex: 1, marginBottom: 15, justifyContent: "center", alignItems: "center"}}
-                            onPress={() => setEmail("")}>
-                            <Svg width="20" height="21" viewBox="0 0 20 21" fill="none">
-                                <Circle cx="10" cy="10.5" r="10" fill="#C7C7C7"/>
-                                <Path d="M5.80005 6.30005L14.3 14.8" stroke="white" strokeWidth="2"/>
-                                <Path d="M5.80005 14.8L14.3 6.30005" stroke="white" strokeWidth="2"/>
-                            </Svg>
-                        </TouchableOpacity>
-                    </View>
+                    </ThemeView>
                     {error ? <Text style={{color: 'red'}}>{error}</Text> : null}
-                </View>
+                </ThemeView>
                 <TouchableOpacity onPress={() => {
                     handleNext()
                 }}>
@@ -92,7 +91,7 @@ const SignUpEmailForm = () => {
                         </Text>
                     </View>
                 </TouchableOpacity>
-            </View>
+            </ThemeView>
         </KeyboardAvoidingView>
     )
 }
@@ -100,7 +99,6 @@ const SignUpEmailForm = () => {
 const styles = StyleSheet.create({
     Container: {
         flex: 1,
-        backgroundColor: "white"
     },
     FormContainer: {
         backgroundColor: "rgba(255, 255, 255, 1)",
@@ -135,9 +133,7 @@ const styles = StyleSheet.create({
         fontWeight: 700,
     },
     inputBox: {
-        width: width * 0.8,
-        marginBottom: height * 0.01,
-        borderBottomWidth: 1,
+        width: width * 0.87,
     },
     btnContainer: {
         marginTop: height * 0.1,

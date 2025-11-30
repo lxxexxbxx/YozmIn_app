@@ -1,8 +1,8 @@
 import React from "react";
-import { StyleSheet, TouchableOpacity } from "react-native";
+import {Platform, StyleSheet, TouchableOpacity} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { ThemeView, ThemeText } from "../common/ThemeComponents";
+import { ThemeView, ThemeText } from "./ThemeComponents";
 import { useTheme } from "../settings/theme/ThemeContext";
 
 const PageTitleComponent = ({ title, backToTab, backToStack }) => {
@@ -17,21 +17,16 @@ const PageTitleComponent = ({ title, backToTab, backToStack }) => {
 
   return (
     <ThemeView style={styles.header}>
-      {/* ✅ 화살표 색상 자동 전환 */}
       <TouchableOpacity style={styles.arrow} onPress={back}>
         <Ionicons
           name="chevron-back"
           size={24}
-          color={colors.text} // ✅ 자동으로 흰색/검정 변경
+          color={colors.text}
         />
       </TouchableOpacity>
-
-      {/* ✅ 제목 색상도 자동 전환 */}
-      <ThemeText style={[styles.title, { color: colors.text }]}>
+      <ThemeText style={[styles.title, { color: colors.text, marginTop: Platform.OS === "ios" ? 10 : 3 }]}>
         {title}
       </ThemeText>
-
-      {/* 오른쪽 여백용 */}
       <ThemeView style={styles.arrow} />
     </ThemeView>
   );
