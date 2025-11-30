@@ -4,7 +4,6 @@ import {
   TextInput,
   View,
   Dimensions,
-  Button,
   TouchableOpacity,
   Image,
   ImageBackground
@@ -67,12 +66,6 @@ const LoginComponent = () => {
       if (response.data.length && response.count) {
         if (response.data[0].password === hashedPw) {
           console.log("user_id:", response.data[0].user_id);
-          // 성공 메시지
-          // Toast.show({
-          //   type: 'success',
-          //   text1: '로그인 성공',
-          //   text2: `${response.data[0].name}님, 환영합니다 👋`,
-          // });
           console.log(`login success: ${response.data[0].name}`)
           userStore.setter.setClear();
           userStore.setter.setUser(
@@ -121,7 +114,7 @@ const LoginComponent = () => {
               }}
                          value={id}
                          placeholder={"아이디"}
-                         placeholderTextColor={colors.text}
+                         placeholderTextColor={"gray"}
                          onChangeText={(value) => {
                            setId(value);
                            setIdError("");
@@ -143,7 +136,7 @@ const LoginComponent = () => {
                 }}
                            value={pw}
                            placeholder={"비밀번호"} secureTextEntry={pwHide}
-                           placeholderTextColor={colors.text}
+                           placeholderTextColor={"gray"}
                            onChangeText={(value) => {
                              setPw(value);
                              setPwError("");
@@ -194,9 +187,9 @@ const LoginComponent = () => {
           </TouchableOpacity>
         </ThemeView>
         <ThemeView style={styles.dividerContainer}>
-          <View style={{flex: 1, height: 1, backgroundColor: colors.text}}/>
+          <ThemeView style={{flex: 1, height: 1, backgroundColor: colors.text}}/>
           <ThemeText style={styles.exText}>간편로그인</ThemeText>
-          <View style={{flex: 1, height: 1, backgroundColor: colors.text}}/>
+          <ThemeView style={{flex: 1, height: 1, backgroundColor: colors.text}}/>
         </ThemeView>
         <GoogleLoginComponent/>
         <KakaoLoginComponent/>

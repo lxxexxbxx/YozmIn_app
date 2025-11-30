@@ -130,6 +130,8 @@ export default function MovieDetailComponent({ route }) {
           />
         )}
 
+        <ThemeText style={{flex: 1, height: 1, backgroundColor: colors.text, marginBottom: 30}}>-</ThemeText>
+
         {/* ✅ 영화 정보 */}
         <ThemeText style={[styles.ratingText, { color: colors.text }]}>
           평점: {renderStars(detail.vote_average)} {detail.vote_average}점
@@ -166,9 +168,11 @@ export default function MovieDetailComponent({ route }) {
           </ThemeView>
         )}
 
+        <ThemeText style={{flex: 1, height: 1, backgroundColor: colors.text, marginTop: 30}}></ThemeText>
+
         {/* ✅ 추천 콘텐츠 */}
         {recommendations.length > 0 && (
-            <View style={{ marginTop: 30, width: "100%" }}>
+            <ThemeView style={{ marginTop: 30, width: "100%" }}>
               <ThemeText style={[styles.recommendTitle, { color: colors.text }]}>
                 관련 콘텐츠
               </ThemeText>
@@ -200,7 +204,7 @@ export default function MovieDetailComponent({ route }) {
                     </TouchableOpacity>
                 ))}
               </View>
-            </View>
+            </ThemeView>
         )}
       </ScrollView>
     </ThemeView>

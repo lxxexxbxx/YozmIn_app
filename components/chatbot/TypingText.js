@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Text, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
+import {ThemeText} from "../common/ThemeComponents";
 
 const TypingText = ({ fullText = '', speed = 30, style }) => {
   const [displayedText, setDisplayedText] = useState('');
@@ -40,7 +41,7 @@ const TypingText = ({ fullText = '', speed = 30, style }) => {
   }, [fullText]);
 
   return (
-      <Text style={styles.answerText}>{displayedText ?? ""}</Text>
+      <ThemeText style={styles.answerText}>{displayedText ?? ""}</ThemeText>
   );
 };
 
