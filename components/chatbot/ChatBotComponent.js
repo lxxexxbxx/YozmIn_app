@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  TextInput,
-  Button,
-  ScrollView,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  Dimensions,
-  View,
+    TextInput,
+    Button,
+    ScrollView,
+    StyleSheet,
+    KeyboardAvoidingView,
+    Platform,
+    Dimensions,
+    View, TouchableOpacity,
 } from "react-native";
 import { CommonUtils } from "../common/CommonUtils";
 import TypingText from "./TypingText";
@@ -15,6 +15,8 @@ import { useUserStore } from "../../stores/UserStore";
 import { useKeyStore } from "../../stores/KeyStore";
 import { ThemeView, ThemeText } from "../common/ThemeComponents";
 import { useTheme } from "../settings/theme/ThemeContext";
+import ImageUploader from "../../Images/ImageUploader";
+import {Ionicons} from "@expo/vector-icons";
 
 const { height } = Dimensions.get("window");
 
@@ -34,6 +36,7 @@ const ChatBotComponent = () => {
 
   const handleSend = async () => {
     if (!input.trim()) return;
+    scrollRef.current?.scrollToEnd({ animated: true })
 
     const userMessage = { role: "user", text: input.trim(), time: getTime() };
     setMessages((prev) => [...prev, userMessage]);
@@ -93,7 +96,7 @@ const ChatBotComponent = () => {
       사용자명: ${userStore.name}
       오늘의 날씨와 주요 뉴스를 간단히 알려줘.
       `;
-      const response = await CommonUtils.fetchChatGPT(prompt);
+      const response = await CommonUtils.fetchGemini(prompt);
       const botMessage = { role: "llm", text: response, time: getTime() };
       setMessages((prev) => [...prev, botMessage]);
     }
@@ -112,7 +115,6 @@ const ChatBotComponent = () => {
         },
       ]}
     >
-      {/* 🔥 채팅 배경 전체를 회색으로 설정 */}
       <ScrollView
         ref={scrollRef}
         style={[
@@ -120,35 +122,56 @@ const ChatBotComponent = () => {
           { backgroundColor: isDark ? "#121212" : "#FFFFFF" },
         ]}
         keyboardShouldPersistTaps="handled"
-        onContentSizeChange={() =>
-          scrollRef.current?.scrollToEnd({ animated: true })
-        }
       >
         {messages.map(renderMessage)}
       </ScrollView>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? height * 0.12 : 0}
+      <KeyboardAvoidingView style={styles.Container}
+                            behavior="padding"
+                            keyboardVerticalOffset={Platform.OS=== "ios" ? -10:90}
       >
-        <ThemeView style={styles.inputContainer}>
-          <TextInput
-            placeholder="질문을 입력하세요"
-            placeholderTextColor={colors.subText}
-            style={[
-              styles.input,
-              {
-                color: colors.text,
-                backgroundColor: isDark ? "#1E1E1E" : "#F9F9F9",
-                borderColor: colors.border,
-              },
-            ]}
-            value={input}
-            onChangeText={setInput}
-            multiline
-          />
-          <Button title="보내기" onPress={handleSend} />
-        </ThemeView>
+          {/* 입력 영역 */}
+          <ThemeView
+              style={[
+                  styles.commentInputContainer,
+                  {
+                      backgroundColor: colors.boxBackground,
+                      borderColor: colors.border,
+                  },
+              ]}
+          >
+              <TextInput
+                  placeholder="질문을 입력하세요"
+                  placeholderTextColor={colors.subText}
+                  style={[
+                      styles.input,
+                      {
+                          color: colors.text,
+                          backgroundColor: isDark ? "#1E1E1E" : "#F9F9F9",
+                          borderColor: colors.border,
+                      },
+                  ]}
+                  value={input}
+                  onChangeText={setInput}
+                  multiline
+              />
+
+              <TouchableOpacity
+                  onPress={handleSend}
+                  disabled={!input}
+                  style={styles.sendButton}
+              >
+                  <Ionicons
+                      name="send"
+                      size={28}
+                      color={
+                          (!input)
+                              ? '#666'
+                              : '#4A90E2'
+                      }
+                  />
+              </TouchableOpacity>
+          </ThemeView>
       </KeyboardAvoidingView>
     </ThemeView>
   );
@@ -162,14 +185,11 @@ const styles = StyleSheet.create({
     padding: 16,
     justifyContent: "flex-end",
   },
-
   chatContainer: {
     flex: 1,
-    padding: 10,
+    marginHorizontal: 10,
     borderRadius: 16,
-    marginBottom: 10,
   },
-
   inputContainer: {
     flexDirection: "row",
     alignItems: "flex-end",
@@ -197,4 +217,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
     alignSelf: "flex-end",
   },
+    commentInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+        borderRadius: 25,
+        borderWidth: 1,
+    },
 });

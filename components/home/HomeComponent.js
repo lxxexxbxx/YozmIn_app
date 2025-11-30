@@ -75,9 +75,7 @@ const HomeComponent = () => {
   }, [userId, store.categories]);
 
   return (
-    // ✅ 테마에 맞게 배경 자동 변경
     <ThemeView style={[styles.container, { backgroundColor: colors.subBackground }]}>
-      {/* ✅ ChatBotComponent 내부 텍스트 색도 테마 반응하도록 수정 */}
       <ChatBotComponent />
     </ThemeView>
   );
