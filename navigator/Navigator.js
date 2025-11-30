@@ -2,7 +2,6 @@ import {createStackNavigator} from '@react-navigation/stack';
 import {NavigationContainer} from "@react-navigation/native";
 import TabNavigator from "./TabNavigator";
 import LoginComponent from "../components/login/LoginComponent";
-import RegisterComponent from "../components/login/RegisterComponent";
 import SettingsScreen from "../components/settings/SettingsComponent";
 import GeneralSettings from "../components/settings/GeneralSettingsComponent"; 
 import Notification from "../components/settings/NotificationComponent"; 
@@ -21,7 +20,7 @@ import SignUpBirthDateForm from "../components/signup/SignUpBirthDateForm";
 import SignUpEmailForm from "../components/signup/SignUpEmailForm";
 import SignUpCompleteForm from "../components/signup/SignUpCompleteForm";
 import SignUpComponent from "../components/signup/SignUpComponent";
-import SelectCategoryForm from "../components/home/SelectCategoryForm";
+import SelectCategoryForm from "../components/mypage/SelectCategoryForm";
 import GameDetailComponent from "../components/trend/game/GameDetailComponent";
 import ShopComponent from "../components/shop/ShopComponent";
 import ClosetScreen from "../components/closet/ClosetScreen";
@@ -55,8 +54,6 @@ const Navigator = () => {
 
                 {/*로그인 컴포넌트*/}
                 <Stack.Screen name={"Login"} component={LoginComponent} options={{headerShown: false}}/>
-                {/*회원가입 컴포넌트*/}
-                <Stack.Screen name={"LoginRegister"} component={RegisterComponent} options={{headerShown: false}}/>
                 {/*하단 바 네비게이터*/}
                 <Stack.Screen name={"TabNavigator"} component={TabNavigator} options={{headerShown: false}}/>
                 {/*설정 컴포넌트 */}

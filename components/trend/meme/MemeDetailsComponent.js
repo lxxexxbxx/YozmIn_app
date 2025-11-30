@@ -56,11 +56,11 @@ const InfoTab = ({ meme }) => {
         <ScrollView style={{ padding: 16 }}>
             <ThemeText style={styles.title}>{meme.title}</ThemeText>
             <ThemeText style={styles.meta}>
-                {meme.year} {meme.month ? `${meme.month}월` : ""}
+                {`${meme.year}년`} {meme.month ? `${meme.month}월` : ""}
             </ThemeText>
             <MemeImage uri={meme.image} style={styles.image} />
-            <ThemeView style={styles.bubbleContainer}>
-                <TypingText style={[styles.desc, {color: colors.text}]} fullText={meme.desc || meme.summary} speed={15} />
+            <ThemeView style={[styles.bubbleContainer, {borderColor: colors.text}]}>
+                <TypingText style={{color: colors.text}} fullText={meme.desc || meme.summary} speed={15} />
             </ThemeView>
         </ScrollView>
     );
@@ -98,6 +98,8 @@ const MemeDetailsComponent = ({ meme }) => {
                         indicatorStyle={{ backgroundColor: "rgba(118, 166, 255, 1)" }}
                         style={{ backgroundColor: colors.background }}
                         labelStyle={{ color: colors.text, fontWeight: "700" }}
+                        activeColor={ colors.text }
+                        inactiveColor={'gray'}
                     />
                 )}
             />
@@ -107,29 +109,14 @@ const MemeDetailsComponent = ({ meme }) => {
 
 const styles = StyleSheet.create({
     title: { fontSize: 20, fontWeight: "800", marginBottom: 4 },
-    meta: { color: "#888", marginBottom: 10 },
+    meta: { marginBottom: 10 },
     image: { width: "100%", height: width * 0.5, borderRadius: 8, marginBottom: 12 },
-    desc: { fontSize: 15, lineHeight: 22, paddingHorizontal: 15, paddingVertical: 10, },
     container: { flex: 1, backgroundColor: "#fff" },
 
-    // 연도 탭바
-    yearTabs: { alignItems: "center", paddingHorizontal: 12 },
-    yearTab: {
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 20,
-        backgroundColor: "#eee",
-        marginRight: 8,
-    },
-    yearTabActive: { backgroundColor: "#111" },
-    yearTabText: { color: "#555", fontWeight: "600" },
-    yearTabTextActive: { color: "#fff" },
     bubbleContainer: {
-        // maxWidth: "95%",
-        marginVertical: 4,
-        padding: 5,
+        padding: 20,
+        borderWidth: 1,
         borderRadius: 12,
-        backgroundColor: "#fff",
         alignSelf: "center",
     },
 });

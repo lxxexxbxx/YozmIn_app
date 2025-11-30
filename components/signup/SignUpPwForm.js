@@ -6,13 +6,15 @@ import {
     Dimensions,
     TouchableOpacity,
     TextInput,
-    Image, KeyboardAvoidingView, Platform
+    Image, KeyboardAvoidingView, Platform, ImageBackground
 } from 'react-native';
 import {useNavigation} from "@react-navigation/native";
 import PageTitleComponent from "../../components/common/PageTitleComponent";
 import {useUserStore} from "../../stores/UserStore";
 import {CommonUtils} from "../common/CommonUtils";
 import SHA256 from "crypto-js/sha256";
+import { ThemeView, ThemeText } from "../common/ThemeComponents";
+import { useTheme } from "../settings/theme/ThemeContext";
 
 const {width, height} = Dimensions.get('window');
 
@@ -26,6 +28,7 @@ const SignUpPwForm = () => {
     const [pwCheckHide, setPwCheckHide] = useState(true);
     const [pwError, setPwError] = useState("");
     const [pwCheckError, setPwCheckError] = useState("");
+    const { colors } = useTheme();
 
     const pwRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+=-]).{8,20}$/;
 
@@ -65,58 +68,83 @@ const SignUpPwForm = () => {
     }
 
     return (
-        <KeyboardAvoidingView style={styles.Container}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        <KeyboardAvoidingView style={[styles.Container, {backgroundColor: colors.background}]}
+                              behavior="padding"
+                              keyboardVerticalOffset={Platform.OS=== "ios" ? -10:0}
         >
-            <View style={styles.FormContainer}>
+            <ThemeView style={styles.FormContainer}>
                 <PageTitleComponent title={"회원가입"} darkMode={false} backToStack={"SignUpId"}></PageTitleComponent>
-                <View style={styles.textContainer}>
-                    <Text style={styles.text}>
+                <ThemeView style={styles.textContainer}>
+                    <ThemeText style={styles.text}>
                         {"비밀번호를 입력해주세요."}
-                    </Text>
-                </View>
-                <View style={styles.inputContainer}>
-                    <Text style={styles.label}>
+                    </ThemeText>
+                </ThemeView>
+                <ThemeView style={styles.inputContainer}>
+                    <ThemeText style={styles.label}>
                         {"비밀번호"}
-                    </Text>
-                    <View style={{flexDirection: "row"}}>
-                        <TextInput style={styles.inputBox} value={pw} autoComplete={"password"}
+                    </ThemeText>
+                    <ThemeView style={{flexDirection: "row", color: colors.text, borderBottomWidth: 1, borderWidth: 0,
+                        borderColor: colors.text, height: height * 0.05}}>
+                        <TextInput style={[styles.inputBox, {color: colors.text}]} value={pw} autoComplete={"password"}
+                                   placeholderTextColor={"gray"}
                                    placeholder={"비밀번호"} secureTextEntry={pwHide}
                                    onChangeText={(value) => {
                                        setPw(value);
                                        setPwError("");
                                    }}/>
-                        <TouchableOpacity
-                            style={{flex: 1, marginBottom: 15, justifyContent: "center", alignItems: "center"}}
-                            onPress={() => setPwHide(!pwHide)}>
-                            {!pwHide ? <Image
-                                source={require("../../assets/eye_opened.png")}/> : <Image
-                                source={require("../../assets/eye_closed.png")}/>}
+                        <TouchableOpacity onPress={() => setPwHide(!pwHide)}
+                                          activeOpacity={1}
+                                          style={{
+                                              color: colors.text,
+                                              borderBottomWidth: 1,
+                                              borderWidth: 0,
+                                              borderColor: colors.text,
+                                              height: height * 0.05,
+                                              width: width * 0.07
+                                          }}>
+                            {!pwHide ? <ImageBackground style={styles.pwEye}
+                                                        resizeMode={"contain"}
+                                                        source={require("../../assets/eye_opened.png")}/> :
+                                <Image style={styles.pwEye}
+                                       resizeMode={"contain"}
+                                       source={require("../../assets/eye_closed.png")}/>}
                         </TouchableOpacity>
-                    </View>
+                    </ThemeView>
                     {pwError ? <Text style={{color: 'red'}}>{pwError}</Text> : null}
-                </View>
-                <View style={styles.inputContainer}>
-                    <Text style={styles.label}>
+                </ThemeView>
+                <ThemeView style={styles.inputContainer}>
+                    <ThemeText style={styles.label}>
                         {"비밀번호 확인"}
-                    </Text>
-                    <View style={{flexDirection: "row"}}>
-                        <TextInput style={styles.inputBox} value={pwCheck}
+                    </ThemeText>
+                    <ThemeView style={{flexDirection: "row", color: colors.text, borderBottomWidth: 1, borderWidth: 0,
+                        borderColor: colors.text, height: height * 0.05}}>
+                        <TextInput style={[styles.inputBox, {color: colors.text}]} value={pwCheck}
                                    placeholder={"비밀번호 확인"} secureTextEntry={pwCheckHide}
+                                   placeholderTextColor={"gray"}
                                    onChangeText={(value) => {
                                        setPwCheck(value);
                                        setPwCheckError("");
                                    }}/>
-                        <TouchableOpacity
-                            style={{flex: 1, marginBottom: 15, justifyContent: "center", alignItems: "center"}}
-                            onPress={() => setPwCheckHide(!pwCheckHide)}>
-                            {!pwCheckHide ? <Image
-                                source={require("../../assets/eye_opened.png")}/> : <Image
-                                source={require("../../assets/eye_closed.png")}/>}
+                        <TouchableOpacity onPress={() => setPwCheckHide(!pwCheckHide)}
+                                          activeOpacity={1}
+                                          style={{
+                                              color: colors.text,
+                                              borderBottomWidth: 1,
+                                              borderWidth: 0,
+                                              borderColor: colors.text,
+                                              height: height * 0.05,
+                                              width: width * 0.07
+                                          }}>
+                            {!pwCheckHide ? <ImageBackground style={styles.pwEye}
+                                                        resizeMode={"contain"}
+                                                        source={require("../../assets/eye_opened.png")}/> :
+                                <Image style={styles.pwEye}
+                                       resizeMode={"contain"}
+                                       source={require("../../assets/eye_closed.png")}/>}
                         </TouchableOpacity>
-                    </View>
+                    </ThemeView>
                     {pwCheckError ? <Text style={{color: 'red'}}>{pwCheckError}</Text> : null}
-                </View>
+                </ThemeView>
                 <TouchableOpacity onPress={() => {handleNext()}}>
                     <View style={styles.btnContainer}>
                         <Text style={styles.btn}>
@@ -124,7 +152,7 @@ const SignUpPwForm = () => {
                         </Text>
                     </View>
                 </TouchableOpacity>
-            </View>
+            </ThemeView>
         </KeyboardAvoidingView>
     )
 }
@@ -132,7 +160,6 @@ const SignUpPwForm = () => {
 const styles = StyleSheet.create({
     Container: {
         flex: 1,
-        backgroundColor: "white"
     },
     FormContainer: {
         backgroundColor: "rgba(255, 255, 255, 1)",
@@ -151,7 +178,6 @@ const styles = StyleSheet.create({
         position: "absolute",
         flexShrink: 0,
         textAlign: "center",
-        color: "rgba(0, 0, 0, 1)",
         fontFamily: "Share",
         fontSize: width * 0.07,
         fontWeight: 700,
@@ -159,6 +185,7 @@ const styles = StyleSheet.create({
     inputContainer: {
         display: "flex",
         flexDirection: "column",
+        marginBottom: 20,
     },
     label: {
         textAlign: "left",
@@ -168,8 +195,6 @@ const styles = StyleSheet.create({
     },
     inputBox: {
         width: width * 0.8,
-        marginBottom: height * 0.01,
-        borderBottomWidth: 1,
     },
     btnContainer: {
         marginTop: height * 0.1,
@@ -189,6 +214,16 @@ const styles = StyleSheet.create({
         color: "rgba(255, 255, 255, 1)",
         fontFamily: "Share",
         fontSize: width * 0.05,
+    },
+    exText: {
+        fontSize: height * 0.017,
+        marginHorizontal: 5,
+        fontWeight: "600",
+    },
+    pwEye: {
+        height: height * 0.04,
+        width: width * 0.08,
+        marginTop: 0,
     }
 });
 
