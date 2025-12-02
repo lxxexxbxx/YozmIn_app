@@ -14,7 +14,8 @@ import {
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Entypo from 'react-native-vector-icons/Entypo';
-import PageTitleComponent from '../common/PageTitleComponent';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import PageTitleComponent from '../common/PageTitleComponent'; // ← 기존 import 그대로 둠
 import supabase from '../../supabase';
 import ImageUploader from '../../Images/ImageUploader';
 import { useUserStore } from '../../stores/UserStore';
@@ -55,7 +56,7 @@ const BookmarkComponent = () => {
   useFocusEffect(
     useCallback(() => {
       fetchBookmarks();
-    }, [fetchBookmarks])
+    }, [fetchBookmarks]),
   );
 
   useEffect(() => {
@@ -65,7 +66,7 @@ const BookmarkComponent = () => {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'bookmark' },
-        () => fetchBookmarks()
+        () => fetchBookmarks(),
       )
       .subscribe();
     return () => {
@@ -153,10 +154,10 @@ const BookmarkComponent = () => {
             },
           },
         ],
-        { cancelable: true }
+        { cancelable: true },
       );
     },
-    [currentUserId]
+    [currentUserId],
   );
 
   const renderItem = ({ item }) => (
@@ -168,33 +169,69 @@ const BookmarkComponent = () => {
           folderName: item.b_folder_name || '북마크',
         })
       }
-      onLongPress={() => handleDelete(item)}   // ✅ 길게 누르면 삭제
-      delayLongPress={500}                     // (선택) 0.5초 이상 눌러야 인식
+      onLongPress={() => handleDelete(item)} // ✅ 길게 누르면 삭제
+      delayLongPress={500} // (선택) 0.5초 이상 눌러야 인식
     >
       {item.b_folder_img ? (
         <Image source={{ uri: item.b_folder_img }} style={styles.image} />
       ) : (
         <View style={[styles.image, styles.imagePlaceholder]}>
-          <Text style={{ fontSize: 12, color: '#666' }}>이미지 없음</Text>
+          <Text style={styles.imagePlaceholderText}>이미지 없음</Text>
         </View>
       )}
-      <Text style={styles.title}>{item.b_folder_name || '이름 없음'}</Text>
+      <Text style={styles.title} numberOfLines={1}>
+        {item.b_folder_name || '이름 없음'}
+      </Text>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      <PageTitleComponent title={'북마크'} backToTab={'MyPage'} />
+      {/* 🔹 상단 헤더: 뒤로가기 + 로고 + 북마크 */}
+      <View style={styles.topHeader}>
+        <TouchableOpacity
+          style={styles.headerBackBtn}
+          onPress={() => {
+            if (navigation.canGoBack()) {
+              // 보통: 마이페이지에서 북마크로 왔으니까 한 칸 뒤로 가면 다시 마이페이지
+              navigation.goBack();
+            } else {
+              // 혹시 직접 북마크만 띄운 경우엔 탭 네비게이터로 보내기
+              navigation.navigate('TabNavigator');
+              // TabNavigator 안에서 마지막에 보던 탭(대부분 마이페이지)이 그대로 떠 있음
+            }
+          }}
+        >
+          <Ionicons name="chevron-back" size={22} color="#111" />
+        </TouchableOpacity>
+
+        <View style={styles.headerCenter}>
+          <Image
+            source={require('../../assets/main_logo.jpeg')}
+            style={styles.headerLogo}
+          />
+          <Text style={styles.headerTitleText}>북마크</Text>
+        </View>
+
+        <View style={styles.headerRightSpacer} />
+      </View>
 
       {loading ? (
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={items}
           keyExtractor={(it) => String(it.b_no)}
           renderItem={renderItem}
           numColumns={2}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={styles.listContent}
+          columnWrapperStyle={styles.columnWrapper}
+          ListEmptyComponent={
+            <View style={styles.emptyBox}>
+              <Text style={styles.emptyText}>아직 만든 북마크가 없어요.</Text>
+              <Text style={styles.emptySubText}>오른쪽 아래 + 버튼으로 새 폴더를 만들어보세요.</Text>
+            </View>
+          }
         />
       )}
 
@@ -261,7 +298,8 @@ const BookmarkComponent = () => {
               onPress={handleCreate}
               disabled={isImageUploading}
             >
-              <Entypo name="plus" size={30} color="white" />
+              <Entypo name="plus" size={26} color="white" />
+              <Text style={styles.addButtonModalText}>추가하기</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -273,60 +311,187 @@ const BookmarkComponent = () => {
 const BOX = 120;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff', alignItems: 'center' },
-  itemContainer: { alignItems: 'center', margin: 15 },
-  image: { width: BOX, height: BOX, borderRadius: 10, borderWidth: 2, borderColor: '#000' },
-  imagePlaceholder: { justifyContent: 'center', alignItems: 'center', backgroundColor: '#eee' },
-  title: { marginTop: 5, fontSize: 14, textAlign: 'center' },
+  container: {
+    flex: 1,
+    backgroundColor: '#F6F7FB',
+  },
 
+  // ───── 헤더 스타일 (옷장/상점과 통일) ─────
+  topHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+    marginTop: 20,
+  },
+  headerBackBtn: {
+    paddingRight: 8,
+    paddingVertical: 4,
+  },
+  headerCenter: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerLogo: {
+    width: 40,
+    height: 40,
+    resizeMode: 'contain',
+    marginRight: 8,
+  },
+  headerTitleText: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#111827',
+    marginTop: 4,
+  },
+  headerRightSpacer: {
+    width: 30,
+  },
+
+  // ───── 리스트/카드 ─────
+  listContent: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 110,
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+
+  itemContainer: {
+    width: '48%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  image: {
+    width: BOX,
+    height: BOX,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  imagePlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+  },
+  imagePlaceholderText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+  title: {
+    marginTop: 8,
+    fontSize: 14,
+    textAlign: 'center',
+    fontWeight: '600',
+    color: '#111827',
+  },
+
+  emptyBox: {
+    marginTop: 40,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#4B5563',
+    marginBottom: 4,
+  },
+  emptySubText: {
+    fontSize: 13,
+    color: '#9CA3AF',
+  },
+
+  // ───── 플로팅 버튼 ─────
   addButton: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 90, // ← 기존보다 위로 올림 (탭바 위에 떠 있게)
     right: 20,
-    backgroundColor: '#000',
+    backgroundColor: '#2F80ED',
     borderRadius: 30,
-    padding: 10,
+    padding: 14,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
 
-  modalContainer: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0, 0, 0, 0.3)' },
+  // ───── 모달 ─────
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
   modalContent: {
     backgroundColor: '#fff',
     padding: 20,
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     alignItems: 'center',
     minHeight: '60%',
   },
-  closeButton: { position: 'absolute', top: 10, right: 10 },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+  closeButton: { position: 'absolute', top: 12, right: 12 },
+  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 16 },
 
   imageUpload: {
     width: BOX * 1.6,
     height: BOX * 1.6,
-    backgroundColor: '#ddd',
+    backgroundColor: '#EEF2FF',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 10,
-    marginBottom: 15,
+    borderRadius: 16,
+    marginBottom: 18,
     overflow: 'hidden',
   },
-  uploadText: { fontSize: 16, color: 'blue' },
+  uploadText: { fontSize: 16, color: '#2563EB' },
   uploadedImage: { width: '100%', height: '100%' },
 
-  label: { fontSize: 14, fontWeight: 'bold', alignSelf: 'flex-start', marginBottom: 5 },
-  input: { width: '100%', height: 40, borderBottomWidth: 1, borderBottomColor: '#000', marginBottom: 20 },
+  label: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    alignSelf: 'flex-start',
+    marginBottom: 5,
+  },
+  input: {
+    width: '100%',
+    height: 40,
+    borderBottomWidth: 1,
+    borderBottomColor: '#9CA3AF',
+    marginBottom: 24,
+  },
 
   addButtonModal: {
-    marginTop: 10,
-    backgroundColor: '#000',
-    borderRadius: 30,
-    paddingHorizontal: 18,
+    marginTop: 4,
+    backgroundColor: '#2F80ED',
+    borderRadius: 999,
+    paddingHorizontal: 20,
     paddingVertical: 10,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  addButtonModalText: {
+    marginLeft: 6,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });
 

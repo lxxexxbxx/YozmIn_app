@@ -247,9 +247,42 @@ export default function ClosetScreen() {
 
   return (
     <ThemeView style={[styles.screen, { backgroundColor: colors.background }]}>
+
+      {/* 🔹 상단 헤더: 뒤로가기 + 로고 + 옷장 */}
+      <ThemeView
+        style={[
+          styles.topHeader,
+          { backgroundColor: colors.background, borderBottomColor: colors.border },
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.headerBackBtn}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="chevron-back" size={22} color={colors.text} />
+        </TouchableOpacity>
+
+        <View style={styles.headerCenter}>
+          <Image
+            source={require("../../assets/main_logo.jpeg")}
+            style={styles.headerLogo}
+          />
+          <ThemeText
+            style={[styles.headerTitleText, { color: colors.text }]}
+          >
+            옷장
+          </ThemeText>
+        </View>
+
+        <View style={styles.headerRightSpacer} />
+      </ThemeView>
+
       <ScrollView
         style={styles.contentScroll}
-        contentContainerStyle={[styles.scrollContent, { flexDirection: isWide ? "row" : "column" }]}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { flexDirection: isWide ? "row" : "column" },
+        ]}
         keyboardShouldPersistTaps="handled"
       >
         {/* Left panel */}
@@ -261,29 +294,23 @@ export default function ClosetScreen() {
           ]}
         >
           <ThemeView style={styles.previewHeader}>
-            <ThemeText style={[styles.title, { color: colors.text }]}>옷장</ThemeText>
+            <ThemeText style={[styles.title, { color: colors.text }]}>
+              캐릭터 미리보기
+            </ThemeText>
             <View style={styles.rowCenter}>
               <TouchableOpacity
                 style={[styles.secondaryBtn, { backgroundColor: colors.subBackground }]}
                 onPress={() => navigation.navigate("Shop")}
               >
-                <MaterialCommunityIcons name="storefront-outline" size={16} color={colors.text} />
-                <ThemeText style={[styles.secondaryBtnText, { color: colors.text }]}>
+                <MaterialCommunityIcons
+                  name="storefront-outline"
+                  size={16}
+                  color={colors.text}
+                />
+                <ThemeText
+                  style={[styles.secondaryBtnText, { color: colors.text }]}
+                >
                   상점 가기
-                </ThemeText>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.secondaryBtn,
-                  { backgroundColor: colors.subBackground, marginLeft: 8 },
-                ]}
-                onPress={() =>
-                  navigation.canGoBack() ? navigation.goBack() : navigation.navigate("MyPage")
-                }
-              >
-                <Ionicons name="chevron-back" size={16} color={colors.text} />
-                <ThemeText style={[styles.secondaryBtnText, { color: colors.text }]}>
-                  뒤로
                 </ThemeText>
               </TouchableOpacity>
             </View>
@@ -295,22 +322,24 @@ export default function ClosetScreen() {
               { backgroundColor: colors.card, borderColor: colors.border },
             ]}
           >
-            <View style={styles.tinoStage}>
-              {/* ✅ 1) 배경: 캐릭터 뒤, 스테이지 전체 */}
-              {wearing.BACKGROUND && wearing.BACKGROUND.imageSrc && (
-                <Image
-                  source={wearing.BACKGROUND.imageSrc}
-                  style={styles.backgroundImage}
-                />
-              )}
+            {/* 🔹 여기! 카드(창) 전체를 기준으로 배경 깔기 */}
+            {wearing.BACKGROUND && wearing.BACKGROUND.imageSrc && (
+              <Image
+                source={wearing.BACKGROUND.imageSrc}
+                style={styles.backgroundImage}
+                resizeMode="cover"
+                pointerEvents="none"
+              />
+            )}
 
-              {/* ✅ 2) 캐릭터 */}
+            <View style={styles.tinoStage}>
+              {/* 캐릭터 */}
               <Image
                 style={styles.characterImage}
                 source={require("../../assets/tino.png")}
               />
 
-              {/* ✅ 3) 모자 & 악세서리: 캐릭터 위에 셀 단위로 */}
+              {/* 모자 & 악세서리 */}
               {["HAT", "ACCESSORY"].map((cat) => {
                 const it = wearing[cat];
                 if (!it) return null;
@@ -425,16 +454,53 @@ export default function ClosetScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+
+  // 🔹 상단 헤더 공통 (상점과 동일 느낌)
+  topHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    marginTop: 20,
+  },
+  headerBackBtn: {
+    paddingRight: 8,
+    paddingVertical: 4,
+  },
+  headerCenter: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "left",
+    justifyContent: "left",
+  },
+  headerLogo: {
+    width: 40,
+    height: 40,
+    resizeMode: "contain",
+    marginRight: 8,
+  },
+  headerTitleText: {
+    fontSize: 20,
+    fontWeight: "800",
+    marginTop: 6,
+  },
+  headerRightSpacer: {
+    width: 30,
+  },
+
   contentScroll: { flex: 1 },
   scrollContent: { padding: 16 },
+
   leftPanel: {
     borderRadius: 16,
     padding: 16,
     marginBottom: 8,
-    marginTop: 40,
+    marginTop: 12, // 헤더 생겼으니 여백 줄임
   },
   leftPanelWide: { flex: 1, minHeight: 360, marginRight: 8 },
   leftPanelNarrow: { width: "100%" },
+
   title: { fontSize: 18, fontWeight: "700" },
   previewHeader: {
     flexDirection: "row",
@@ -447,22 +513,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingVertical: 12,
     paddingHorizontal: 12,
+    paddingTop: 40,
+    overflow: "hidden", // 카드 밖 잘라주기
   },
+
   tinoStage: {
     width: STAGE_W,
     height: STAGE_H,
     position: "relative",
     alignSelf: "center",
   },
-  // 🔹 배경은 스테이지 전체
+
+  // 🔹 배경: 카드(창) 전체를 덮도록
   backgroundImage: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    width: STAGE_W,
-    height: STAGE_H,
-    resizeMode: "cover",
+    ...StyleSheet.absoluteFillObject,
   },
+
   characterImage: {
     position: "absolute",
     left: 0,
@@ -484,6 +550,7 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
     backgroundColor: "transparent",
   },
+
   rightPanel: {
     borderRadius: 16,
     padding: 16,
@@ -491,10 +558,12 @@ const styles = StyleSheet.create({
   },
   rightPanelWide: { flex: 1.2, marginLeft: 8 },
   rightPanelNarrow: { width: "100%", marginTop: 12 },
+
   sectionTitle: { fontSize: 16, fontWeight: "700" },
   tabBar: { flexDirection: "row" },
   tabBtn: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999 },
   tabText: { fontSize: 13, fontWeight: "600" },
+
   cardThumb: { width: 40, height: 40, resizeMode: "contain" },
   itemCard: {
     flex: 1,
@@ -507,6 +576,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 6,
   },
   itemTitle: { marginTop: 8, fontSize: 14, fontWeight: "600", textAlign: "center" },
+
   rowBetween: {
     flexDirection: "row",
     alignItems: "center",
@@ -515,10 +585,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   rowCenter: { flexDirection: "row", alignItems: "center" },
+
   itemPrice: { fontSize: 13, fontWeight: "700", marginLeft: 4 },
+
   badgeOn: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
   badgeOff: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
   badgeText: { fontSize: 11, fontWeight: "700" },
+
   secondaryBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -527,6 +600,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   secondaryBtnText: { marginLeft: 6, fontSize: 12, fontWeight: "700" },
+
   equipBtn: {
     marginTop: 8,
     alignSelf: "stretch",
