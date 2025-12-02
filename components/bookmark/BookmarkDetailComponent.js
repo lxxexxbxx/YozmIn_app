@@ -1,14 +1,19 @@
 // components/bookmark/BookmarkDetailComponent.js
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, FlatList, Image, TouchableOpacity,
-  ActivityIndicator, Alert
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import supabase from '../../supabase';
 import { useUserStore } from '../../stores/UserStore';
-import PageTitleComponent from '../common/PageTitleComponent';
 
 const BookmarkDetailComponent = ({ route, navigation }) => {
   const { folderNo: _folderNo, folderName: _folderName } = route.params || {};
@@ -59,7 +64,7 @@ const BookmarkDetailComponent = ({ route, navigation }) => {
       return;
     }
 
-    const postIds = (mapRows || []).map(r => r.post_id);
+    const postIds = (mapRows || []).map((r) => r.post_id);
     if (postIds.length === 0) {
       setItems([]);
       setLoading(false);
@@ -69,7 +74,9 @@ const BookmarkDetailComponent = ({ route, navigation }) => {
     // (2) post 테이블에서 상세
     const { data: posts, error: postErr } = await supabase
       .from('post')
-      .select('post_id, image_url, content, like_cnt, comment_cnt, view_count, created_at, user_id')
+      .select(
+        'post_id, image_url, content, like_cnt, comment_cnt, view_count, created_at, user_id',
+      )
       .in('post_id', postIds);
 
     if (postErr) {
@@ -79,7 +86,7 @@ const BookmarkDetailComponent = ({ route, navigation }) => {
       return;
     }
 
-    // 최신순으로 정렬(매핑 created_at과 동일한 순서로 보이고 싶다면, 맵을 만들어 정렬)
+    // 매핑 순서대로 정렬
     const orderMap = new Map();
     postIds.forEach((id, idx) => orderMap.set(id, idx));
     const sorted = (posts || []).sort((a, b) => {
@@ -101,7 +108,7 @@ const BookmarkDetailComponent = ({ route, navigation }) => {
         .eq('folder_no', folderNo)
         .eq('post_id', postId);
       if (error) throw error;
-      setItems(prev => prev.filter(p => p.post_id !== postId));
+      setItems((prev) => prev.filter((p) => p.post_id !== postId));
     } catch (e) {
       console.error('북마크 제거 실패:', e);
       Alert.alert('오류', `폴더에서 제거 실패: ${e.message}`);
@@ -109,26 +116,31 @@ const BookmarkDetailComponent = ({ route, navigation }) => {
   };
 
   // 포커스시 로드
-  useFocusEffect(useCallback(() => {
-    (async () => {
-      await ensureFolderNo();
-      // ensureFolderNo에서 setFolderNo가 비동기라, 다음 틱에서 fetch
-      setTimeout(fetchFolderPosts, 0);
-    })();
-  }, [ensureFolderNo, fetchFolderPosts]));
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        await ensureFolderNo();
+        // ensureFolderNo에서 setFolderNo가 비동기라, 다음 틱에서 fetch
+        setTimeout(fetchFolderPosts, 0);
+      })();
+    }, [ensureFolderNo, fetchFolderPosts]),
+  );
 
   // 실시간 반영 (선택)
   useEffect(() => {
     if (!currentUserId) return;
     const ch = supabase
       .channel('realtime-bookmark-post')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookmark_post' }, (payload) => {
-        // 내 폴더에 대한 변경만 관심
-        const row = payload.new || payload.old;
-        if (row?.user_id === currentUserId && row?.folder_no === folderNo) {
-          fetchFolderPosts();
-        }
-      })
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'bookmark_post' },
+        (payload) => {
+          const row = payload.new || payload.old;
+          if (row?.user_id === currentUserId && row?.folder_no === folderNo) {
+            fetchFolderPosts();
+          }
+        },
+      )
       .subscribe();
     return () => supabase.removeChannel(ch);
   }, [currentUserId, folderNo, fetchFolderPosts]);
@@ -146,10 +158,7 @@ const BookmarkDetailComponent = ({ route, navigation }) => {
             <Text style={{ color: '#777' }}>이미지 없음</Text>
           </View>
         )}
-        <Text
-          numberOfLines={2}
-          style={styles.caption}
-        >
+        <Text numberOfLines={2} style={styles.caption}>
           {item.content || '내용 없음'}
         </Text>
       </TouchableOpacity>
@@ -169,10 +178,7 @@ const BookmarkDetailComponent = ({ route, navigation }) => {
         </View>
 
         {/* 폴더에서 제거 */}
-        <TouchableOpacity
-          onPress={() => removeFromFolder(item.post_id)}
-          style={styles.removeBtn}
-        >
+        <TouchableOpacity onPress={() => removeFromFolder(item.post_id)} style={styles.removeBtn}>
           <FontAwesome name="trash" size={16} color="#ef4444" />
         </TouchableOpacity>
       </View>
@@ -181,7 +187,33 @@ const BookmarkDetailComponent = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      <PageTitleComponent title={folderName || '북마크'} />
+      {/* 🔹 상단 헤더: 뒤로가기 + 로고 + 폴더 이름 */}
+      <View style={styles.topHeader}>
+        <TouchableOpacity
+          style={styles.headerBackBtn}
+          onPress={() => {
+            if (navigation.canGoBack()) {
+              // 보통: Bookmark → BookmarkDetail 이니까 뒤로가기 = 북마크 목록
+              navigation.goBack();
+            } else {
+              // 혹시 단독으로 띄운 경우
+              navigation.navigate('Bookmark');
+            }
+          }}
+        >
+          <Ionicons name="chevron-back" size={22} color="#111" />
+        </TouchableOpacity>
+
+        <View style={styles.headerCenter}>
+          <Image
+            source={require('../../assets/main_logo.jpeg')}
+            style={styles.headerLogo}
+          />
+          <Text style={styles.headerTitleText}>{folderName || '북마크'}</Text>
+        </View>
+
+        <View style={styles.headerRightSpacer} />
+      </View>
 
       {loading ? (
         <View style={styles.centerBox}>
@@ -189,7 +221,7 @@ const BookmarkDetailComponent = ({ route, navigation }) => {
         </View>
       ) : items.length === 0 ? (
         <View style={styles.centerBox}>
-          <Text style={{ color: '#666' }}>이 폴더에 저장된 게시글이 없어요.</Text>
+          <Text style={styles.emptyText}>이 폴더에 저장된 게시글이 없어요.</Text>
         </View>
       ) : (
         <FlatList
@@ -197,7 +229,8 @@ const BookmarkDetailComponent = ({ route, navigation }) => {
           keyExtractor={(it) => String(it.post_id)}
           renderItem={renderItem}
           numColumns={2}
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={styles.listContent}
+          columnWrapperStyle={styles.columnWrapper}
         />
       )}
     </View>
@@ -208,26 +241,114 @@ const GAP = 14;
 const CARD_W = 160;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', alignItems: 'center' },
-  centerBox: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  container: {
+    flex: 1,
+    backgroundColor: '#F6F7FB',
+  },
+
+  // ───── 헤더 (북마크랑 통일) ─────
+  topHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+    marginTop: 20,
+  },
+  headerBackBtn: {
+    paddingRight: 8,
+    paddingVertical: 4,
+  },
+  headerCenter: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerLogo: {
+    width: 40,
+    height: 40,
+    resizeMode: 'contain',
+    marginRight: 8,
+  },
+  headerTitleText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#111827',
+    marginTop: 4,
+  },
+  headerRightSpacer: {
+    width: 30,
+  },
+
+  // ───── 리스트 / 카드 ─────
+  listContent: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 24,
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
+    marginBottom: GAP,
+  },
+
+  centerBox: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    color: '#6B7280',
+    fontSize: 14,
+  },
 
   card: {
     width: CARD_W,
-    margin: GAP / 2,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 10,
-    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, shadowOffset: { width: 0, height: 2 },
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
-  thumb: { width: '100%', height: 110, borderRadius: 8, backgroundColor: '#eee' },
-  thumbPlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  caption: { marginTop: 8, fontSize: 13, color: '#111' },
+  thumb: {
+    width: '100%',
+    height: 110,
+    borderRadius: 8,
+    backgroundColor: '#E5E7EB',
+  },
+  thumbPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  caption: {
+    marginTop: 8,
+    fontSize: 13,
+    color: '#111827',
+  },
 
-  metaRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
-  metaItem: { flexDirection: 'row', alignItems: 'center', marginRight: 10 },
-  metaText: { marginLeft: 4, fontSize: 12, color: '#4b5563' },
-  removeBtn: { marginLeft: 'auto', padding: 6 },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  metaText: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: '#4B5563',
+  },
+  removeBtn: {
+    marginLeft: 'auto',
+    padding: 6,
+  },
 });
 
 export default BookmarkDetailComponent;
