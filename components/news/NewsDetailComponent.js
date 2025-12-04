@@ -6,6 +6,9 @@ import { fetchCrawledNewsContent } from './NewsAPI/NaverNewsDetailAPIComponent';
 import { fetchNewsDetails, extractKeywordFromTitle, reextractKeyword } from './NewsAPI/GeminiAPIDetailComponent';
 import { ThemeView, ThemeText, ThemeScrollView } from '../common/ThemeComponents';
 import { useTheme } from '../settings/theme/ThemeContext';
+import PageTitleComponent from '../common/PageTitleComponent';
+
+import TypingText from '../chatbot/TypingText';
 
 const normalizeText = (val) => {
   if (val == null) return '';
@@ -143,48 +146,43 @@ export default function NewsDetailComponent() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <PageTitleComponent title={titleText} />
+
       <ContainerScroll contentContainerStyle={styles.scrollView}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 20 }}>
-          <ThemeText style={{ fontSize: 18, fontWeight: 'bold' }}>{'← 뒤로가기'}</ThemeText>
-        </TouchableOpacity>
 
-        {/* 뉴스 제목 컨테이너 (다크 모드 스타일만 조건부로 덮어쓰기) */}
-        <ThemeView 
-          style={[
-            styles.titleContainer, 
-            { 
-              // 라이트 모드 기본 배경색 유지
-              backgroundColor: '#e0f7fa', 
-              
-              // ⭐️ 다크 모드일 때만 스타일을 덮어씁니다.
-              ...(isDark && {
-                backgroundColor: colors.boxBackground, // 다크 모드 배경색 사용
-                shadowColor: '#ffffff', // 밝은 그림자를 사용하여 띄워진 효과 부여
-                shadowOpacity: 0.15,
-                borderColor: colors.border, // 테마 경계선 색상 사용
-                borderWidth: 1, 
-              })
-            }
-          ]}
-        >
-          {/* 텍스트 색상도 다크 모드일 때만 흰색 계열로 변경 */}
-          <ThemeText style={[styles.titleText, { color: isDark ? colors.text : '#00796B' }]}>📰 {titleText}</ThemeText>
-        </ThemeView>
-
-        {/* 기사 내용 요약 섹션 */}
+        {/* 1. 기사 내용 요약 섹션 */}
         <ThemeView style={[styles.sectionContainer, { backgroundColor: colors.boxBackground, borderColor: isDark ? '#8C8C8C' : '#EAEAEA', borderWidth: 1 }]}>
-          <ThemeText style={[styles.sectionContent, { color: colors.text }]}>{summaryText}</ThemeText>
+          {/* ✅ Import한 TypingText 사용 (Props 주의: fullText, textColor) */}
+          <TypingText
+            fullText={summaryText}
+            speed={10}
+            textColor={colors.text}
+          // 만약 TypingText가 style prop을 지원하지 않는다면, 
+          // 폰트 크기 조절 등을 위해 ThemeText로 감싸거나 TypingText 코드를 수정해야 할 수도 있습니다.
+          // 보통 챗봇용은 폰트가 고정되어 있을 수 있습니다.
+          />
         </ThemeView>
 
-        <ThemeView style={[styles.sectionContainer, { backgroundColor: '#fffbea' }]}>
+        {/* 2. 배경 지식 섹션 */}
+        <ThemeView style={[styles.sectionContainer, { backgroundColor: '#fffbea', borderColor: isDark ? '#8C8C8C' : '#EAEAEA', borderWidth: 1 }]}>
           <ThemeText style={[styles.sectionTitle, { color: colors.text }]}>📘 배경 지식</ThemeText>
-          <ThemeText style={[styles.sectionContent, { color: colors.text }]}>{backgroundText}</ThemeText>
+          <TypingText
+            fullText={backgroundText}
+            speed={10}
+            textColor={colors.text}
+          />
         </ThemeView>
 
-        <ThemeView style={[styles.sectionContainer, { backgroundColor: '#e8f5e9' }]}>
-          <ThemeText style={[styles.sectionTitle, { color: colors.text }]}>📝 AI 요약</ThemeText>
-          <ThemeText style={[styles.sectionContent, { color: colors.text }]}>{aiSummaryText}</ThemeText>
+        {/* 3. AI 요약 섹션 */}
+        <ThemeView style={[styles.sectionContainer, { backgroundColor: '#e8f5e9', borderColor: isDark ? '#8C8C8C' : '#EAEAEA', borderWidth: 1 }]}>
+          <ThemeText style={[styles.sectionTitle, { color: colors.text }]}>📝 요즈미 AI 요약</ThemeText>
+          <TypingText
+            fullText={aiSummaryText}
+            speed={10}
+            textColor={colors.text}
+          />
         </ThemeView>
+
       </ContainerScroll>
     </SafeAreaView>
   );
@@ -195,18 +193,6 @@ const styles = StyleSheet.create({
   loadingText: { marginTop: 15, fontSize: 16 },
   container: { flex: 1 },
   scrollView: { padding: 20, paddingBottom: 40 },
-  titleContainer: {
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  titleText: { fontSize: 22, fontWeight: 'bold', textAlign: 'center' },
   sectionContainer: {
     borderRadius: 10,
     padding: 15,
