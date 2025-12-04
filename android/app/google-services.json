@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "543690420387",
+    "project_id": "yozumin-app-473400",
+    "storage_bucket": "yozumin-app-473400.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:543690420387:android:8ce42e45f5ac6a97808f16",
+        "android_client_info": {
+          "package_name": "com.yozm.yozminapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "543690420387-bqvu3928ptjau6fjjsr09rs57kuffpp4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBK3WbYEM70yZM4X17Hy4X8K03oQkxxJ2Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "543690420387-bqvu3928ptjau6fjjsr09rs57kuffpp4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
