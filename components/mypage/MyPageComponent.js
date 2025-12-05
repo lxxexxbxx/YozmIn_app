@@ -392,9 +392,10 @@ const MyPageComponent = () => {
       <View style={styles.topHeader}>
         <View style={styles.headerLeft}>
           <Image
-            source={require("../../assets/main_logo.jpeg")}
+            source={require("../../assets/Yozmin_Logo_v0.1.png")}
             style={styles.headerLogo}
           />
+          
           <ThemeText style={styles.headerTitle}>마이페이지</ThemeText>
         </View>
 
@@ -643,15 +644,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 20,
   },
   headerLeft: {
     flexDirection: "row",
     alignItems: "center",
   },
   headerLogo: {
-    width: 34,
-    height: 34,
+    width: 60,
+    height: 60,
     resizeMode: "contain",
     marginRight: 8,
   },
@@ -844,6 +844,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
   modalImage: {
     width: "100%",
     height: "100%",
