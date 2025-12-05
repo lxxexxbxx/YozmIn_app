@@ -128,7 +128,16 @@ const TabNavigator = () => {
             {/*마이페이지*/}
             <Tab.Screen name={"마이페이지"} component={MyPageComponent}
                         options={{
-                            headerShown : false,
+                            headerLeft: () => (
+                                <>
+                                    <Image source={
+                                        require("../assets/Yozmin_Logo_v0.1.png")
+                                    } style={{width: 60, height: 60, resizeMode: "contain", marginLeft: 15}}
+                                    />
+                                </>
+                            ),
+                            headerStyle: {backgroundColor: colors.background},
+                            headerTintColor: colors.text,
                             tabBarIcon: ({focused}) => (
                                 <Image source={
                                     focused ? require("../assets/mypage_icon_on.png") :
