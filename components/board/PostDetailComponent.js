@@ -898,7 +898,7 @@ const PostDetailComponent = ({ route, navigation }) => {
 
             <View style={styles.headerCenter}>
               <Image
-                source={require('../../assets/main_logo.jpeg')}
+                source={require('../../assets/Yozmin_Logo_v0.1.png')}
                 style={styles.headerLogo}
               />
               <ThemeText
@@ -1248,15 +1248,15 @@ const styles = StyleSheet.create({
     justifyContent: 'left',
   },
   headerLogo: {
-    width: 32,
-    height: 32,
+    width: 50,
+    height: 50,
     resizeMode: 'contain',
     marginRight: 8,
   },
   headerTitleText: {
     fontSize: 18,
     fontWeight: '700',
-    marginTop:4,
+    marginTop: 12,
   },
   headerRightBtn: {
     paddingLeft: 8,

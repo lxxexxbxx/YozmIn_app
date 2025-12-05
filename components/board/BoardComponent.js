@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
 
   notice: {
     textAlign: 'center',
-    marginTop: 50,
+    marginTop: 20,
     marginBottom: 10,
     fontSize: 24,
     fontWeight: 'bold',
