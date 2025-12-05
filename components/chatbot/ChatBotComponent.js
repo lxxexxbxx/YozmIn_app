@@ -130,7 +130,7 @@ const ChatBotComponent = () => {
 
       <KeyboardAvoidingView style={styles.Container}
         behavior="padding"
-        keyboardVerticalOffset={Platform.OS === "ios" ? -10 : 90}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 90}
       >
         {/* 입력 영역 */}
         <ThemeView

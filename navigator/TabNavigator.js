@@ -45,7 +45,7 @@ const TabNavigator = () => {
                                         require("../assets/Yozmin_Logo_v0.1.png")
                                     } style={{width: 60, height: 60, resizeMode: "contain", marginLeft: 15}}
                                     />
-                                    <ThemeText style={{fontSize: 20, marginLeft: 5}}>{"요즘사람"}</ThemeText>
+                                    <ThemeText style={{fontSize: 20, fontWeight: "bold", marginLeft: 5}}>{"요즘사람"}</ThemeText>
                                 </>
                             ),
                             headerStyle: {backgroundColor: colors.background},
@@ -65,12 +65,14 @@ const TabNavigator = () => {
             {/*</Tab.Screen>*/}
             <Tab.Screen name={"트렌드"} component={TrendComponent}
                         options={{
+                          headerTitle: "",
                             headerLeft: () => (
                                 <>
                                     <Image source={
                                         require("../assets/Yozmin_Logo_v0.1.png")
                                     } style={{width: 60, height: 60, resizeMode: "contain", marginLeft: 15}}
                                     />
+                                  <ThemeText style={{fontSize: 20, fontWeight: "bold", marginLeft: 5}}>{"트렌드"}</ThemeText>
                                 </>
                             ),
                             headerStyle: {backgroundColor: colors.background},
@@ -86,12 +88,14 @@ const TabNavigator = () => {
             {/*게시판*/}
             <Tab.Screen name={"게시판"} component={BoardComponent}
                         options={{
+                          headerTitle: "",
                             headerLeft: () => (
                                 <>
                                     <Image source={
                                         require("../assets/Yozmin_Logo_v0.1.png")
                                     } style={{width: 60, height: 60, resizeMode: "contain", marginLeft: 15}}
                                     />
+                                  <ThemeText style={{fontSize: 20, fontWeight: "bold", marginLeft: 5}}>{"게시판"}</ThemeText>
                                 </>
                             ),
                             headerStyle: {backgroundColor: colors.background},
@@ -107,12 +111,14 @@ const TabNavigator = () => {
             {/*뉴스*/}
             <Tab.Screen name={"뉴스"} component={NewsComponent}
                         options={{
+                          headerTitle: "",
                             headerLeft: () => (
                                 <>
                                     <Image source={
                                         require("../assets/Yozmin_Logo_v0.1.png")
                                     } style={{width: 60, height: 60, resizeMode: "contain", marginLeft: 15}}
                                     />
+                                  <ThemeText style={{fontSize: 20, fontWeight: "bold", marginLeft: 5}}>{"뉴스"}</ThemeText>
                                 </>
                             ),
                             headerStyle: {backgroundColor: colors.background},
@@ -128,16 +134,7 @@ const TabNavigator = () => {
             {/*마이페이지*/}
             <Tab.Screen name={"마이페이지"} component={MyPageComponent}
                         options={{
-                            headerLeft: () => (
-                                <>
-                                    <Image source={
-                                        require("../assets/Yozmin_Logo_v0.1.png")
-                                    } style={{width: 60, height: 60, resizeMode: "contain", marginLeft: 15}}
-                                    />
-                                </>
-                            ),
-                            headerStyle: {backgroundColor: colors.background},
-                            headerTintColor: colors.text,
+                          headerShown: false,
                             tabBarIcon: ({focused}) => (
                                 <Image source={
                                     focused ? require("../assets/mypage_icon_on.png") :
