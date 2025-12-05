@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
-  View, // 👈 ThemeView 대신 기본 View 사용
+  View,
   FlatList,
   ActivityIndicator,
   StyleSheet,
@@ -68,8 +68,6 @@ const NewsComponent = ({ navigation }) => {
 
   return (
     <ThemeView style={[styles.container, { backgroundColor: colors.subBackground }]}>
-
-      <View style={{ height: 80 }} />
 
       <View style={styles.header}>
         <ThemeText style={[styles.headerTitle, { color: colors.subText }]}>
@@ -206,7 +204,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingVertical: 10,
-    paddingHorizontal: 20,
+    marginTop: 10,
     alignItems: "center",
     marginBottom: 10,
   },
