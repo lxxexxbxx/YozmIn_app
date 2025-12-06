@@ -1,5 +1,5 @@
 import axios from "axios";
-import {useKeyStore} from "../../../stores/KeyStore";
+import { useKeyStore } from "../../../stores/KeyStore";
 
 export const fetchNewsTrends = async (newsTitles) => {
     const GEMINI_API_KEY = useKeyStore.getState().GOOGLE_API_KEY;

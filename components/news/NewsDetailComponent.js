@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
 import { fetchCrawledNewsContent } from './NewsAPI/NaverNewsDetailAPIComponent';
@@ -119,21 +119,21 @@ export default function NewsDetailComponent() {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.center, { backgroundColor: colors.background }]}>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.text} />
         <ThemeText style={[styles.loadingText, { color: colors.subText }]}>{loadingMessage}</ThemeText>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (!newsDetail) {
     return (
-      <SafeAreaView style={[styles.center, { backgroundColor: colors.background }]}>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
         <ThemeText>뉴스 정보를 불러오지 못했습니다. 😢</ThemeText>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 20 }}>
           <ThemeText style={{ fontSize: 18, fontWeight: 'bold' }}>{'← 뒤로가기'}</ThemeText>
         </TouchableOpacity>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -145,11 +145,16 @@ export default function NewsDetailComponent() {
   const ContainerScroll = ThemeScrollView || ScrollView;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <PageTitleComponent title={titleText} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <PageTitleComponent title={"뉴스 상세"} edges={['bottom', 'left', 'right']} />
 
       <ContainerScroll contentContainerStyle={styles.scrollView}>
 
+        <ThemeView style={styles.headlineContainer}>
+          <ThemeText style={[styles.headlineText, { color: colors.text }]}>
+            {"📰 " + titleText}
+          </ThemeText>
+        </ThemeView>
         {/* 1. 기사 내용 요약 섹션 */}
         <ThemeView style={[styles.sectionContainer, { backgroundColor: colors.boxBackground, borderColor: isDark ? '#8C8C8C' : '#EAEAEA', borderWidth: 1 }]}>
           {/* ✅ Import한 TypingText 사용 (Props 주의: fullText, textColor) */}
@@ -184,7 +189,7 @@ export default function NewsDetailComponent() {
         </ThemeView>
 
       </ContainerScroll>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -192,7 +197,19 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: 15, fontSize: 16 },
   container: { flex: 1 },
-  scrollView: { padding: 20, paddingBottom: 40 },
+  scrollView: { padding: 10, paddingBottom: 40 },
+  headlineContainer: {
+    marginTop: 20,
+    marginBottom: 20,
+    padding: 5,
+  },
+  headlineText: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    lineHeight: 34,
+    flexWrap: 'wrap',
+    textAlign: 'left',
+  },
   sectionContainer: {
     borderRadius: 10,
     padding: 15,
