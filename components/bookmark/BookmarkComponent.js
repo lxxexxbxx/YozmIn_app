@@ -15,7 +15,9 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import PageTitleComponent from '../common/PageTitleComponent'; // ← 기존 import 그대로 둠
+import PageTitleComponent from '../common/PageTitleComponent'; // 공통 상단바
+import { ThemeView, ThemeText } from "../common/ThemeComponents";
+import { useTheme } from "../settings/theme/ThemeContext";   // 🔹 추가
 import supabase from '../../supabase';
 import ImageUploader from '../../Images/ImageUploader';
 import { useUserStore } from '../../stores/UserStore';
@@ -23,6 +25,7 @@ import { useUserStore } from '../../stores/UserStore';
 const BookmarkComponent = () => {
   const navigation = useNavigation();
   const { user_id: currentUserId } = useUserStore();
+  const { colors } = useTheme(); // 🔹 추가
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -186,35 +189,14 @@ const BookmarkComponent = () => {
   );
 
   return (
-    <View style={styles.container}>
-      {/* 🔹 상단 헤더: 뒤로가기 + 로고 + 북마크 */}
-      <View style={styles.topHeader}>
-        <TouchableOpacity
-          style={styles.headerBackBtn}
-          onPress={() => {
-            if (navigation.canGoBack()) {
-              // 보통: 마이페이지에서 북마크로 왔으니까 한 칸 뒤로 가면 다시 마이페이지
-              navigation.goBack();
-            } else {
-              // 혹시 직접 북마크만 띄운 경우엔 탭 네비게이터로 보내기
-              navigation.navigate('TabNavigator');
-              // TabNavigator 안에서 마지막에 보던 탭(대부분 마이페이지)이 그대로 떠 있음
-            }
-          }}
-        >
-          <Ionicons name="chevron-back" size={22} color="#111" />
-        </TouchableOpacity>
-
-        <View style={styles.headerCenter}>
-          <Image
-            source={require('../../assets/main_logo.jpeg')}
-            style={styles.headerLogo}
-          />
-          <Text style={styles.headerTitleText}>북마크</Text>
-        </View>
-
-        <View style={styles.headerRightSpacer} />
-      </View>
+    <ThemeView
+      style={[
+        styles.container,
+        { backgroundColor: colors.background }, // 🔹 옷장과 비슷하게 테마 배경 적용
+      ]}
+    >
+      {/* 🔹 옷장처럼 공통 상단바만 사용 */}
+      <PageTitleComponent title={"북마크"} />
 
       {loading ? (
         <ActivityIndicator size="large" style={{ marginTop: 40 }} />
@@ -304,7 +286,7 @@ const BookmarkComponent = () => {
           </View>
         </View>
       </Modal>
-    </View>
+    </ThemeView>
   );
 };
 
@@ -316,7 +298,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F6F7FB',
   },
 
-  // ───── 헤더 스타일 (옷장/상점과 통일) ─────
+  // (topHeader, headerRightSpacer는 지금 안 써도 되지만 일단 유지)
   topHeader: {
     flexDirection: 'row',
     alignItems: 'center',
