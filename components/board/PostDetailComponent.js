@@ -30,6 +30,7 @@ import OptionWhiteIcon from '../../assets/Option_White.png';
 import SirenIcon from '../../assets/Siren.png';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
+
 const PostDetailComponent = ({ route, navigation }) => {
   const { postId } = route.params;
   const { colors, isDark } = useTheme();
@@ -1248,15 +1249,15 @@ const styles = StyleSheet.create({
     justifyContent: 'left',
   },
   headerLogo: {
-    width: 50,
-    height: 50,
+    width: 55,
+    height: 55,
     resizeMode: 'contain',
     marginRight: 8,
   },
   headerTitleText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
-    marginTop: 12,
+    marginTop: 14,
   },
   headerRightBtn: {
     paddingLeft: 8,
