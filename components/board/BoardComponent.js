@@ -335,7 +335,7 @@ const BoardComponent = () => {
       {/* 👇 입력창: 키보드 올라올 때 같이 움직이게 */}
       <KeyboardAvoidingView
         behavior="padding"
-        keyboardVerticalOffset={Platform.OS === 'ios' ? -10 : 0}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 85 : 85 }
       >
         <ThemeView
           style={[

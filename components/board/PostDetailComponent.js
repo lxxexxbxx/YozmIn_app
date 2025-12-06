@@ -597,7 +597,7 @@ const PostDetailComponent = ({ route, navigation }) => {
       <KeyboardAvoidingView
         style={{ flex: 1, backgroundColor: colors.background }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? -10 : 0}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? -35 : -35 }
       >
         <ThemeView style={[styles.container, { backgroundColor: colors.background }]}>
           {/* 게시글 옵션 Modal */}
@@ -1367,11 +1367,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: 12,
-    marginBottom: 10,
+    marginBottom: 40,
     borderWidth: 1,
     borderRadius: 20,
     paddingHorizontal: 10,
-    marginBottom : 40,
   },
   input: {
     flex: 1,
