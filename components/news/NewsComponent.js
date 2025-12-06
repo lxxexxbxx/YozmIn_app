@@ -104,10 +104,10 @@ const NewsComponent = ({ navigation }) => {
               {
                 backgroundColor:
                   selectedCategory === category.key
-                    ? colors.accent
+                    ? "rgba(118, 166, 255, 1)"
                     : isDark
-                      ? "#333"
-                      : "#E5E5EA",
+                      ? "#2A2A2A"
+                      : "rgba(118, 166, 255, 1)",
               },
             ]}
             onPress={() => handleCategoryChange(category.key)}
