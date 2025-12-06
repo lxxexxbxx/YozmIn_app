@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import PageTitleComponent from "../common/PageTitleComponent";
 import { useNavigation } from "@react-navigation/native";
 import supabase from "../../supabase";
 import { useUserStore } from "../../stores/UserStore";
@@ -300,35 +301,7 @@ const ShopComponent = () => {
 
   return (
     <ThemeView style={[styles.screen, { backgroundColor: colors.background }]}>
-      {/* 상단 공통 헤더: 뒤로가기 + 로고 + 상점 텍스트 */}
-      <ThemeView
-        style={[
-          styles.topHeader,
-          { backgroundColor: colors.background, borderBottomColor: colors.border },
-        ]}
-      >
-        <TouchableOpacity
-          style={styles.headerBackBtn}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.text} />
-        </TouchableOpacity>
-
-        <View style={styles.headerCenter}>
-          <Image
-            source={require("../../assets/main_logo.jpeg")}
-            style={styles.headerLogo}
-          />
-          <ThemeText
-            style={[styles.headerTitleText, { color: colors.text }]}
-          >
-            상점
-          </ThemeText>
-        </View>
-
-        {/* 오른쪽 공간 맞추기용 더미 뷰 */}
-        <View style={styles.headerRightSpacer} />
-      </ThemeView>
+        <PageTitleComponent title={"상점"}/>
 
       <ScrollView
         style={styles.contentScroll}
@@ -539,38 +512,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
 
   // ───── 상단 헤더 ─────
-  topHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    marginTop : 20,
-  },
-  headerBackBtn: {
-    paddingRight: 8,
-    paddingVertical: 4,
-  },
-  headerCenter: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "left",
-    justifyContent: "left",
-  },
-  headerLogo: {
-    width: 40,
-    height: 40,
-    resizeMode: "contain",
-    marginRight: 8,
-  },
-  headerTitleText: {
-    fontSize: 20,
-    fontWeight: "800",
-    marginTop : 6,
-  },
-  headerRightSpacer: {
-    width: 30,
-  },
 
   contentScroll: { flex: 1 },
   scrollContent: { padding: 16 },
