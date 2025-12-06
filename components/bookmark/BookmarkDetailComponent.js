@@ -14,10 +14,14 @@ import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import supabase from '../../supabase';
 import { useUserStore } from '../../stores/UserStore';
+import PageTitleComponent from '../common/PageTitleComponent';          // 🔹 추가
+import { ThemeView } from "../common/ThemeComponents";                 // 🔹 추가
+import { useTheme } from "../settings/theme/ThemeContext";             // 🔹 추가
 
 const BookmarkDetailComponent = ({ route, navigation }) => {
   const { folderNo: _folderNo, folderName: _folderName } = route.params || {};
   const { user_id: currentUserId } = useUserStore();
+  const { colors } = useTheme(); // 🔹 추가
 
   const [folderNo, setFolderNo] = useState(_folderNo || null);
   const [folderName, setFolderName] = useState(_folderName || '북마크');
@@ -186,34 +190,14 @@ const BookmarkDetailComponent = ({ route, navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
-      {/* 🔹 상단 헤더: 뒤로가기 + 로고 + 폴더 이름 */}
-      <View style={styles.topHeader}>
-        <TouchableOpacity
-          style={styles.headerBackBtn}
-          onPress={() => {
-            if (navigation.canGoBack()) {
-              // 보통: Bookmark → BookmarkDetail 이니까 뒤로가기 = 북마크 목록
-              navigation.goBack();
-            } else {
-              // 혹시 단독으로 띄운 경우
-              navigation.navigate('Bookmark');
-            }
-          }}
-        >
-          <Ionicons name="chevron-back" size={22} color="#111" />
-        </TouchableOpacity>
-
-        <View style={styles.headerCenter}>
-          <Image
-            source={require('../../assets/main_logo.jpeg')}
-            style={styles.headerLogo}
-          />
-          <Text style={styles.headerTitleText}>{folderName || '북마크'}</Text>
-        </View>
-
-        <View style={styles.headerRightSpacer} />
-      </View>
+    <ThemeView
+      style={[
+        styles.container,
+        { backgroundColor: colors.background }, // 🔹 테마 배경
+      ]}
+    >
+      {/* 🔹 옷장 페이지처럼 공통 상단바 사용 */}
+      <PageTitleComponent title={folderName || '북마크'} />
 
       {loading ? (
         <View style={styles.centerBox}>
@@ -233,7 +217,7 @@ const BookmarkDetailComponent = ({ route, navigation }) => {
           columnWrapperStyle={styles.columnWrapper}
         />
       )}
-    </View>
+    </ThemeView>
   );
 };
 
@@ -246,7 +230,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F6F7FB',
   },
 
-  // ───── 헤더 (북마크랑 통일) ─────
+  // 예전 상단 헤더 스타일 (현재는 PageTitleComponent 사용하므로 미사용)
   topHeader: {
     flexDirection: 'row',
     alignItems: 'center',

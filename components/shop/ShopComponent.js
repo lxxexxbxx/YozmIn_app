@@ -328,6 +328,7 @@ const ShopComponent = () => {
           </ThemeView>
 
           <ThemeView
+          
             style={[
               styles.characterCard,
               {

@@ -14,6 +14,7 @@ import { useUserStore } from "../../stores/UserStore";
 import QuestCard from "./QuestCard";
 import { ThemeView, ThemeText } from "../common/ThemeComponents";
 import { useTheme } from "../settings/theme/ThemeContext";
+import PageTitleComponent from "../common/PageTitleComponent"; // ✅ 공통 헤더 추가
 
 function kstDateStr(d = new Date()) {
   const utc = d.getTime() + d.getTimezoneOffset() * 60000;
@@ -218,40 +219,8 @@ export default function TodayQuestsScreen() {
 
   return (
     <ThemeView style={[s.screen, { backgroundColor: colors.background }]}>
-      {/* 🔹 상단 헤더: 뒤로가기 + 로고 + 오늘의 퀘스트 */}
-      <ThemeView
-        style={[
-          s.topHeader,
-          { backgroundColor: colors.background, borderBottomColor: colors.border },
-        ]}
-      >
-        <TouchableOpacity
-          style={s.headerBackBtn}
-          onPress={() => {
-            if (navigation.canGoBack()) {
-              navigation.goBack();
-            } else {
-              navigation.navigate("TabNavigator");
-            }
-          }}
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.text} />
-        </TouchableOpacity>
-
-        <ThemeView style={s.headerCenter}>
-          <Image
-            source={require("../../assets/main_logo.jpeg")}
-            style={s.headerLogo}
-          />
-          <ThemeText
-            style={[s.headerTitleText, { color: colors.text }]}
-          >
-            퀘스트
-          </ThemeText>
-        </ThemeView>
-
-        <ThemeView style={s.headerRightSpacer} />
-      </ThemeView>
+      {/* 🔹 공통 상단바 (옷장 / 북마크와 통일) */}
+      <PageTitleComponent title={"퀘스트"} />
 
       {/* 🔹 내용 영역 */}
       <ThemeView style={s.content}>
@@ -316,7 +285,7 @@ const s = StyleSheet.create({
     flex: 1,
   },
 
-  // 🔹 상단 헤더 (다른 페이지와 통일)
+  // 🔹 (예전 헤더 스타일 – 지금은 PageTitleComponent 사용, 남겨둠)
   topHeader: {
     flexDirection: "row",
     alignItems: "center",
