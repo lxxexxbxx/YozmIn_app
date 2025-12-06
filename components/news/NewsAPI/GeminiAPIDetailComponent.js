@@ -31,7 +31,7 @@ export const extractKeywordFromTitle = async (title) => {
         키워드 : 조직 개편, 인선 변화
         올바른 키워드 : 대통령실 조직 개편
         `
-        ;
+            ;
 
         const response = await axios.post(
             `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
@@ -80,7 +80,7 @@ export const reextractKeyword = async (title) => {
         키워드 : 조직 개편, 인선 변화
         올바른 키워드 : 대통령실 조직 개편
         `
-        ;
+            ;
 
         const response = await axios.post(
             `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
