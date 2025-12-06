@@ -11,7 +11,7 @@ const SettingsScreen = () => {
   return (
     <ThemeView style={styles.container}>
       {/* 헤더 */}
-      <PageTitleComponent title={"설정"} backToTab={"MyPage"} />
+      <PageTitleComponent title={"설정"} />
 
       {/* 설정 목록을 감싸는 박스 */}
       <ThemeView style={styles.settingsBox}>

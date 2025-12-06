@@ -1,5 +1,5 @@
 import React from "react";
-import {Platform, StyleSheet, TouchableOpacity} from "react-native";
+import {Platform, StyleSheet, TouchableOpacity, Image} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { ThemeView, ThemeText } from "./ThemeComponents";
@@ -16,6 +16,7 @@ const PageTitleComponent = ({ title, backToTab, backToStack }) => {
   };
 
   return (
+    <ThemeView style={{borderBottomWidth: 1,borderBottomColor: colors.border }}>
     <ThemeView style={styles.header}>
       <TouchableOpacity style={styles.arrow} onPress={back}>
         <Ionicons
@@ -24,10 +25,15 @@ const PageTitleComponent = ({ title, backToTab, backToStack }) => {
           color={colors.text}
         />
       </TouchableOpacity>
-      <ThemeText style={[styles.title, { color: colors.text, marginTop: Platform.OS === "ios" ? 10 : 3 }]}>
+      <Image source={
+        require("../../assets/Yozmin_Logo_v0.1.png")
+        } style={{width: 50, height: 50, resizeMode: "contain",marginLeft : 10}}
+      />
+      <ThemeText style={[styles.title, { color: colors.text, marginTop: Platform.OS === "ios" ? 14 : 7 }]}>
         {title}
       </ThemeText>
       <ThemeView style={styles.arrow} />
+    </ThemeView>
     </ThemeView>
   );
 };
@@ -36,12 +42,13 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 40,
-    marginLeft: 20,
+    marginTop: 45,
+    marginLeft: 15,
     marginRight: 20,
+    marginBottom : 10,
   },
   arrow: {
-    marginTop: 8,
+    marginTop: 13,
     width: 20,
   },
   title: {
@@ -49,8 +56,8 @@ const styles = StyleSheet.create({
     textAlign: "left",
     fontSize: 25,
     fontWeight: "bold",
-    marginBottom: 20,
-    marginLeft: 20,
+    marginBottom: 10,
+    marginLeft: 8,
   },
 });
 

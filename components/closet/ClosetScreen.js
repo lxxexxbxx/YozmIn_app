@@ -16,6 +16,7 @@ import { useUserStore } from "../../stores/UserStore";
 import { pushQuest } from "../quest/Quests"; // 그대로 둠
 import { ThemeView, ThemeText } from "../common/ThemeComponents";
 import { useTheme } from "../settings/theme/ThemeContext";
+import PageTitleComponent from "../common/PageTitleComponent";
 
 const CELL_SIZE = 70;
 const STAGE_W = 260;
@@ -246,37 +247,9 @@ export default function ClosetScreen() {
   };
 
   return (
-    <ThemeView style={[styles.screen, { backgroundColor: colors.background }]}>
-
-      {/* 🔹 상단 헤더: 뒤로가기 + 로고 + 옷장 */}
-      <ThemeView
-        style={[
-          styles.topHeader,
-          { backgroundColor: colors.background, borderBottomColor: colors.border },
-        ]}
-      >
-        <TouchableOpacity
-          style={styles.headerBackBtn}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.text} />
-        </TouchableOpacity>
-
-        <View style={styles.headerCenter}>
-          <Image
-            source={require("../../assets/main_logo.jpeg")}
-            style={styles.headerLogo}
-          />
-          <ThemeText
-            style={[styles.headerTitleText, { color: colors.text }]}
-          >
-            옷장
-          </ThemeText>
-        </View>
-
-        <View style={styles.headerRightSpacer} />
-      </ThemeView>
-
+      <ThemeView style={[styles.screen, { backgroundColor: colors.background }]}>
+        <PageTitleComponent title={"옷장"}/>
+      
       <ScrollView
         style={styles.contentScroll}
         contentContainerStyle={[
@@ -455,49 +428,9 @@ export default function ClosetScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
 
-  // 🔹 상단 헤더 공통 (상점과 동일 느낌)
-  topHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    marginTop: 20,
-  },
-  headerBackBtn: {
-    paddingRight: 8,
-    paddingVertical: 4,
-  },
-  headerCenter: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "left",
-    justifyContent: "left",
-  },
-  headerLogo: {
-    width: 40,
-    height: 40,
-    resizeMode: "contain",
-    marginRight: 8,
-  },
-  headerTitleText: {
-    fontSize: 20,
-    fontWeight: "800",
-    marginTop: 6,
-  },
-  headerRightSpacer: {
-    width: 30,
-  },
-
   contentScroll: { flex: 1 },
   scrollContent: { padding: 16 },
 
-  leftPanel: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 8,
-    marginTop: 12, // 헤더 생겼으니 여백 줄임
-  },
   leftPanelWide: { flex: 1, minHeight: 360, marginRight: 8 },
   leftPanelNarrow: { width: "100%" },
 
