@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     button: { backgroundColor: "rgba(118, 166, 255, 1)", paddingVertical: 8, borderRadius: 8, alignItems: "center" },
     buttonText: { color: "#fff", fontWeight: "600" },
     emptyText: { textAlign: "center", marginTop: 40, color: "#888" },
-    filterBar: { justifyContent: "center", paddingHorizontal: 12, backgroundColor: "transparent", zIndex: 4000, elevation: 4000 },
+    filterBar: { justifyContent: "center", paddingHorizontal: 12, backgroundColor: "transparent", zIndex: 4000, elevation: 4000, marginBottom: 10 },
     filterRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 4, gap: 8 },
     dropdownOuter: { flex: 1 },
     dropdown: { borderRadius: 10, borderWidth: 1, borderColor: "#ddd", minHeight: 40, backgroundColor: "rgba(255,255,255,0.95)" },
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
         height: SCREEN_HEIGHT, // 전체 높이 사용
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
-        paddingTop: Platform.OS === 'ios' ? 40 : 10, // ⚡ 아이폰 노치 회피를 위한 상단 패딩
+        paddingTop: Platform.OS === 'ios' ? 20 : 10, // ⚡ 아이폰 노치 회피를 위한 상단 패딩
         overflow: 'hidden',
         // 그림자
         shadowColor: "#000",
@@ -383,17 +383,18 @@ const styles = StyleSheet.create({
         elevation: 10,
     },
     dragHandleArea: {
-        width: '100%',
-        height: 50, // 터치 영역 높이
+        width: '200%',
+        height: 20, // 터치 영역 높이
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: 'transparent',
     },
     dragIndicator: {
-        width: 60,
-        height: 5,
+        width: "10%",
+        height: 7,
+        marginRight: width * 0.99,
         borderRadius: 2.5,
-        backgroundColor: '#ccc',
+        backgroundColor: "gray",
     },
     sheetContent: {
         flex: 1,

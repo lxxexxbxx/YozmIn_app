@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import {TouchableOpacity, StyleSheet, Text, Alert} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import PageTitleComponent from '../common/PageTitleComponent';
 import { ThemeView, ThemeText } from '../common/ThemeComponents';
@@ -7,6 +7,26 @@ import { useTheme } from '../settings/theme/ThemeContext';
 
 const SettingsScreen = () => {
   const navigation = useNavigation();
+
+  const logout = () => {
+    Alert.alert(
+        "로그아웃", // Title of the alert
+        "로그아웃 하시겠습니까?", // Message of the alert
+        [
+          {
+            text: "취소",
+            onPress: () => {},
+            style: 'cancel', // 'cancel' style typically positions the button on the left (iOS) or as a negative action (Android)
+          },
+          {
+            text: "로그아웃",
+            onPress: () => navigation.navigate("Login"),
+            style: 'destructive', // 'destructive' style typically highlights the button in red (iOS) or as a primary destructive action (Android)
+          },
+        ],
+        { cancelable: false } // Prevents dismissal by tapping outside the alert
+    );
+  }
 
   return (
     <ThemeView style={styles.container}>
@@ -21,6 +41,10 @@ const SettingsScreen = () => {
         <ThemeView style={styles.separator} />
         <TouchableOpacity style={styles.settingItem} onPress={() => navigation.navigate('Notification')}>
           <ThemeText style={styles.settingText}>알림</ThemeText>
+        </TouchableOpacity>
+        <ThemeView style={styles.separator} />
+        <TouchableOpacity style={styles.settingItem} onPress={() => logout()}>
+          <Text style={{color: "red", textColor: "red"}}>로그아웃</Text>
         </TouchableOpacity>
       </ThemeView>
     </ThemeView>

@@ -101,52 +101,54 @@ const SelectCategoryForm = () => {
     }
 
     return (
-            <ScrollView>
-                <ThemeView style={{}}>
-                    {/* 헤더 */}
-                    <PageTitleComponent title={"관심사"}/>
-                    <ThemeView style={{padding: 20}}>
-                        {/* 제목 */}
-                        <ThemeText style={{font: 20, alignSelf: "center"}}>관심사를 골라볼까요?</ThemeText>
-                        <ThemeText style={{font: 20, alignSelf: "center"}}>관심사에 맞게 콘텐츠를 추천해드릴게요!</ThemeText>
-                        <ThemeText style={[styles.count, {font: 20, alignSelf: "center"}]}>{selected.length} / 10개</ThemeText>
+           <ThemeView>
+               <ScrollView>
+                   <ThemeView>
+                       {/* 헤더 */}
+                       <PageTitleComponent title={"관심사"}/>
+                       <ThemeView style={{padding: 20}}>
+                           {/* 제목 */}
+                           <ThemeText style={{font: 20, alignSelf: "center"}}>관심사를 골라볼까요?</ThemeText>
+                           <ThemeText style={{font: 20, alignSelf: "center"}}>관심사에 맞게 콘텐츠를 추천해드릴게요!</ThemeText>
+                           <ThemeText style={[styles.count, {font: 20, alignSelf: "center"}]}>{selected.length} / 10개</ThemeText>
 
-                        {/* 카테고리 별 태그 */}
-                        {Object.entries(INTERESTS).map(([category, items]) => (
-                            <ThemeView key={category} style={styles.section}>
-                                <ThemeText style={styles.sectionTitle}>{category}</ThemeText>
-                                <ThemeView style={styles.tagContainer}>
-                                    {items.map((item) => {
-                                        const isSelected = selected.includes(item.id);
-                                        return (
-                                            <TouchableOpacity
-                                                key={item.id}
-                                                style={[styles.tag, isSelected && styles.selectedTag]}
-                                                onPress={() => toggleInterest(item.id)}
-                                            >
-                                                <ThemeText style={[styles.tagText, isSelected && styles.selectedTagText]}>
-                                                    {item.label}
-                                                </ThemeText>
-                                            </TouchableOpacity>
-                                        );
-                                    })}
-                                </ThemeView>
-                            </ThemeView>
-                        ))}
-                        <ThemeView style={{alignSelf: "center"}}>
-                            <TouchableOpacity onPress={() => {
-                                handleNext()
-                            }}>
-                                <View style={styles.btnContainer}>
-                                    <Text style={styles.btn}>
-                                        {"다음"}
-                                    </Text>
-                                </View>
-                            </TouchableOpacity>
-                        </ThemeView>
-                    </ThemeView>
-                </ThemeView>
-            </ScrollView>
+                           {/* 카테고리 별 태그 */}
+                           {Object.entries(INTERESTS).map(([category, items]) => (
+                               <ThemeView key={category} style={styles.section}>
+                                   <ThemeText style={styles.sectionTitle}>{category}</ThemeText>
+                                   <ThemeView style={styles.tagContainer}>
+                                       {items.map((item) => {
+                                           const isSelected = selected.includes(item.id);
+                                           return (
+                                               <TouchableOpacity
+                                                   key={item.id}
+                                                   style={[styles.tag, isSelected && styles.selectedTag]}
+                                                   onPress={() => toggleInterest(item.id)}
+                                               >
+                                                   <ThemeText style={[styles.tagText, isSelected && styles.selectedTagText]}>
+                                                       {item.label}
+                                                   </ThemeText>
+                                               </TouchableOpacity>
+                                           );
+                                       })}
+                                   </ThemeView>
+                               </ThemeView>
+                           ))}
+                           <ThemeView style={{alignSelf: "center"}}>
+                               <TouchableOpacity onPress={() => {
+                                   handleNext()
+                               }}>
+                                   <View style={styles.btnContainer}>
+                                       <Text style={styles.btn}>
+                                           {"다음"}
+                                       </Text>
+                                   </View>
+                               </TouchableOpacity>
+                           </ThemeView>
+                       </ThemeView>
+                   </ThemeView>
+               </ScrollView>
+           </ThemeView>
     );
 }
 
@@ -191,7 +193,7 @@ const styles = StyleSheet.create({
     },
     tag: {
         borderWidth: 1,
-        borderColor: '#ccc',
+        borderColor: "rgba(118, 166, 255, 1)",
         borderRadius: 30,
         paddingHorizontal: 14,
         paddingVertical: 6,
@@ -200,14 +202,13 @@ const styles = StyleSheet.create({
     },
     tagText: {
         fontSize: 14,
-        color: '#555',
     },
     selectedTag: {
-        borderColor: 'red',
-        backgroundColor: '#ffe6e6',
+        borderColor: "rgba(118, 166, 255, 1)",
+        backgroundColor: 'rgba(118, 166, 255, 1)',
     },
     selectedTagText: {
-        color: 'red',
+        color: "rgba(118, 166, 255, 1)",
     },
     btnContainer: {
         marginTop: height * 0.1,
