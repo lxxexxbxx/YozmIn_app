@@ -98,13 +98,13 @@ export default function MovieDetailComponent({ route }) {
 
   return (
     <ThemeView style={[styles.container, { backgroundColor: colors.background }]}>
-      <PageTitleComponent darkMode={colors.background !== "#FFFFFF"} />
+      <PageTitleComponent title={"상세정보"} darkMode={colors.background !== "#FFFFFF"} />
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <ThemeText style={[styles.title, { color: colors.text }]}>
           {detail.title || detail.name}
         </ThemeText>
-        {/* ✅ 영상 또는 포스터 */}
+        {/* 영상 또는 포스터 */}
         {videoKey ? (
           <View style={{ width: "100%", height: 230, marginBottom: 16 }}>
             <YoutubePlayer
@@ -132,9 +132,9 @@ export default function MovieDetailComponent({ route }) {
 
         <ThemeText style={{flex: 1, height: 1, backgroundColor: colors.text, marginBottom: 30}}>-</ThemeText>
 
-        {/* ✅ 영화 정보 */}
+        {/* 영화 정보 */}
         <ThemeText style={[styles.ratingText, { color: colors.text }]}>
-          평점: {renderStars(detail.vote_average)} {detail.vote_average}점
+          평점: {renderStars(detail.vote_average.toFixed(1))} {detail.vote_average.toFixed(1)}점
         </ThemeText>
         <ThemeText style={[styles.overview, { color: colors.text }]}>
           {detail.genres[0] ? detail.genres[0].name : ""}

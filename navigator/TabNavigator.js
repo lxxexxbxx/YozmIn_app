@@ -45,7 +45,7 @@ const TabNavigator = () => {
                                         require("../assets/Yozmin_Logo_v0.1.png")
                                     } style={{width: 60, height: 60, resizeMode: "contain", marginLeft: 15}}
                                     />
-                                    <ThemeText style={{fontSize: 20, fontWeight: "bold", marginLeft: 5}}>{"요즘사람"}</ThemeText>
+                                    <ThemeText style={{fontSize: 20, fontWeight: "bold", marginLeft: 5}}>{"요즈미채팅"}</ThemeText>
                                 </>
                             ),
                             headerStyle: {backgroundColor: colors.background},

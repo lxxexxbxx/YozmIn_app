@@ -47,7 +47,7 @@ export default function MovieListComponent({ category }) {
       },
     });
 
-    // 🔞 금칙어 필터링
+    // 금칙어 필터링
     const bannedKeywords = ["19", "야한", "에로", "노출", "새엄마", "가슴", "무삭제", "무삭제판", "동창회", "섹스"];
 
     const filteredResults = response.data.results.filter((movie) => {
@@ -77,7 +77,6 @@ export default function MovieListComponent({ category }) {
         source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
         style={styles.poster}
       />
-      {/* ✅ 텍스트 색상은 테마 자동 반응 */}
       <ThemeText style={[styles.title, { color: colors.text }]}>
         {item.title || item.name}
       </ThemeText>
