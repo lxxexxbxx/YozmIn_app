@@ -130,7 +130,7 @@ const ChatBotComponent = () => {
 
       <KeyboardAvoidingView style={styles.Container}
         behavior="padding"
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 90}
+        keyboardVerticalOffset={100}
       >
         {/* 입력 영역 */}
         <ThemeView
@@ -149,8 +149,7 @@ const ChatBotComponent = () => {
               styles.input,
               {
                 color: colors.text,
-                backgroundColor: isDark ? "#1E1E1E" : "#F9F9F9",
-                borderColor: colors.border,
+                backgroundColor: isDark ? '#1E1E1E' : '#F0F0F0',
               },
             ]}
             value={input}
@@ -198,12 +197,12 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
+    marginLeft: 8,
     marginRight: 8,
-    minHeight: 40,
-    maxHeight: 100,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    fontSize: 16,
   },
   bubbleContainer: {
     maxWidth: "75%",
