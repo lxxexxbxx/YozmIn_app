@@ -1,5 +1,5 @@
 // HotPlaceScreen.js
-import React, {useEffect, useMemo, useRef, useState, useCallback} from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
     StyleSheet,
     TouchableOpacity,
@@ -7,28 +7,25 @@ import {
     ActivityIndicator,
     Alert,
 } from "react-native";
-import BottomSheet, {BottomSheetFlatList} from "@gorhom/bottom-sheet";
-import {WebView} from "react-native-webview";
+import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
+import { WebView } from "react-native-webview";
 import * as Location from "expo-location";
 import axios from "axios";
-import {useKeyStore} from "../../../stores/KeyStore";
-import {ThemeView, ThemeText} from "../../common/ThemeComponents";
-import {useTheme} from "../../settings/theme/ThemeContext";
+import { useKeyStore } from "../../../stores/KeyStore";
+import { ThemeView, ThemeText } from "../../common/ThemeComponents";
+import { useTheme } from "../../settings/theme/ThemeContext";
 
-/** 기본 설정 */
 const SEARCH_RADIUS_M = 3000;
 const TARGET_AGE_VECTOR = [0.05, 0.45, 0.35, 0.1, 0.05];
 const EPS = 1e-9;
 
-/** 유틸 함수 */
+/** 유틸 함수들 */
 function congestionScore(c) {
     return c === "여유" ? +0.1 : c === "붐빔" ? -0.15 : 0;
 }
-
 function distanceDecay(km, lambda = 0.35) {
     return Math.exp(-lambda * (km || 0));
 }
-
 function cosineSim(u, v) {
     if (!u?.length || !v?.length || u.length !== v.length) return 0;
     let dot = 0, nu = 0, nv = 0;
@@ -40,25 +37,20 @@ function cosineSim(u, v) {
     }
     return dot / (Math.sqrt(nu) * Math.sqrt(nv) + EPS);
 }
-
 function congestionColor(c) {
     return c === "여유" ? "#1db954" : c === "붐빔" ? "#e53935" : "#f5a623";
 }
-
 function scoreColor(score) {
     if (score >= 80) return "#1db954";
     if (score < 50) return "#e53935";
     return "#f5a623";
 }
-
-/** 가중치 설정 */
 const WEIGHTS = {
-    cafe: {wR: 0.3, wQ: 0.25, wP: 0.1, wT: 0.1, wD: 0.1, wA: 0.1, wC: 0.05, alpha: 0.5},
-    food: {wR: 0.3, wQ: 0.25, wP: 0.1, wT: 0.1, wD: 0.1, wA: 0.1, wC: 0.05, alpha: 0.5},
-    tour: {wR: 0.1, wQ: 0.1, wP: 0.3, wT: 0.2, wD: 0.15, wA: 0.1, wC: 0.05, alpha: 0.4},
+    cafe: { wR: 0.3, wQ: 0.25, wP: 0.1, wT: 0.1, wD: 0.1, wA: 0.1, wC: 0.05, alpha: 0.5 },
+    food: { wR: 0.3, wQ: 0.25, wP: 0.1, wT: 0.1, wD: 0.1, wA: 0.1, wC: 0.05, alpha: 0.5 },
+    tour: { wR: 0.1, wQ: 0.1, wP: 0.3, wT: 0.2, wD: 0.15, wA: 0.1, wC: 0.05, alpha: 0.4 },
 };
 
-/** 카카오 검색 */
 async function kakaoSearchKeyword(category, userLocation) {
     const KAKAO_REST_API_KEY = useKeyStore.getState().KAKAO_REST_API_KEY;
     const keyword = category === "cafe" ? "카페" : category === "food" ? "맛집" : "관광명소";
@@ -71,8 +63,8 @@ async function kakaoSearchKeyword(category, userLocation) {
         size: 15,
         sort: "accuracy",
     };
-    const headers = {Authorization: `KakaoAK ${KAKAO_REST_API_KEY}`};
-    const {data} = await axios.get(url, {params, headers});
+    const headers = { Authorization: `KakaoAK ${KAKAO_REST_API_KEY}` };
+    const { data } = await axios.get(url, { params, headers });
     return (data.documents || []).map((d) => ({
         id: d.id,
         name: d.place_name,
@@ -84,11 +76,9 @@ async function kakaoSearchKeyword(category, userLocation) {
     }));
 }
 
-/** 네이버 트렌드 API */
 async function naverTrendEnrich(places) {
     const NAVER_CLIENT_ID = useKeyStore.getState().NAVER_CLIENT_ID;
     const NAVER_CLIENT_SECRET = useKeyStore.getState().NAVER_CLIENT_SECRET;
-
     if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) return places;
     try {
         const headers = {
@@ -101,9 +91,9 @@ async function naverTrendEnrich(places) {
             startDate: "2025-09-01",
             endDate: "2025-09-21",
             timeUnit: "date",
-            keywordGroups: places.slice(0, 5).map((p) => ({groupName: p.name, keywords: [p.name]})),
+            keywordGroups: places.slice(0, 5).map((p) => ({ groupName: p.name, keywords: [p.name] })),
         };
-        const resAll = await axios.post(url, {...bodyBase}, {headers});
+        const resAll = await axios.post(url, { ...bodyBase }, { headers });
         const trendMap = {};
         (resAll.data?.results || []).forEach((r) => {
             const last = r.data?.[r.data.length - 1]?.ratio ?? 50;
@@ -113,7 +103,7 @@ async function naverTrendEnrich(places) {
             ...p,
             trend: trendMap[p.name] ?? 50,
             ageVector: TARGET_AGE_VECTOR,
-            gender: {male: 0.5, female: 0.5},
+            gender: { male: 0.5, female: 0.5 },
             congestion: ["여유", "보통", "붐빔"][Math.floor(Math.random() * 3)],
         }));
     } catch (e) {
@@ -122,7 +112,6 @@ async function naverTrendEnrich(places) {
     }
 }
 
-/** 점수 계산 */
 function calcScore(p, category, includeCongestion) {
     const W = WEIGHTS[category];
     const Rn = Math.log(1 + (p.reviews ?? 0)) / Math.log(1 + 5000);
@@ -145,10 +134,9 @@ function calcScore(p, category, includeCongestion) {
     return Math.min(100, Math.max(0, base * G * (1 + W.alpha * Cn) * O * 100));
 }
 
-/** 메인 컴포넌트 */
 export default function HotPlaceScreen() {
     const KAKAO_JS_KEY = useKeyStore.getState().KAKAO_JS_KEY;
-    const {colors, isDark} = useTheme(); // ✅ isDark 추가
+    const { colors, isDark } = useTheme();
 
     const [category, setCategory] = useState("tour");
     const [includeCongestion, setIncludeCongestion] = useState(true);
@@ -160,20 +148,41 @@ export default function HotPlaceScreen() {
     const snapPoints = useMemo(() => ["25%", "60%", "90%"], []);
     const sheetRef = useRef(null);
 
-    /** 현재 위치 가져오기 */
-    useEffect(() => {
-        (async () => {
-            let {status} = await Location.requestForegroundPermissionsAsync();
+    const refreshLocation = useCallback(async () => {
+        try {
+            setLoading(true);
+            let { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== "granted") {
                 Alert.alert("위치 권한 필요", "앱 설정에서 위치 권한을 허용해주세요.");
+                setLoading(false);
                 return;
             }
-            const loc = await Location.getCurrentPositionAsync({});
-            setUserLocation({lat: loc.coords.latitude, lng: loc.coords.longitude});
-        })();
+            const loc = await Location.getCurrentPositionAsync({
+                accuracy: Location.Accuracy.Balanced,
+            });
+            setUserLocation({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+        } catch (e) {
+            console.error(e);
+            Alert.alert("오류", "위치를 가져오지 못했습니다.");
+            setLoading(false);
+        }
     }, []);
 
-    /** 데이터 로드 */
+    const handleWebViewMessage = (event) => {
+        try {
+            const data = JSON.parse(event.nativeEvent.data);
+            if (data.type === 'REFRESH_LOCATION') {
+                refreshLocation();
+            }
+        } catch (e) {
+            console.warn("WebView message parse error", e);
+        }
+    };
+
+    useEffect(() => {
+        refreshLocation();
+    }, [refreshLocation]);
+
     useEffect(() => {
         if (!userLocation) return;
         (async () => {
@@ -209,10 +218,12 @@ export default function HotPlaceScreen() {
         })();
     }, [category, includeCongestion, openOnly, userLocation]);
 
-    /** 헤더 (카테고리/필터) */
     const renderHeader = useCallback(
         () => (
             <ThemeView>
+                <ThemeView style={{ marginTop: 8, marginBottom: 8 }}>
+                    <ThemeText style={{ fontSize: 18, fontWeight: 'bold' }}>내 주변 핫플레이스</ThemeText>
+                </ThemeView>
                 <ThemeView style={styles.tabs}>
                     {["tour", "cafe", "food"].map((cat) => (
                         <TouchableOpacity
@@ -222,16 +233,12 @@ export default function HotPlaceScreen() {
                                 {
                                     backgroundColor:
                                         category === cat
-                                            ? isDark
-                                                ? "#FFFFFF22"
-                                                : "#00000015"
+                                            ? isDark ? "#FFFFFF22" : "#00000015"
                                             : colors.boxBackground,
                                     borderWidth: 1,
                                     borderColor:
                                         category === cat
-                                            ? isDark
-                                                ? "#AAAAAA"
-                                                : "#333333"
+                                            ? isDark ? "#AAAAAA" : "#333333"
                                             : colors.border,
                                 },
                             ]}
@@ -239,8 +246,7 @@ export default function HotPlaceScreen() {
                         >
                             <ThemeText
                                 style={{
-                                    color:
-                                        category === cat ? colors.text : colors.subText,
+                                    color: category === cat ? colors.text : colors.subText,
                                     fontWeight: "600",
                                 }}
                             >
@@ -249,30 +255,28 @@ export default function HotPlaceScreen() {
                         </TouchableOpacity>
                     ))}
                 </ThemeView>
-
                 <ThemeView style={styles.switchRow}>
                     <ThemeText>혼잡도 고려</ThemeText>
-                    <Switch value={includeCongestion} onValueChange={setIncludeCongestion}/>
+                    <Switch value={includeCongestion} onValueChange={setIncludeCongestion} />
                     <ThemeText>영업중만</ThemeText>
-                    <Switch value={openOnly} onValueChange={setOpenOnly}/>
+                    <Switch value={openOnly} onValueChange={setOpenOnly} />
                 </ThemeView>
             </ThemeView>
         ),
         [category, includeCongestion, openOnly, colors, isDark]
     );
 
-    /** 아이템 렌더 */
     const renderItem = useCallback(
-        ({item}) => (
+        ({ item }) => (
             <ThemeView
                 style={[
                     styles.card,
-                    {backgroundColor: colors.background, borderColor: colors.border},
+                    { backgroundColor: colors.background, borderColor: colors.border },
                 ]}
             >
-                <ThemeView style={{flexDirection: "row", justifyContent: "space-between", alignItems: "center"}}>
+                <ThemeView style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                     <ThemeText style={styles.cardTitle}>{item.name}</ThemeText>
-                    <ThemeView style={[styles.badge, {backgroundColor: congestionColor(item.congestion)}]}>
+                    <ThemeView style={[styles.badge, { backgroundColor: congestionColor(item.congestion) }]}>
                         <ThemeText style={styles.badgeText}>{item.congestion ?? "-"}</ThemeText>
                     </ThemeView>
                 </ThemeView>
@@ -281,7 +285,7 @@ export default function HotPlaceScreen() {
                 <ThemeText style={styles.meta}>
                     거리: {item.distanceKm?.toFixed?.(1) ?? item.distanceKm ?? "-"} km
                 </ThemeText>
-                <ThemeText style={[styles.score, {color: scoreColor(item.score ?? 0)}]}>
+                <ThemeText style={[styles.score, { color: scoreColor(item.score ?? 0) }]}>
                     추천점수: {item.score?.toFixed(1)}점 / 100점
                 </ThemeText>
             </ThemeView>
@@ -289,79 +293,165 @@ export default function HotPlaceScreen() {
         [colors]
     );
 
-    /** 지도 HTML */
     const mapHtml = `
     <!DOCTYPE html><html><head>
       <meta charset="utf-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JS_KEY}&libraries=services"></script>
-      <style>html,body,#map{height:100%;margin:0;padding:0;}</style>
+      <style>
+        html, body, #map { height: 100%; margin: 0; padding: 0; }
+        .my-loc-label { 
+            padding: 4px 8px; 
+            background-color: #333; 
+            color: #fff; 
+            border-radius: 4px; 
+            font-size: 11px; 
+            font-weight: bold;
+            white-space: nowrap;
+            transform: translateY(-50px);
+        }
+        /* 버튼 스타일 */
+        .custom-control {
+            position: absolute;
+            bottom: 28%; /* 1/4 지점보다 살짝 위 */
+            right: 20px;
+            z-index: 9999;
+            background: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 1px solid #ddd;
+        }
+        .custom-control:active {
+            background: #f0f0f0;
+        }
+      </style>
     </head><body>
       <div id="map"></div>
+      
+      <div class="custom-control" onclick="reqLocation()">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"></circle>
+            <line x1="12" y1="2" x2="12" y2="4"></line>
+            <line x1="12" y1="20" x2="12" y2="22"></line>
+            <line x1="2" y1="12" x2="4" y2="12"></line>
+            <line x1="20" y1="12" x2="22" y2="12"></line>
+            <circle cx="12" cy="12" r="3" fill="#333" stroke="none"></circle>
+        </svg>
+      </div>
+
       <script>
-        const map = new kakao.maps.Map(document.getElementById("map"), {
-          center:new kakao.maps.LatLng(${userLocation?.lat}, ${userLocation?.lng}), level:5
-        });
+        const container = document.getElementById("map");
+        const options = {
+            center: new kakao.maps.LatLng(${userLocation?.lat ?? 37.5665}, ${userLocation?.lng ?? 126.9780}),
+            level: 5
+        };
+        const map = new kakao.maps.Map(container, options);
+
+        function reqLocation() {
+            if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'REFRESH_LOCATION' }));
+            }
+        }
+
+        const userLat = ${userLocation?.lat ?? 0};
+        const userLng = ${userLocation?.lng ?? 0};
+        
+        if (userLat !== 0 && userLng !== 0) {
+            const userPos = new kakao.maps.LatLng(userLat, userLng);
+            const imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png"; 
+            const imageSize = new kakao.maps.Size(24, 35); 
+            const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize); 
+            
+            new kakao.maps.Marker({
+                position: userPos,
+                map: map,
+                image: markerImage,
+                zIndex: 9999 
+            });
+
+            new kakao.maps.CustomOverlay({
+                position: userPos,
+                content: '<div class="my-loc-label">내 위치</div>',
+                map: map
+            });
+        }
+
         const places = ${JSON.stringify(places)};
         const bounds = new kakao.maps.LatLngBounds();
+
+        if (userLat !== 0 && userLng !== 0) {
+            bounds.extend(new kakao.maps.LatLng(userLat, userLng));
+        }
+
         places.forEach(function(p){
           const pos = new kakao.maps.LatLng(p.lat, p.lng);
           bounds.extend(pos);
           const marker = new kakao.maps.Marker({ position: pos, map: map });
+          
           const content =
-            '<div style="padding:6px 8px;font-size:12px;line-height:1.4;">'
+            '<div style="padding:6px 8px;font-size:12px;line-height:1.4; color:#000;">'
             + '<b>' + (p.name||'') + '</b><br/>'
             + '⭐' + (p.rating||'-') + ' · 리뷰 ' + (p.reviews||'-') + '<br/>'
-            + '혼잡도 ' + (p.congestion||'-') + ' · 점수 ' + (p.score? p.score.toFixed(1) : '-') + '점/100<br/>'
-            + '<a href="https://map.kakao.com/link/to/'+encodeURIComponent(p.name)+','+p.lat+','+p.lng+'" target="_blank">길찾기</a>'
+            + '혼잡도 ' + (p.congestion||'-') + ' · 점수 ' + (p.score? p.score.toFixed(1) : '-') + '점<br/>'
+            + '<a href="https://map.kakao.com/link/to/'+encodeURIComponent(p.name)+','+p.lat+','+p.lng+'" target="_blank" style="color:blue;">길찾기</a>'
             + '</div>';
+            
           const iw = new kakao.maps.InfoWindow({ content: content });
           kakao.maps.event.addListener(marker, 'click', function(){ iw.open(map, marker); });
         });
-        if (places.length) map.setBounds(bounds);
+
+        if (places.length > 0) {
+            map.setBounds(bounds);
+        }
       </script>
     </body></html>
   `;
 
     return (
-        <ThemeView style={[styles.container, {backgroundColor: colors.background}]}>
-            <WebView originWhitelist={["*"]} source={{html: mapHtml}} style={StyleSheet.absoluteFillObject}/>
+        <ThemeView style={[styles.container, { backgroundColor: colors.background }]}>
+            <WebView
+                originWhitelist={["*"]}
+                source={{ html: mapHtml }}
+                style={StyleSheet.absoluteFillObject}
+                onMessage={handleWebViewMessage}
+            />
             {loading && (
                 <ThemeView style={styles.centered}>
-                    <ActivityIndicator size="large" color={colors.text}/>
-                    <ThemeText style={{marginTop: 8}}>추천 계산 중…</ThemeText>
+                    <ActivityIndicator size="large" color={colors.text} />
+                    <ThemeText style={{ marginTop: 8 }}>추천 계산 중…</ThemeText>
                 </ThemeView>
             )}
             <BottomSheet
                 ref={sheetRef}
                 index={0}
                 snapPoints={snapPoints}
-                backgroundStyle={{
-                    backgroundColor: colors.boxBackground,   // 🔥 하단시트 배경색
-                }}
-                handleIndicatorStyle={{
-                    backgroundColor: colors.subText,        // 🔥 위로 당기는 손잡이 색상
-                }}
+                backgroundStyle={{ backgroundColor: colors.boxBackground }}
+                handleIndicatorStyle={{ backgroundColor: colors.subText }}
             >
                 <BottomSheetFlatList
-                    style={{backgroundColor: colors.background}}
+                    style={{ backgroundColor: colors.background }}
                     data={places}
-                    keyExtractor={(item) => item.id}
+                    keyExtractor={(item) => String(item.id)}
                     ListHeaderComponent={renderHeader}
-                    contentContainerStyle={{paddingHorizontal: 12, paddingBottom: 32}}
+                    contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 32 }}
                     renderItem={renderItem}
                     showsVerticalScrollIndicator
                 />
             </BottomSheet>
-
         </ThemeView>
     );
 }
 
-/** 스타일 */
 const styles = StyleSheet.create({
-    container: {flex: 1},
-    tabs: {flexDirection: "row", gap: 8, marginVertical: 8},
-    tab: {paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16},
+    container: { flex: 1 },
+    tabs: { flexDirection: "row", gap: 8, marginVertical: 8 },
+    tab: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16 },
     switchRow: {
         flexDirection: "row",
         alignItems: "center",
@@ -374,14 +464,15 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         borderWidth: StyleSheet.hairlineWidth,
     },
-    cardTitle: {fontSize: 16, fontWeight: "700"},
-    meta: {marginTop: 4},
-    score: {marginTop: 6, fontWeight: "700", fontSize: 15},
-    badge: {paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999},
-    badgeText: {fontWeight: "700"},
+    cardTitle: { fontSize: 16, fontWeight: "700" },
+    meta: { marginTop: 4 },
+    score: { marginTop: 6, fontWeight: "700", fontSize: 15 },
+    badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
+    badgeText: { fontWeight: "700" },
     centered: {
         ...StyleSheet.absoluteFillObject,
         alignItems: "center",
         justifyContent: "center",
+        backgroundColor: 'rgba(0,0,0,0.3)'
     },
 });
