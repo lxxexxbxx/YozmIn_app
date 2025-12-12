@@ -127,10 +127,7 @@ export default function TrendNavigator() {
                                     {() => <MovieListComponent category="tv_popular" />}
                                 </Tab.Screen>
                             )}
-                            {(categories.includes("food_restaurant") ||
-                                categories.includes("food_coffee") ||
-                                categories.includes("food_dessert") ||
-                                categories.includes("food_sushi")) && (
+                            {categories.includes("food_") && (
                                 <Tab.Screen name="🔥핫플" component={HotPlaceComponent} />
                             )}
                             <Tab.Screen name="😎밈" component={MemeDictionaryComponent} />
@@ -138,9 +135,6 @@ export default function TrendNavigator() {
                     ) : (
                         // 카테고리가 없을 때 기본값
                         <>
-                            <Tab.Screen name="📺시리즈">
-                                {() => <MovieListComponent category="tv_popular" />}
-                            </Tab.Screen>
                             <Tab.Screen name="😎밈" component={MemeDictionaryComponent} />
                         </>
                     )}

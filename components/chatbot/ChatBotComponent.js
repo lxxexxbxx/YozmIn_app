@@ -7,7 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
-  View, TouchableOpacity,
+  View, TouchableOpacity, Image,
 } from "react-native";
 import { CommonUtils } from "../common/CommonUtils";
 import TypingText from "./TypingText";
@@ -59,35 +59,48 @@ const ChatBotComponent = () => {
       ? isDark
         ? "#4C4C4C"
         : "#EAEAEA"
-      : isDark
-        ? "#333333"
-        : "#DCF8C6";
+      : "rgba(118, 166, 255, 1)";
 
     return (
-      <View
-        key={idx}
-        style={[
-          styles.bubbleContainer,
-          {
-            alignSelf: isLLM ? "flex-start" : "flex-end",
-            backgroundColor: bubbleColor,
-            borderWidth: StyleSheet.hairlineWidth,
-            borderColor: isDark ? "#999" : "#DDD",
-          },
-        ]}
-      >
-        {isLast ? (
-          <TypingText fullText={msg.text} speed={25} textColor={colors.text} />
-        ) : (
-          <ThemeText style={[styles.messageText, { color: colors.text }]}>
-            {msg.text}
-          </ThemeText>
-        )}
+        <ThemeView key={idx}
+                   style={[
+                     {
+                       flexDirection: "row",
+                       alignSelf: isLLM ? "flex-start" : "flex-end",
+                     },
+                   ]}>
+          {isLLM ? <TouchableOpacity
+              onPress={() => {}}
+              onLongPress={() => {}}
+              delayLongPress={400}
+          >
+            <Image
+                source={require('../../assets/Yozmin_Logo_v0.1.png')}
+                style={styles.profileImage}
+            />
+          </TouchableOpacity> : <></>}
+          <View key={idx}
+                   style={[
+                     styles.bubbleContainer,
+                     {
+                       backgroundColor: bubbleColor,
+                       borderWidth: StyleSheet.hairlineWidth,
+                       borderColor: isDark ? "#999" : "#DDD",
+                     },
+                   ]}>
+            {isLast ? (
+                <TypingText fullText={msg.text} speed={25} textColor={"white"} />
+            ) : (
+                <ThemeText style={[styles.messageText, { color: colors.text }]}>
+                  {msg.text}
+                </ThemeText>
+            )}
 
-        <ThemeText style={[styles.timeText, { color: colors.subText }]}>
-          {msg.time}
-        </ThemeText>
-      </View>
+            <ThemeText style={[styles.timeText, { color: colors.subText }]}>
+              {msg.time}
+            </ThemeText>
+          </View>
+        </ThemeView>
     );
   };
 
@@ -129,8 +142,8 @@ const ChatBotComponent = () => {
       </ScrollView>
 
       <KeyboardAvoidingView style={styles.Container}
-        behavior="padding"
-        keyboardVerticalOffset={100}
+                            behavior="padding"
+                            keyboardVerticalOffset={100}
       >
         {/* 입력 영역 */}
         <ThemeView
@@ -225,5 +238,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 25,
     borderWidth: 1,
+  },
+  profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 8,
   },
 });

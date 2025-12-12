@@ -5,7 +5,9 @@ import CryptoJS from "react-native-crypto-js";
 const SECRET_KEY = "dktitcn1212!dktitcn1212!!@#$%^&*";
 
 export const useKeyStore = create((set, get) =>({
+    GEMINI_API_KEY: "",
     GOOGLE_API_KEY: "",
+    GOOGLE_WEB_CLIENT_ID: "",
     SEARCH_ENGINE_ID: "",
     NAVER_CLIENT_ID: "",
     NAVER_CLIENT_SECRET: "",
@@ -21,7 +23,9 @@ export const useKeyStore = create((set, get) =>({
 
     setter: {
         setClear: function () {set({
+            GEMINI_API_KEY: "",
             GOOGLE_API_KEY: "",
+            GOOGLE_WEB_CLIENT_ID: "",
             SEARCH_ENGINE_ID: "",
             NAVER_CLIENT_ID: "",
             NAVER_CLIENT_SECRET: "",
