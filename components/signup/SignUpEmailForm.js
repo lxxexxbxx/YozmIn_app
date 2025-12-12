@@ -50,7 +50,7 @@ const SignUpEmailForm = () => {
         }
 
         store.setter.setEmail(email);
-        navigation.replace("SignUpBirthDate");
+        navigation.navigate("SignUpBirthDate");
     }
 
     return (
@@ -58,8 +58,8 @@ const SignUpEmailForm = () => {
                               behavior="padding"
                               keyboardVerticalOffset={Platform.OS=== "ios" ? -10:0}
         >
+            <PageTitleComponent title={"회원가입"}></PageTitleComponent>
             <ThemeView style={styles.FormContainer}>
-                <PageTitleComponent title={"회원가입"} darkMode={false} backToStack={"SignUpPw"}></PageTitleComponent>
                 <ThemeView style={styles.textContainer}>
                     <ThemeText style={styles.text}>
                         {"이메일을 입력해주세요."}
@@ -80,7 +80,7 @@ const SignUpEmailForm = () => {
                                        setError("");
                                    }}/>
                     </ThemeView>
-                    {error ? <Text style={{color: 'red'}}>{error}</Text> : null}
+                    {error ? <Text style={{alignSelf: 'center', color: 'red'}}>{error}</Text> : null}
                 </ThemeView>
                 <TouchableOpacity onPress={() => {
                     handleNext()

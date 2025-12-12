@@ -34,7 +34,7 @@ const SignUpNameForm = () => {
     }
 
     store.setter.setName(name);
-    navigation.replace("SignUpId");
+    navigation.navigate("SignUpId");
   }
 
   return (
@@ -42,8 +42,8 @@ const SignUpNameForm = () => {
                             behavior="padding"
                             keyboardVerticalOffset={Platform.OS=== "ios" ? -10:0}
       >
+        <PageTitleComponent title={"회원가입"}></PageTitleComponent>
         <ThemeView style={styles.FormContainer}>
-          <PageTitleComponent title={"회원가입"} darkMode={false} backToStack={"Login"}></PageTitleComponent>
           <ThemeView style={styles.textContainer}>
             <ThemeText style={styles.text}>
               {"이름을 입력해주세요."}
@@ -64,7 +64,7 @@ const SignUpNameForm = () => {
                            setError("");
                          }}/>
             </ThemeView>
-            {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
+            {error ? <Text style={{ alignSelf: 'center', color: 'red' }}>{error}</Text> : null}
           </ThemeView>
           <TouchableOpacity onPress={() => {handleNext()}}>
             <View style={styles.btnContainer}>

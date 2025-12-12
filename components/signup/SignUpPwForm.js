@@ -53,7 +53,7 @@ const SignUpPwForm = () => {
             return;
         }
         if (!pwRegex.test(pw)) {
-            setPwError("비밀번호는 영문, 숫자, 특수문자 포함\n8~20자 이내여야 합니다.");
+            setPwError("비밀번호는 영문, 숫자, 특수문자 포함 8~20자 이내여야 합니다.");
             return;
         }
         if (pw !== pwCheck) {
@@ -64,7 +64,7 @@ const SignUpPwForm = () => {
         const hashedPw = SHA256(pwCheck).toString();
 
         store.setter.setPw(hashedPw);
-        navigation.replace("SignUpEmail");
+        navigation.navigate("SignUpEmail");
     }
 
     return (
@@ -72,8 +72,8 @@ const SignUpPwForm = () => {
                               behavior="padding"
                               keyboardVerticalOffset={Platform.OS=== "ios" ? -10:0}
         >
+            <PageTitleComponent title={"회원가입"}></PageTitleComponent>
             <ThemeView style={styles.FormContainer}>
-                <PageTitleComponent title={"회원가입"} darkMode={false} backToStack={"SignUpId"}></PageTitleComponent>
                 <ThemeView style={styles.textContainer}>
                     <ThemeText style={styles.text}>
                         {"비밀번호를 입력해주세요."}
@@ -110,7 +110,7 @@ const SignUpPwForm = () => {
                                        source={require("../../assets/eye_closed.png")}/>}
                         </TouchableOpacity>
                     </ThemeView>
-                    {pwError ? <Text style={{color: 'red'}}>{pwError}</Text> : null}
+                    {pwError ? <Text style={{marginTop: 10, alignSelf: 'center', color: 'red'}}>{pwError}</Text> : null}
                 </ThemeView>
                 <ThemeView style={styles.inputContainer}>
                     <ThemeText style={styles.label}>
@@ -143,7 +143,7 @@ const SignUpPwForm = () => {
                                        source={require("../../assets/eye_closed.png")}/>}
                         </TouchableOpacity>
                     </ThemeView>
-                    {pwCheckError ? <Text style={{color: 'red'}}>{pwCheckError}</Text> : null}
+                    {pwCheckError ? <Text style={{marginTop: 10, alignSelf: 'center', color: 'red'}}>{pwCheckError}</Text> : null}
                 </ThemeView>
                 <TouchableOpacity onPress={() => {handleNext()}}>
                     <View style={styles.btnContainer}>

@@ -1,39 +1,64 @@
 import React, {useEffect} from 'react';
-import { ImageBackground, StyleSheet, Dimensions } from 'react-native';
+import {View, Text, ImageBackground, StyleSheet, Dimensions, Alert} from 'react-native';
 import {useUserStore} from "../../stores/UserStore";
 import supabase from "../../supabase";
 import {useNavigation} from "@react-navigation/native";
 import {CommonUtils} from "../common/CommonUtils";
-import { ThemeView, ThemeText } from "../common/ThemeComponents";
-import { useTheme } from "../settings/theme/ThemeContext";
 
 const { width, height } = Dimensions.get('window');
 
 const SignUpCompleteForm = () => {
   const store = useUserStore();
   const navigation = useNavigation();
-  const {colors, isDark} = useTheme();
 
   const insertUser = async () => {
-    const response = await supabase
-    .from("user")
-    .insert([{
-      name: store.name,
-      user_id: store.user_id,
-      password: store.password,
-      email: store.email,
-      birth_date: store.birth_date
-    }]);
+    if(!store.name || !store.user_id || !store.password ||
+        !store.email || !store.birth_date) {
 
-    if(response.status === 201) {
-      console.log("등록 성공");
-      console.log(`회원가입 완료: ${store.name}님, 환영합니다 👋`);
-      navigation.replace("TabNavigator");
+      // 에러 메시지
+      Alert.alert("회원가입 실패", "회원 정보가 잘못되었습니다.");
+
+      navigation.replace("Login");
+      return;
     }
-    else{
-      console.log("등록 실패:", response.error);
-      console.log("회원가입 실패: 회원 정보가 잘못되었습니다.")
-      navigation.navigate("Login");
+
+    const userTableResponse = await supabase
+        .from("user")
+        .insert([{
+          name: store.name,
+          user_id: store.user_id,
+          password: store.password,
+          email: store.email,
+          birth_date: store.birth_date
+        }]);
+
+    const mypageTableResponse = await supabase
+        .from("mypage")
+        .insert([{
+          user_id: store.user_id,
+        }]);
+
+    if(userTableResponse.status === 201 && mypageTableResponse.status === 201) {
+      setTimeout(() => {
+        // 성공 메시지
+        Alert.alert("회원가입 성공", `${store.name}님, 환영합니다 👋`);
+      }, 3100);
+    }
+    else if(userTableResponse.status !== 201){
+      console.log("등록 실패[user]:", userTableResponse.error);
+      // 에러 메시지
+      Alert.alert("회원가입 실패", "입력정보 확인 후 다시 시도해주세요.");
+
+      navigation.replace("Login");
+      return;
+    }
+    else if(mypageTableResponse.status !== 201){
+      console.log("등록 실패[mypage]:", mypageTableResponse.error);
+      // 에러 메시지
+      Alert.alert("회원가입 실패", "입력정보 확인 후 다시 시도해주세요.");
+
+      navigation.replace("Login");
+      return;
     }
   }
 
@@ -41,17 +66,20 @@ const SignUpCompleteForm = () => {
     CommonUtils.noGoBack();
     insertUser();
     store.setter.setClear();
+    setTimeout(() => {
+      navigation.replace("TabNavigator");
+    }, 3000);
   }, []);
 
   return (
-      <ThemeView style={[styles.Container, {backgroundColor: colors.background}]}>
+      <View style={styles.Container}>
         <ImageBackground style={styles.clap} source={require("../../assets/clap.jpeg")}/>
-        <ThemeView style={styles.label}>
-          <ThemeText style={styles.text}>
+        <View style={styles.label}>
+          <Text style={styles.text}>
             {`축하해요! \n요즘사람이 되실 준비가 끝났어요.`}
-          </ThemeText>
-        </ThemeView>
-      </ThemeView>
+          </Text>
+        </View>
+      </View>
   );
 }
 
