@@ -50,13 +50,13 @@ const Navigator = () => {
                 <Stack.Screen name={"SignUpPw"} component={SignUpPwForm} options={{headerShown: false}}/>
                 <Stack.Screen name={"SignUpEmail"} component={SignUpEmailForm} options={{headerShown: false}}/>
                 <Stack.Screen name={"SignUpBirthDate"} component={SignUpBirthDateForm} options={{headerShown: false}}/>
-                <Stack.Screen name={"SignUpComplete"} component={SignUpCompleteForm} options={{headerShown: false}}/>
+                <Stack.Screen name={"SignUpComplete"} component={SignUpCompleteForm} options={{headerShown: false, gestureEnabled: false}}/>
                 <Stack.Screen name={"SelectCategory"} component={SelectCategoryForm} options={{headerShown: false}}/>
 
                 {/*로그인 컴포넌트*/}
-                <Stack.Screen name={"Login"} component={LoginComponent} options={{headerShown: false}}/>
+                <Stack.Screen name={"Login"} component={LoginComponent} options={{headerShown: false, gestureEnabled: false}}/>
                 {/*하단 바 네비게이터*/}
-                <Stack.Screen name={"TabNavigator"} component={TabNavigator} options={{headerShown: false}}/>
+                <Stack.Screen name={"TabNavigator"} component={TabNavigator} options={{headerShown: false, gestureEnabled: false}}/>
                 {/*설정 컴포넌트 */}
                 <Stack.Screen name={"SettingsScreen"} component={SettingsScreen} options={{headerShown: false}}/>
                 {/* 일반설정 컴포넌트 */}
@@ -70,12 +70,12 @@ const Navigator = () => {
                 {/* 옷장 컴포넌트 */}
                 {/* ------------------------- 뉴스 연결 네비게이션 ------------------------ */}
                 {/* 뉴스 목록 페이지 */}
-                <Stack.Screen name="NewsList" component={NewsComponent} options={{headerShown: false}}/>
+                <Stack.Screen name="NewsList" component={NewsComponent} options={{headerShown: false, gestureEnabled: false}}/>
                 {/* 뉴스 상세 페이지 */}
                 <Stack.Screen name="NewsDetail" component={NewsDetailComponent} options={{headerShown: false}}/>
                 {/* ------------------------- 뉴스 연결 네비게이션 ------------------------ */}
                 {/*트렌드 탭 내 네비게이터*/}
-                <Stack.Screen name={"TrendNavigator"} component={TrendNavigator} options={{headerShown: false}}/>
+                <Stack.Screen name={"TrendNavigator"} component={TrendNavigator} options={{headerShown: false, gestureEnabled: false}}/>
                 {/*영화 정보 상세*/}
                 <Stack.Screen name={"TrendMovieDetail"} component={MovieDetailComponent} options={{headerShown: false}}/>
                 {/*게임 정보 상세*/}
