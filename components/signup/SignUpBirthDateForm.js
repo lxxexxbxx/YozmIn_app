@@ -19,34 +19,6 @@ import DropDownPicker from "react-native-dropdown-picker";
 
 const {width, height} = Dimensions.get('window');
 
-// year 리스트
-const getYears = () => {
-    const todayYear = new Date().getFullYear();
-    const items = [];
-    for(let i=todayYear; i>=2010; i--) {
-        items.push({ label: `${i}년`, value: i });
-    }
-    return items
-}
-// month 리스트
-const getMonths = () => {
-    const todayMonth = new Date().getMonth();
-    const items = [];
-    for(let i=todayMonth; i>=0; i--) {
-        items.push({ label: `${i+1}월`, value: i+1 });
-    }
-    return items
-}
-// day 리스트
-const getDays = () => {
-    const todayDate = new Date().getDate();
-    const items = [];
-    for(let i=todayDate; i>=0; i--) {
-        items.push({ label: `${i}일`, value: i });
-    }
-    return items
-}
-
 const SignUpBirthDateForm = () => {
     const navigation = useNavigation();
     const store = useUserStore();
@@ -56,23 +28,54 @@ const SignUpBirthDateForm = () => {
     const [openM, setOpenM] = useState(false);
     const [openD, setOpenD] = useState(false);
 
-    const [year , setYear] = useState(new Date().getFullYear());
-    const [years , setYears] = useState(getYears);
-    const [month , setMonth] = useState(new Date().getMonth() + 1);
-    const [months , setMonths] = useState(getMonths);
-    const [day, setDay] = useState(new Date().getDate());
-    const [days, setDays] = useState(getDays);
+    // year 리스트(현재연도 ~ 100년 전, 8세부터 선택가능)
+    const getYears = () => {
+        const todayYear = new Date().getFullYear();
+        const items = [];
+        for (let i = todayYear - 8; i >= todayYear - 100; i--) {
+            items.push({label: `${i}년`, value: i});
+        }
+        setYears(items);
+    }
+    // month 리스트(1 ~ 12월)
+    const getMonths = () => {
+        const todayMonth = new Date().getMonth();
+        const items = [];
+        for (let i = todayMonth; i >= 0; i--) {
+            items.push({label: `${i + 1}월`, value: i + 1});
+        }
+        setMonths(items);
+    }
+    // day 리스트
+    const getDays = () => {
+        const maxDate = new Date(year, month, 0).getDate();
+        const items = [];
+        for (let i = maxDate; i > 0; i--) {
+            items.push({label: `${i}일`, value: i});
+        }
+        setDays(items);
+    }
+
+    const [year, setYear] = useState(null);
+    const [years, setYears] = useState([]);
+    const [month, setMonth] = useState(null);
+    const [months, setMonths] = useState([]);
+    const [day, setDay] = useState(null);
+    const [days, setDays] = useState([]);
 
     useEffect(() => {
         CommonUtils.noGoBack();
+        getYears();
+        getMonths();
+        getDays();
 
-        if (store.birth_date) {
-            const date = store.birth_date.split("-");
-            console.log(date);
-            setYear(date[0]);
-            setMonth(date[1]);
-            setDay(date[2]);
-        }
+        // if (store.birth_date) {
+        //     const date = store.birth_date.split("-");
+        //     console.log(date);
+        //     setYear(date[0]);
+        //     setMonth(date[1]);
+        //     setDay(date[2]);
+        // }
     }, []);
 
     const handleNext = () => {
@@ -81,10 +84,11 @@ const SignUpBirthDateForm = () => {
         setMonth(month);
         setDay(day);
 
-        const birthDate = year + "-" + month + "-" + day;
+        const birthDate = year + "-" + String(month).padStart(2, "0") + "-" + String(day).padStart(2, "0");
+        console.log(birthDate);
 
         store.setter.setBirthDate(birthDate);
-        navigation.replace("SignUpComplete");
+        navigation.navigate("SignUpComplete");
     }
 
     // 드롭다운이 겹치지 않도록 onOpen 시 서로 닫기
@@ -106,8 +110,8 @@ const SignUpBirthDateForm = () => {
                               behavior="padding"
                               keyboardVerticalOffset={Platform.OS === "ios" ? -10 : 0}
         >
+            <PageTitleComponent title={"회원가입"}></PageTitleComponent>
             <ThemeView style={styles.FormContainer}>
-                <PageTitleComponent title={"회원가입"} darkMode={false} backToStack={"SignUpEmail"}></PageTitleComponent>
                 <ThemeView style={styles.textContainer}>
                     <ThemeText style={styles.text}>
                         {"생년월일을 입력해주세요."}
@@ -118,7 +122,7 @@ const SignUpBirthDateForm = () => {
                         {"생년월일"}
                     </ThemeText>
                     <ThemeView style={styles.filterRow}>
-                        <ThemeView style={{ zIndex: 3000, elevation: 3000 }}>
+                        <ThemeView style={{zIndex: 3000, elevation: 3000}}>
                             <DropDownPicker
                                 open={openY}
                                 value={year}
@@ -131,12 +135,12 @@ const SignUpBirthDateForm = () => {
                                 style={styles.dropdown}
                                 dropDownContainerStyle={styles.dropdownContainer}
                                 listMode={"SCROLLVIEW"}
-                                scrollViewProps={{ nestedScrollEnabled: true }}
+                                scrollViewProps={{nestedScrollEnabled: true}}
                                 zIndex={3000}
                                 zIndexInverse={1000}
                             />
                         </ThemeView>
-                        <ThemeView style={{ zIndex: 3000, elevation: 3000 }}>
+                        <ThemeView style={{zIndex: 3000, elevation: 3000}}>
                             <DropDownPicker
                                 open={openM}
                                 value={month}
@@ -145,16 +149,19 @@ const SignUpBirthDateForm = () => {
                                 setValue={setMonth}
                                 setItems={setMonths}
                                 onOpen={onMonthOpen}
+                                onChangeValue={(value) => {
+                                    getDays(value)
+                                }}
                                 placeholder="월 선택"
                                 style={styles.dropdown}
                                 dropDownContainerStyle={styles.dropdownContainer}
                                 listMode={"SCROLLVIEW"}
-                                scrollViewProps={{ nestedScrollEnabled: true }}
+                                scrollViewProps={{nestedScrollEnabled: true}}
                                 zIndex={3000}
                                 zIndexInverse={1000}
                             />
                         </ThemeView>
-                        <ThemeView style={{ zIndex: 3000, elevation: 3000 }}>
+                        <ThemeView style={{zIndex: 3000, elevation: 3000}}>
                             <DropDownPicker
                                 open={openD}
                                 value={day}
@@ -167,7 +174,7 @@ const SignUpBirthDateForm = () => {
                                 style={styles.dropdown}
                                 dropDownContainerStyle={styles.dropdownContainer}
                                 listMode={"SCROLLVIEW"}
-                                scrollViewProps={{ nestedScrollEnabled: true }}
+                                scrollViewProps={{nestedScrollEnabled: true}}
                                 zIndex={3000}
                                 zIndexInverse={1000}
                             />

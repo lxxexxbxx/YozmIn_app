@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import { StyleSheet } from "react-native";
 import {ThemeText} from "../common/ThemeComponents";
+import {useTheme} from "../settings/theme/ThemeContext";
 
-const TypingText = ({ fullText = '', speed = 30, style }) => {
+const TypingText = ({ fullText = '', speed = 30, textColor }) => {
   const [displayedText, setDisplayedText] = useState('');
   const intervalRef = useRef(null);
+  const { colors, isDark } = useTheme();
 
   useEffect(() => {
     if (typeof fullText !== 'string' || fullText.length === 0) return;
@@ -41,7 +43,7 @@ const TypingText = ({ fullText = '', speed = 30, style }) => {
   }, [fullText]);
 
   return (
-      <ThemeText style={styles.answerText}>{displayedText ?? ""}</ThemeText>
+      <ThemeText style={[styles.answerText, {color: textColor ? textColor : colors.text}]}>{displayedText ?? ""}</ThemeText>
   );
 };
 

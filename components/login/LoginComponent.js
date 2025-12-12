@@ -31,8 +31,7 @@ const LoginComponent = () => {
   const [id, setId] = useState("");
   const [pw, setPw] = useState("");
 
-  const [idError, setIdError] = useState("");
-  const [pwError, setPwError] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   const [pwHide, setPwHide] = useState(true);
 
@@ -41,17 +40,16 @@ const LoginComponent = () => {
   });
 
   const login = async () => {
-    setIdError("");
-    setPwError("");
+    setErrorMsg("");
     setId(id.trim());
     setPw(pw.trim());
 
     if (!id) {
-      setIdError("아이디를 입력해주세요.");
+      setErrorMsg("아이디를 입력해주세요.");
       return;
     }
     if (!pw) {
-      setPwError("비밀번호를 입력해주세요.");
+      setErrorMsg("비밀번호를 입력해주세요.");
       return;
     }
 
@@ -92,15 +90,14 @@ const LoginComponent = () => {
           }
           // navigation.replace("TabNavigator")
         } else {
-          setPwError("비밀번호가 다릅니다.\n다시 입력해주세요.");
+          setErrorMsg("비밀번호가 다릅니다.\n다시 입력해주세요.");
           return;
         }
       }
     } else {
       console.log("조회 실패:", response.error);
+      setErrorMsg("아이디 또는 비밀번호가 다릅니다.");
     }
-
-    setPwError("아이디 또는 비밀번호가 다릅니다.");
   }
 
   return (
@@ -124,11 +121,9 @@ const LoginComponent = () => {
               placeholderTextColor={"gray"}
               onChangeText={(value) => {
                 setId(value);
-                setIdError("");
               }} />
           </ThemeView>
         </ThemeView>
-        {idError ? <Text style={{ color: 'red' }}>{idError}</Text> : null}
         <ThemeView style={{ flexDirection: "row" }}>
           <ThemeView style={{ alignSelf: 'center' }}>
             <ThemeView style={{
@@ -146,7 +141,7 @@ const LoginComponent = () => {
                 placeholderTextColor={"gray"}
                 onChangeText={(value) => {
                   setPw(value);
-                  setPwError("");
+                  setErrorMsg("");
                 }} />
             </ThemeView>
           </ThemeView>
@@ -168,7 +163,7 @@ const LoginComponent = () => {
                 source={require("../../assets/eye_closed.png")} />}
           </TouchableOpacity>
         </ThemeView>
-        {pwError ? <Text style={{ color: 'red' }}>{pwError}</Text> : null}
+        {errorMsg ? <Text style={{ marginTop: 10, color: 'red' }}>{errorMsg}</Text> : null}
       </ThemeView>
       <TouchableOpacity style={{ alignSelf: 'center', marginBottom: 15 }}
         onPress={() => login()}>

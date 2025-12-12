@@ -2,7 +2,7 @@ import axios from "axios";
 import { useKeyStore } from "../../../stores/KeyStore";
 
 export const fetchNewsTrends = async (newsTitles) => {
-    const GEMINI_API_KEY = useKeyStore.getState().GOOGLE_API_KEY;
+    const GEMINI_API_KEY = useKeyStore.getState().GEMINI_API_KEY;
     try {
         console.log("🔹 Gemini 2.0 API에 뉴스 데이터 분석 요청 중...");
 

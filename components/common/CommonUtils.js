@@ -5,7 +5,7 @@ import {useKeyStore} from "../../stores/KeyStore";
 
 export const CommonUtils = {
     googleSearch: async function (searchWord, dateRestrict) {
-        const {GOOGLE_API_KEY, SEARCH_ENGINE_ID} = useKeyStore.getState();
+        const {GEMINI_API_KEY, GOOGLE_API_KEY, SEARCH_ENGINE_ID} = useKeyStore.getState();
 
         try {
             const url = `https://www.googleapis.com/customsearch/v1?q=${searchWord}&cx=${SEARCH_ENGINE_ID}&dateRestrict=${dateRestrict}&key=${GOOGLE_API_KEY}`;
@@ -25,7 +25,7 @@ export const CommonUtils = {
         }
     },
     fetchGeminiTrendKeywords: async function (keywords) {
-        const {GOOGLE_API_KEY, SEARCH_ENGINE_ID} = useKeyStore.getState();
+        const {GEMINI_API_KEY} = useKeyStore.getState();
 
         try {
             const prompt = `
@@ -58,7 +58,7 @@ export const CommonUtils = {
         `;
 
             const response = await axios.post(
-                `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GOOGLE_API_KEY}`,
+                `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
                 {
                     contents: [
                         {
@@ -78,8 +78,6 @@ export const CommonUtils = {
                 }
             );
 
-            console.log(response);
-
             // Gemini 응답에서 정리된 키워드 추출
             return response.data.candidates[0].content.parts[0].text
                 .split("\n")
@@ -93,11 +91,11 @@ export const CommonUtils = {
     },
     fetchGemini: async function (prompt) {
         // prompt = "너는 이제부터 Z세대 트렌드 전문가 캐릭터야. 말투는 친근하고 재치 있게, 약간 요즘 말투로 이야기해줘.\n\nQ: " + prompt;
-        const {GOOGLE_API_KEY, SEARCH_ENGINE_ID} = useKeyStore.getState();
+        const {GEMINI_API_KEY} = useKeyStore.getState();
 
         try {
             const response = await axios.post(
-                `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GOOGLE_API_KEY}`,
+                `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
                 {
                     contents: [
                         {
@@ -123,7 +121,7 @@ export const CommonUtils = {
         }
     },
     fetchChatGPT: async function (prompt) {
-        const OPENAI_API_KEY = useKeyStore.getState().OPENAI_API_KEY;
+        const {OPENAI_API_KEY} = useKeyStore.getState();
         const API_ENDPOINT = 'https://api.openai.com/v1/responses';
 
         if (!OPENAI_API_KEY) {

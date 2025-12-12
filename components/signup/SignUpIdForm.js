@@ -38,7 +38,7 @@ const SignUpIdForm = () => {
     if(isDup) return;
 
     store.setter.setId(id);
-    navigation.replace("SignUpPw");
+    navigation.navigate("SignUpPw");
   }
 
   // 중복확인
@@ -64,8 +64,8 @@ const SignUpIdForm = () => {
                             behavior="padding"
                             keyboardVerticalOffset={Platform.OS=== "ios" ? -10:0}
       >
+        <PageTitleComponent title={"회원가입"}></PageTitleComponent>
         <ThemeView style={styles.FormContainer}>
-          <PageTitleComponent title={"회원가입"} darkMode={false} backToStack={"SignUpName"}></PageTitleComponent>
           <ThemeView style={styles.textContainer}>
             <ThemeText style={styles.text}>
               {"아이디를 입력해주세요."}
@@ -86,7 +86,7 @@ const SignUpIdForm = () => {
                            setError("");
                          }}/>
             </ThemeView>
-            {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
+            {error ? <Text style={{ alignSelf: 'center', color: 'red' }}>{error}</Text> : null}
           </ThemeView>
           <TouchableOpacity onPress={() => {handleNext()}}>
             <View style={styles.btnContainer}>

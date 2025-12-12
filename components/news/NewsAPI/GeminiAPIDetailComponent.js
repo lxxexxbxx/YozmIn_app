@@ -5,7 +5,7 @@ import { useKeyStore } from "../../../stores/KeyStore";
 
 
 export const extractKeywordFromTitle = async (title) => {
-    const GEMINI_API_KEY = useKeyStore.getState().GOOGLE_API_KEY;
+    const GEMINI_API_KEY = useKeyStore.getState().GEMINI_API_KEY;
     console.log(`🔹 Gemini API에 키워드 추출 요청: "${title}"`);
 
     if (!title) return null;
