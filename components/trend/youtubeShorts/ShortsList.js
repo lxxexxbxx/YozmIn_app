@@ -6,7 +6,7 @@ import { useTheme } from "../../settings/theme/ThemeContext";
 const { width } = Dimensions.get("window");
 
 // ⚡ 하단 안전 영역 계산 (안드로이드 네비게이션 바 / 아이폰 홈 인디케이터)
-const BOTTOM_SAFE_AREA = Platform.OS === 'android' ? 50 : 34;
+const BOTTOM_SAFE_AREA = Platform.OS === 'android' ? 50 : 60;
 
 const ShortsList = ({ videoList }) => {
     const { colors } = useTheme();
