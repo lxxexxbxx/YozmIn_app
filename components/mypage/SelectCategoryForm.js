@@ -57,41 +57,57 @@ const INTERESTS = {
 };
 
 const SelectCategoryForm = () => {
-    const store = useUserStore();
+    const userStore = useUserStore();
     const navigation = useNavigation();
     const [selected, setSelected] = useState(
-        store.categories ? store.categories.split(',') : []
+        userStore.categories ? userStore.categories.split(',') : []
     );
     const {colors} = useTheme();
 
     const toggleInterest = (id) => {
-        setSelected((prev) =>
-            prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-        );
+        if (selected.includes(id)) {
+            setSelected((prev) => prev.filter((item) => item !== id));
+        } else {
+            if (selected.length >= 10) {
+                Alert.alert("안내", "관심사는 최대 10개만 선택 가능합니다.");
+            } else {
+                setSelected((prev) => [...prev, id]);
+            }
+        }
     };
 
     const handleNext = async () => {
         const selectedItems = selected.join(",");
         console.log(selectedItems);
-        await store.setter.setCategories(selectedItems);
-        console.log(store.categories);
 
-        if(!store.categories) {
+        if(!selectedItems || selectedItems === "" ||
+            selectedItems === null || selectedItems === undefined) {
             Alert.alert("안내", "관심사를 선택해주세요.");
             return;
         }
 
+        console.log(userStore);
+
+        const userData = await supabase
+        .from("user")
+        .select("*", { count: "exact" })
+        .eq("user_id", userStore.user_id);
+
+        console.log(userData.status, userData[0]);
+
         const response = await supabase
         .from("user")
         .update([{
-            categories: store.categories
+            categories: selectedItems
         }])
-        .eq('user_id', store.user_id);
+        .eq('user_id', userStore.user_id);
 
         if(response.status === 204) {
             Alert.alert("안내", "관심사 저장 완료");
             navigation.goBack();
         }
+        userStore.setter.setCategories(selectedItems);
+        console.log(userStore.categories);
     }
 
     return (

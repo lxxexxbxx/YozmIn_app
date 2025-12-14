@@ -127,7 +127,7 @@ export default function TrendNavigator() {
                                     {() => <MovieListComponent category="tv_popular" />}
                                 </Tab.Screen>
                             )}
-                            {categories.includes("food_") && (
+                            {(categories.includes("food_") || categories.includes("food_")) && (
                                 <Tab.Screen name="🔥핫플" component={HotPlaceComponent} />
                             )}
                             <Tab.Screen name="😎밈" component={MemeDictionaryComponent} />
