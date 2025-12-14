@@ -62,6 +62,7 @@ const SignUpBirthDateForm = () => {
     const [months, setMonths] = useState([]);
     const [day, setDay] = useState(null);
     const [days, setDays] = useState([]);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         CommonUtils.noGoBack();
@@ -79,6 +80,12 @@ const SignUpBirthDateForm = () => {
     }, []);
 
     const handleNext = () => {
+        setError("");
+        if(!year || !month || !day) {
+            setError("년/월/일 모두 선택해주세요.");
+            return;
+        }
+
         console.log(new Date(store.birth_date));
         setYear(year);
         setMonth(month);
@@ -180,6 +187,7 @@ const SignUpBirthDateForm = () => {
                             />
                         </ThemeView>
                     </ThemeView>
+                    {error ? <Text style={{ marginTop: 20, alignSelf: 'center', color: 'red' }}>{error}</Text> : null}
                 </ThemeView>
                 <TouchableOpacity onPress={() => {
                     handleNext()
