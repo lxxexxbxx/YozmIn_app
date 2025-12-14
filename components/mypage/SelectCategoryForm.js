@@ -52,7 +52,6 @@ const INTERESTS = {
         { id: 'food_restaurant', label: '🍱 맛집' },
         { id: 'food_coffee', label: '☕ 커피' },
         { id: 'food_dessert', label: '🍰 디저트' },
-        { id: 'food_sushi', label: '🍣 스시' },
     ],
 };
 
@@ -92,8 +91,6 @@ const SelectCategoryForm = () => {
         .from("user")
         .select("*", { count: "exact" })
         .eq("user_id", userStore.user_id);
-
-        console.log(userData.status, userData[0]);
 
         const response = await supabase
         .from("user")
