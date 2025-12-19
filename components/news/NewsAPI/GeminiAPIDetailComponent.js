@@ -56,7 +56,7 @@ export const extractKeywordFromTitle = async (title) => {
 };
 
 export const reextractKeyword = async (title) => {
-    const GEMINI_API_KEY = useKeyStore.getState().GOOGLE_API_KEY;
+    const GEMINI_API_KEY = useKeyStore.getState().GEMINI_API_KEY;
     console.log(`🔹 Gemini API에 키워드 추출 요청: "${title}"`);
 
     if (!title) return null;
@@ -106,7 +106,7 @@ export const reextractKeyword = async (title) => {
 
 // ⭐️ 함수 인자를 (crawledContent, title)로 변경
 export const fetchNewsDetails = async (crawledContent, title) => {
-    const GEMINI_API_KEY = useKeyStore.getState().GOOGLE_API_KEY;
+    const GEMINI_API_KEY = useKeyStore.getState().GEMINI_API_KEY;
     console.log("🔹 Gemini API에 크롤링된 뉴스 분석 및 요약 요청...");
 
     // 크롤링된 본문이 없으면 요청을 보내지 않음
