@@ -107,7 +107,16 @@ const NewsComponent = ({ navigation }) => {
                     ? "rgba(118, 166, 255, 1)"
                     : isDark
                       ? "#2A2A2A"
-                      : "rgba(118, 166, 255, 1)",
+                      : "#F2F4F6",
+
+                borderWidth: 1,
+                borderColor:
+                  selectedCategory === category.key
+                    ? "rgba(118, 166, 255, 1)"
+                    : isDark
+                      ? "#444444"
+                      : "#E5E5E5",
+
               },
             ]}
             onPress={() => handleCategoryChange(category.key)}
