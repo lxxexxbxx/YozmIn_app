@@ -67,6 +67,7 @@ export const fetchNewsTrends = async (newsTitles) => {
         return topics;
     } catch (error) {
         console.error("🚨 Gemini API 호출 오류:", error);
+        console.error("🚨 Gemini API 호출 오류 상세:", error.response.data);
         return [];
     }
 };
