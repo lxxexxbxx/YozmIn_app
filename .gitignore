@@ -10,6 +10,10 @@ dist/
 web-build/
 expo-env.d.ts
 *.env
+!.env.example
+android/
+google-services.json
+GoogleService-Info.plist
 
 # Native
 *.orig.*

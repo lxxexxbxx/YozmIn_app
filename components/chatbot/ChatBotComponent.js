@@ -15,6 +15,7 @@ import { ThemeView, ThemeText } from "../common/ThemeComponents";
 import { useTheme } from "../settings/theme/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import supabase from "../../supabase";
+import {useKeyStore} from "../../stores/KeyStore";
 
 // ==========================================
 // [설정] GEMMA 3 서버리스 엔드포인트 (Hugging Face Inference Endpoint)
@@ -25,7 +26,7 @@ const API_URL =
 const { height } = Dimensions.get("window");
 
 // ⚠️ 실서비스면 토큰은 앱에 박지 말고(유출됨) 서버/엣지펑션으로 빼세요.
-const HF_TOKEN = "***REMOVED***";
+const {HF_TOKEN} = useKeyStore.getState();
 
 // ==========================================
 // [주의] 아래 테이블명은 프로젝트에 맞게 수정하세요.

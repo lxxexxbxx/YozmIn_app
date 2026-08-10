@@ -8,7 +8,7 @@ import { useKeyStore } from "../../../stores/KeyStore"; // Naver API 키를 위�
  * @returns {Promise<string|null>} - 찾은 기사 URL 또는 null
  */
 const findNewsUrlByTitle = async (title) => {
-    const { NAVER_CLIENT_ID, NAVER_CLIENT_SECRET } = useKeyStore.getState();
+    const { NAVER_CLIENT_ID, NAVER_CLIENT } = useKeyStore.getState();
 
     try {
         const response = await axios.get(
@@ -20,7 +20,7 @@ const findNewsUrlByTitle = async (title) => {
                 },
                 headers: {
                     'X-Naver-Client-Id': NAVER_CLIENT_ID,
-                    'X-Naver-Client-Secret': NAVER_CLIENT_SECRET,
+                    'X-Naver-Client-Secret': NAVER_CLIENT,
                 },
             }
         );

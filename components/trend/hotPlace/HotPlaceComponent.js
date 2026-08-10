@@ -78,12 +78,12 @@ async function kakaoSearchKeyword(category, userLocation) {
 
 async function naverTrendEnrich(places) {
     const NAVER_CLIENT_ID = useKeyStore.getState().NAVER_CLIENT_ID;
-    const NAVER_CLIENT_SECRET = useKeyStore.getState().NAVER_CLIENT_SECRET;
-    if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) return places;
+    const NAVER_CLIENT = useKeyStore.getState().NAVER_CLIENT;
+    if (!NAVER_CLIENT_ID || !NAVER_CLIENT) return places;
     try {
         const headers = {
             "X-Naver-Client-Id": NAVER_CLIENT_ID,
-            "X-Naver-Client-Secret": NAVER_CLIENT_SECRET,
+            "X-Naver-Client-Secret": NAVER_CLIENT,
             "Content-Type": "application/json",
         };
         const url = "https://openapi.naver.com/v1/datalab/search";

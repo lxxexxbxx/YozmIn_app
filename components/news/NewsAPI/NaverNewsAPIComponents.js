@@ -6,7 +6,7 @@ import {useKeyStore} from "../../../stores/KeyStore";
 const EXPIRATION_TIME = 3600000;
 
 export const fetchNewsTitles = async (query) => {
-    const { NAVER_CLIENT_ID, NAVER_CLIENT_SECRET } = useKeyStore.getState();
+    const { NAVER_CLIENT_ID, NAVER_CLIENT } = useKeyStore.getState();
     const searchQuery = Array.isArray(query) ? query.join[0] : query;
     // URL 요청 시 오류 발생할 수 있는 한글 띄어쓰기가 보함되어 있기 때문에 인코딩 쿼리 인코딩 필수
     const encodedQuery = encodeURIComponent(searchQuery);
@@ -38,7 +38,7 @@ export const fetchNewsTitles = async (query) => {
                 {
                     headers: {
                         'X-Naver-Client-Id': NAVER_CLIENT_ID,
-                        'X-Naver-Client-Secret': NAVER_CLIENT_SECRET,
+                        'X-Naver-Client-Secret': NAVER_CLIENT,
                     },
                 }
             );
@@ -64,7 +64,7 @@ export const fetchNewsTitles = async (query) => {
 };
 
 export const fetchNewsDetail = async (title) => {
-    const { NAVER_CLIENT_ID, NAVER_CLIENT_SECRET } = useKeyStore.getState();
+    const { NAVER_CLIENT_ID, NAVER_CLIENT } = useKeyStore.getState();
 
     try {
         console.log(`🔎 뉴스 검색: ${title}`);
@@ -74,7 +74,7 @@ export const fetchNewsDetail = async (title) => {
             {
                 headers: {
                     'X-Naver-Client-Id': NAVER_CLIENT_ID,
-                    'X-Naver-Client-Secret': NAVER_CLIENT_SECRET,
+                    'X-Naver-Client-Secret': NAVER_CLIENT,
                 },
             }
         );

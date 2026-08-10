@@ -2,7 +2,7 @@ import {create} from "zustand";
 import supabase from "../supabase";
 import CryptoJS from "react-native-crypto-js";
 
-const SECRET_KEY = "***REMOVED***";
+const SECRET_KEY = process.env.EXPO_PUBLIC_SECRET_KEY || "";
 
 export const useKeyStore = create((set, get) =>({
     GEMINI_API_KEY: "",
@@ -10,7 +10,7 @@ export const useKeyStore = create((set, get) =>({
     GOOGLE_WEB_CLIENT_ID: "",
     SEARCH_ENGINE_ID: "",
     NAVER_CLIENT_ID: "",
-    NAVER_CLIENT_SECRET: "",
+    NAVER_CLIENT: "",
     SUPABASE_URL: "",
     SUPABASE_API_KEY: "",
     TMDB_API_KEY: "",
@@ -20,6 +20,7 @@ export const useKeyStore = create((set, get) =>({
     KAKAO_NATIVE_APP_KEY: "",
     KAKAO_REST_API_KEY: "",
     KAKAO_ADMIN_KEY: "",
+    HF_TOKEN: "",
 
     setter: {
         setClear: function () {set({
@@ -28,7 +29,7 @@ export const useKeyStore = create((set, get) =>({
             GOOGLE_WEB_CLIENT_ID: "",
             SEARCH_ENGINE_ID: "",
             NAVER_CLIENT_ID: "",
-            NAVER_CLIENT_SECRET: "",
+            NAVER_CLIENT: "",
             SUPABASE_URL: "",
             SUPABASE_API_KEY: "",
             TMDB_API_KEY: "",
@@ -37,6 +38,7 @@ export const useKeyStore = create((set, get) =>({
             KAKAO_NATIVE_APP_KEY: "",
             KAKAO_REST_API_KEY: "",
             KAKAO_ADMIN_KEY: "",
+            HF_TOKEN: "",
         })},
         decryptKey: function (encryptedBase64) {
             try {
