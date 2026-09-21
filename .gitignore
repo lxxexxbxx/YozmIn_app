@@ -47,3 +47,16 @@ android/app/release/
 
 # typescript
 *.tsbuildinfo
+# 보안 점검 산출물 (실제 키 값 포함 - 절대 커밋 금지)
+SECURITY_AUDIT_REPORT.md
+
+# 히스토리 정리 도구 및 산출물
+bfg.jar
+*.bfg-report/
+YozmIn_app-clean.git/
+
+# Claude Code 로컬 설정
+.claude/settings.local.json
+
+# Windows 리다이렉션 실수로 생성되는 파일
+nul
